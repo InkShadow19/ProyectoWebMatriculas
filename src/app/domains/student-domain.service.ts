@@ -31,7 +31,7 @@ export class StudentDomainService {
     });
   }
 
-  getList(page: number, size: number, description?: string, enabled?: string, filters?: Record<string, string>): Observable<ApiResponse<TStudentModel>> {
+  getList(page: number, size: number, description?: string, enabled?: boolean, filters?: Record<string, string>): Observable<ApiResponse<TStudentModel>> {
 
     var params = new HttpParams()
     params = params.set("page", page.toString())

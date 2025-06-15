@@ -1,3 +1,8 @@
+### [1.0.2] 15-06-2025
+
+## Added
+- Student service was added.
+
 ### [1.0.1] 15-06-2025
 
 ## Added

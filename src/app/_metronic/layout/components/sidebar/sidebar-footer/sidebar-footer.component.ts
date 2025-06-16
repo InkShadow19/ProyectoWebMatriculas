@@ -11,5 +11,9 @@ export class SidebarFooterComponent implements OnInit {
 
   constructor() {}
 
-  ngOnInit(): void {}
+  version = "1.0.0"
+
+  ngOnInit(): void {
+    this.version = "Versión " + environment.appVersion
+  }
 }

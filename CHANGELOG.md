@@ -1,3 +1,11 @@
+### [1.0.3] 15-06-2025
+
+## Added
+- User files was added.
+
+## Updated
+- Sidebar menu was updated.
+
 ### [1.0.2] 15-06-2025
 
 ## Added

@@ -12,9 +12,9 @@
             @include scrollbar-color(transparent, $app-sidebar-dark-scrollbar-color-hover);
         }
 
-        .app-sidebar-logo {
+        /*.app-sidebar-logo {
             border-bottom: 1px dashed $app-sidebar-dark-separator-color;
-        }
+        }*/
 
         .btn-custom {
             @include button-custom-variant(

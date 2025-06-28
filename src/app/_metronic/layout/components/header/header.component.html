@@ -22,7 +22,10 @@
     <!--begin::Mobile logo-->
     <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
       <a routerLink="/dashboard" class="d-lg-none">
-        <img alt="Logo" src="./assets/media/logos/logo_villa_small.png" class="h-40px" />
+        <!-- Logo para modo claro -->
+        <img alt="Logo" src="./assets/media/logos/logo_villa_small_light.png" class="h-40px theme-light-show" />
+        <!-- Logo para modo oscuro -->
+        <img alt="Logo" src="./assets/media/logos/logo_villa_small_dark.png" class="h-40px theme-dark-show" />
       </a>
     </div>
     <!--end::Mobile logo-->
@@ -32,15 +35,14 @@
     <!--begin::Logo-->
     <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
       <a routerLink="/dashboard">
+        <!-- Si el layout es de header oscuro, muestra el logo oscuro -->
         <ng-container *ngIf="currentLayoutType === 'dark-header'">
-          <img alt="Logo" src="./assets/media/logos/default-dark.svg"
-            class="h-20px h-lg-30px app-sidebar-logo-default" />
+          <img alt="Logo" src="./assets/media/logos/logo_villa_dark.png" class="h-20px h-lg-30px app-sidebar-logo-default" />
         </ng-container>
+        <!-- Si el layout NO es de header oscuro, el logo depende del tema global -->
         <ng-container *ngIf="currentLayoutType !== 'dark-header'">
-          <img alt="Logo" src="./assets/media/logos/default.svg"
-            class="h-20px h-lg-30px app-sidebar-logo-default theme-light-show" />
-          <img alt="Logo" src="./assets/media/logos/default-dark.svg"
-            class="h-20px h-lg-30px app-sidebar-logo-default theme-dark-show" />
+          <img alt="Logo" src="./assets/media/logos/logo_villa_light.png" class="h-20px h-lg-30px app-sidebar-logo-default theme-light-show" />
+          <img alt="Logo" src="./assets/media/logos/logo_villa_dark.png" class="h-20px h-lg-30px app-sidebar-logo-default theme-dark-show" />
         </ng-container>
       </a>
     </div>

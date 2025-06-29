@@ -27,6 +27,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Esta regla se aplicará a AMBOS logos, lo cual es perfecto */
 .splash-screen img {
   margin-left: calc(100vw - 100%);
   margin-bottom: 30px;
@@ -42,8 +43,33 @@ body {
   color: #92929F;
 }
 
-
 #root {
   opacity: 1;
   transition: opacity 1s ease-in-out;
 }
+
+/* === INICIO DE LA MODIFICACIÓN: LÓGICA PARA INTERCAMBIAR LOGOS === */
+
+/* Paso 1: Por defecto, asumimos que el tema es claro.
+  Mostramos el logo para modo claro (.logo-light) y ocultamos el de modo oscuro (.logo-dark).
+*/
+.splash-screen .logo-dark {
+  display: none;
+}
+
+.splash-screen .logo-light {
+  display: block;
+}
+
+/* Paso 2: Si el script detecta el modo oscuro (añadiendo [data-bs-theme="dark"] al <html>),
+  invertimos la visibilidad de los logos.
+*/
+[data-bs-theme="dark"] .splash-screen .logo-light {
+  display: none;
+}
+
+[data-bs-theme="dark"] .splash-screen .logo-dark {
+  display: block;
+}
+
+/* === FIN DE LA MODIFICACIÓN === */

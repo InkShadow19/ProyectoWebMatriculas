@@ -1,15 +1,14 @@
 <!--begin::Logo image-->
 <a routerLink="/dashboard">
   <ng-container *ngIf="currentLayoutType === 'dark-sidebar'">
-    <img alt="Logo" src="./assets/media/logos/logo_villa_white.png" class="h-40px app-sidebar-logo-default" />
-  </ng-container>
-  <ng-container *ngIf="currentLayoutType !== 'dark-sidebar'">
-    <img alt="Logo" src="./assets/media/logos/logo_villa_dark.png" class="h-40px app-sidebar-logo-default theme-light-show" />
-    <img alt="Logo" src="./assets/media/logos/logo_villa_white.png"
-      class="h-40px app-sidebar-logo-default theme-dark-show" />
+    <img alt="Logo" src="./assets/media/logos/logo_villa_dark.png" class="h-50px app-sidebar-logo-default" />
+    <img alt="Logo" src="./assets/media/logos/logo_villa_small_dark.png" class="h-50px app-sidebar-logo-minimize" />
   </ng-container>
 
-  <img alt="Logo" src="./assets/media/logos/logo_villa_small.png" class="h-40px app-sidebar-logo-minimize" />
+  <ng-container *ngIf="currentLayoutType !== 'dark-sidebar'">
+    <img alt="Logo" src="./assets/media/logos/logo_villa_light.png" class="h-50px app-sidebar-logo-default" />
+    <img alt="Logo" src="./assets/media/logos/logo_villa_small_light.png" class="h-50px app-sidebar-logo-minimize" />
+  </ng-container>
 </a>
 <!--end::Logo image-->
 

@@ -5,9 +5,9 @@
 // Text colors
 @each $name, $color in $theme-text-colors {
     // Base color
-    .text-#{$name} {
+    /*.text-#{$name} {
         color: var(--#{$prefix}text-#{$name}) !important;
-    }
+    }*/
 
     // Inverse color
     @if (theme-inverse-color($name)) {

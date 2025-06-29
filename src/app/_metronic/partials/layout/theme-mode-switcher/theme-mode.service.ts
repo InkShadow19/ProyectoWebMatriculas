@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { ThemeModeComponent } from '../../../kt/layout';
+// 1. Importa el LayoutService
+import { LayoutService } from '../../../layout/core/layout.service';
 
 export type ThemeModeType = 'dark' | 'light' | 'system';
 const systemMode = ThemeModeComponent.getSystemMode() as 'light' | 'dark';
@@ -50,7 +52,8 @@ export class ThemeModeService {
       getThemeModeFromLocalStorage(themeMenuModeLSKey)
     );
 
-  constructor() {}
+  // 2. Inyecta LayoutService en el constructor
+  constructor(private layoutService: LayoutService) { }
 
   public updateMode(_mode: ThemeModeType) {
     const updatedMode = _mode === 'system' ? systemMode : _mode;
@@ -62,6 +65,18 @@ export class ThemeModeService {
 
     document.documentElement.setAttribute('data-bs-theme', updatedMode);
     ThemeModeComponent.init();
+
+    // 3. ===== INICIO DE LA LÓGICA AÑADIDA =====
+    // Obtenemos la configuración actual del layout desde el BehaviorSubject del servicio
+    const currentConfig = this.layoutService.layoutConfigSubject.value;
+    if (currentConfig && currentConfig.app?.sidebar?.default) {
+      // Actualizamos la clase del sidebar en el objeto de configuración
+      currentConfig.app.sidebar.default.class = `app-sidebar-${updatedMode}`;
+
+      // Emitimos la configuración actualizada para que toda la app reaccione al cambio
+      this.layoutService.layoutConfigSubject.next({ ...currentConfig });
+    }
+    // ===== FIN DE LA LÓGICA AÑADIDA =====
   }
 
   public updateMenuMode(_menuMode: ThemeModeType) {
@@ -72,16 +87,36 @@ export class ThemeModeService {
   }
 
   public init() {
+    // Al llamar a updateMode aquí, nos aseguramos de que el sidebar se sincronice
+    // correctamente desde la carga inicial de la aplicación.
     this.updateMode(this.mode.value);
     this.updateMenuMode(this.menuMode.value);
   }
 
   public switchMode(_mode: ThemeModeType) {
+    // Determina el modo final (light o dark)
+    const updatedMode = _mode === 'system' ? systemMode : _mode;
+    // Determina el layout que corresponde al modo
+    const layoutType = updatedMode === 'dark' ? 'dark-sidebar' : 'light-sidebar';
+
+    // --- INICIO DE LA LÓGICA CORRECTA ---
+
+    // 1. Llamamos al método público de LayoutService. Él se encargará de
+    //    guardar el tipo de layout ('dark-sidebar' o 'light-sidebar')
+    //    con la clave correcta en localStorage.
+    this.layoutService.setBaseLayoutType(layoutType);
+
+    // 2. Guardamos las preferencias del tema (esto ya lo hacías bien)
     if (localStorage) {
-      const updatedMode = _mode === 'system' ? systemMode : _mode;
       localStorage.setItem(themeModeLSKey, updatedMode);
       localStorage.setItem(themeMenuModeLSKey, _mode);
     }
-    document.location.reload()
+
+    // 3. Recargamos la página como lo hace la plantilla originalmente.
+    //    Al recargar, el LayoutInitService leerá el valor que acabamos de guardar
+    //    y construirá la página con el sidebar del color correcto.
+    document.location.reload();
+
+    // --- FIN DE LA LÓGICA CORRECTA ---
   }
 }

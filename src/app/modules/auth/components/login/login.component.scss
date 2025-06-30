@@ -1,13 +1,46 @@
 :host {
   width: 100%;
+  display: flex;
+  justify-content: center;
   @media (min-width: 992px) {
     .login-form {
       width: 100%;
-      max-width: 450px;
+      max-width: 390px;
 
       .mat-form-field {
         width: 100%;
       }
     }
   }
+}
+.fv-plugins-message-container {
+  margin-top: 4px;
+  margin-left: 48px; // Esto alinea con el input (ajusta según el ancho del ícono)
+  font-size: 1.1rem;
+  color: #e74c3c; // rojo o tu color de error
+}
+.input-group {
+  display: flex;
+  align-items: center; // Alinea verticalmente ícono e input
+
+  .input-group-prepend {
+    .input-group-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 42px;
+      background-color: white;
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem 0 0 0.375rem;
+      padding: 0 12px;
+    }
+  }
+
+  .form-control {
+    border-radius: 0.375rem; // Estilo opcional
+    height: 42px; // Asegura que tenga el mismo alto que el ícono
+  }
+}
+.main-title {
+  color: #01371d;
 }

@@ -15,8 +15,8 @@
 body[data-kt-app-layout="light-sidebar"] .app-sidebar {
 
     // --- Definimos nuestros colores base para reutilizarlos ---
-    $texto-normal: #01371d;  // Un gris oscuro y suave para el estado normal
-    $texto-activo: #085742;  // Tu verde oscuro para estados activos y hover 
+    $texto-normal: #01371d;
+    $texto-activo: #085742;
 
     // --- Títulos de sección (OPCIONES, ADMINISTRACIÓN) ---
     .menu-section {
@@ -25,33 +25,38 @@ body[data-kt-app-layout="light-sidebar"] .app-sidebar {
 
     // --- Ítems de menú (reglas generales y específicas) ---
     .menu-item {
+
         // Color BASE para texto e íconos de links principales
-        .menu-link > .menu-title,
-        .menu-link > .menu-icon {
+        .menu-link>.menu-title,
+        .menu-link>.menu-icon {
             color: $texto-normal !important;
         }
 
         // Color BASE para texto y bullet de SUBMENÚS
-        .menu-sub .menu-link > .menu-title {
+        .menu-sub .menu-link>.menu-title {
             color: $texto-normal !important;
         }
+
         .menu-sub .menu-link .menu-bullet .bullet {
             background-color: $texto-normal !important;
         }
 
         // --- Reglas del hover (al pasar el mouse) ---
         // Para links principales y padres de desplegables
-        & > .menu-link:hover {
-             .menu-title,
-             .menu-icon {
+        &>.menu-link:hover {
+
+            .menu-title,
+            .menu-icon {
                 color: $texto-activo !important;
-             }
+            }
         }
+
         // Para submenús
-        .menu-sub .menu-item > .menu-link:hover {
+        .menu-sub .menu-item>.menu-link:hover {
             .menu-title {
                 color: $texto-activo !important;
             }
+
             // ¡LA REGLA QUE AÑADIMOS PARA EL BULLET!
             .menu-bullet .bullet {
                 background-color: $texto-activo !important;
@@ -59,9 +64,10 @@ body[data-kt-app-layout="light-sidebar"] .app-sidebar {
         }
 
         // --- Regla para el ítem ACTIVO ---
-        &.here > .menu-link.active,
-        &.show > .menu-link,    
-        & > .menu-link.active {
+        &.here>.menu-link.active,
+        &.show>.menu-link,
+        &>.menu-link.active {
+
             // El texto y el ícono del item activo siempre serán verde oscuro
             .menu-title,
             .menu-icon {
@@ -75,10 +81,10 @@ body[data-kt-app-layout="light-sidebar"] .app-sidebar {
 body[data-kt-app-layout="light-sidebar"] .app-sidebar .app-sidebar-logo,
 body[data-kt-app-layout="dark-sidebar"] .app-sidebar .app-sidebar-logo {
     // Mueve el logo hacia la izquierda. Un valor negativo lo mueve a la izquierda.
-    margin-left: -5px; 
+    margin-left: -5px;
 
     // Añade más espacio en la parte de arriba.
-    margin-top: 2.5px;      
+    margin-top: 2.5px;
 }
 
 // Regla del botón versión, solo cuando el layout "light-sidebar" está activo.

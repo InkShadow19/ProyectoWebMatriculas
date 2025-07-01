@@ -1,0 +1,6 @@
+export enum SituacionReference {
+  PROMOVIDO = 'PROMOVIDO',
+  INGRESANTE = 'INGRESANTE',
+  REPITENTE = 'REPITENTE',
+  UNDEFINED = 'UNDEFINED'
+}

@@ -3,4 +3,10 @@
 }
 .auth-left-column {
   background-color: #d7e5b4 !important;
+
+  @media (max-width: 991.98px) {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
 }

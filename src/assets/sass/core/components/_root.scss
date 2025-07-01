@@ -119,13 +119,13 @@
 
     // Scrolltop
     --#{$prefix}scrolltop-opacity: #{$scrolltop-opacity};
-    --#{$prefix}scrolltop-opacity-on: #{$scrolltop-opacity-on};
-    --#{$prefix}scrolltop-opacity-hover: #{$scrolltop-opacity-hover};
+    --#{$prefix}scrolltop-opacity-on: 1;
+    --#{$prefix}scrolltop-opacity-hover: 1;
     --#{$prefix}scrolltop-box-shadow: #{$scrolltop-box-shadow};
-    --#{$prefix}scrolltop-bg-color: #{$scrolltop-bg-color};
-    --#{$prefix}scrolltop-bg-color-hover: #{$scrolltop-bg-color-hover};
-    --#{$prefix}scrolltop-icon-color: #{$scrolltop-icon-color};
-    --#{$prefix}scrolltop-icon-color-hover: #{$scrolltop-icon-color-hover};
+    --#{$prefix}scrolltop-bg-color: #d7e5b4;
+    --#{$prefix}scrolltop-bg-color-hover: #bcc89e;
+    --#{$prefix}scrolltop-icon-color: #{$scrolltop-icon-color-hover};
+    --#{$prefix}scrolltop-icon-color-hover: #FFFFFF;
 
     // Keenthemes drawer component
     --#{$prefix}drawer-box-shadow: #{$drawer-box-shadow};
@@ -275,13 +275,13 @@
 
     // Scrolltop
     --#{$prefix}scrolltop-opacity: #{$scrolltop-opacity-dark};
-    --#{$prefix}scrolltop-opacity-on: #{$scrolltop-opacity-on-dark};
-    --#{$prefix}scrolltop-opacity-hover: #{$scrolltop-opacity-hover-dark};
+    --#{$prefix}scrolltop-opacity-on: 1;
+    --#{$prefix}scrolltop-opacity-hover: 1;
     --#{$prefix}scrolltop-box-shadow: #{$scrolltop-box-shadow-dark};
-    --#{$prefix}scrolltop-bg-color: #{$scrolltop-bg-color-dark};
-    --#{$prefix}scrolltop-bg-color-hover: #{$scrolltop-bg-color-hover-dark};
-    --#{$prefix}scrolltop-icon-color: #{$scrolltop-icon-color-dark};
-    --#{$prefix}scrolltop-icon-color-hover: #{$scrolltop-icon-color-hover-dark};
+    --#{$prefix}scrolltop-bg-color: #9A9CAE;
+    --#{$prefix}scrolltop-bg-color-hover: #878998;
+    --#{$prefix}scrolltop-icon-color: #{$scrolltop-icon-color-dark};;
+    --#{$prefix}scrolltop-icon-color-hover: #{$scrolltop-bg-color-hover-dark};;
 
     // Keenthemes drawer component
     --#{$prefix}drawer-box-shadow: #{$drawer-box-shadow-dark};

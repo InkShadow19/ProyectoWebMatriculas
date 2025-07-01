@@ -1,0 +1,7 @@
+export enum EstadoDeudaReference {
+  PENDIENTE = 'PENDIENTE',
+  PAGADO = 'PAGADO',
+  VENCIDO = 'VENCIDO',
+  ANULADO = 'ANULADO',
+  UNDEFINED = 'UNDEFINED'
+}

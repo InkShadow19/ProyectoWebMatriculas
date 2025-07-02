@@ -1,4 +1,15 @@
 import { Routes } from '@angular/router';
+import { BancosComponent } from './bancos/bancos.component';
+import { AniosAcademicosComponent } from './anios-academicos/anios-academicos.component';
+import { ApoderadosComponent } from './apoderados/apoderados.component';
+import { ConceptosPagoComponent } from './conceptos-pago/conceptos-pago.component';
+import { CronogramaPagosComponent } from './cronograma-pagos/cronograma-pagos.component';
+import { EstudiantesComponent } from './estudiantes/estudiantes.component';
+import { GradosComponent } from './grados/grados.component';
+import { MatriculasComponent } from './matriculas/matriculas.component';
+import { PagosComponent } from './pagos/pagos.component';
+import { UserComponent } from './admin/user/user.component';
+import { RolesComponent } from './roles/roles.component';
 
 const Routing: Routes = [
   {
@@ -54,6 +65,50 @@ const Routing: Routes = [
   {
     path: '**',
     redirectTo: 'error/404',
+  },
+  {
+    path: 'bancos',
+    component: BancosComponent,
+  },
+  {
+    path: 'anios-academicos',
+    component: AniosAcademicosComponent,
+  },
+  {
+    path: 'apoderados',
+    component: ApoderadosComponent,
+  },
+  {
+    path: 'conceptos-pago',
+    component: ConceptosPagoComponent,
+  },
+  {
+    path: 'cronograma-pagos',
+    component: CronogramaPagosComponent,
+  },
+  {
+    path: 'estudiantes',
+    component: EstudiantesComponent,
+  },
+  {
+    path: 'grados',
+    component: GradosComponent,
+  },
+  {
+    path: 'matriculas',
+    component: MatriculasComponent,
+  },
+  {
+    path: 'pagos',
+    component: PagosComponent,
+  },
+  {
+    path: 'admin',
+    component: UserComponent,
+  },
+  {
+    path: 'roles',
+    component: RolesComponent,
   },
 ];
 

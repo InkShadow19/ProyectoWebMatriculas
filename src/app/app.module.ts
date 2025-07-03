@@ -12,8 +12,19 @@ import { AppComponent } from './app.component';
 import { AuthService } from './modules/auth/services/auth.service';
 import { environment } from 'src/environments/environment';
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
+import { CommonModule } from '@angular/common';
 // #fake-start#
 import { FakeAPIService } from './_fake/fake-api.service';
+import { BancosComponent } from './pages/bancos/bancos.component';
+import { ConceptosPagoComponent } from './pages/conceptos-pago/conceptos-pago.component';
+import { AniosAcademicosComponent } from './pages/anios-academicos/anios-academicos.component';
+import { EstudiantesComponent } from './pages/estudiantes/estudiantes.component';
+import { ApoderadosComponent } from './pages/apoderados/apoderados.component';
+import { RolesComponent } from './pages/roles/roles.component';
+import { UserComponent } from './pages/admin/user/user.component';
+import { GestionAcademicaComponent } from './pages/gestion-academica/gestion-academica.component';
+import { NivelesComponent } from './pages/niveles/niveles.component';
+import { GradosComponent } from './pages/grados/grados.component';
 // #fake-end#
 
 function appInitializer(authService: AuthService) {
@@ -26,8 +37,21 @@ function appInitializer(authService: AuthService) {
 }
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [
+    AppComponent,
+  ],
   imports: [
+    CommonModule,
+    BancosComponent,
+    ConceptosPagoComponent,
+    AniosAcademicosComponent,
+    EstudiantesComponent,
+    ApoderadosComponent,
+    RolesComponent,
+    UserComponent,
+    GestionAcademicaComponent,
+    NivelesComponent,
+    GradosComponent,
     BrowserModule,
     BrowserAnimationsModule,
     TranslateModule.forRoot(),

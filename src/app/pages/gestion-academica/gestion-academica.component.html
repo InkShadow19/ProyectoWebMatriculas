@@ -1,0 +1,33 @@
+<div class="card">
+    <div class="card-header card-header-stretch">
+        <div class="card-title">
+            <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x border-transparent fs-6 fw-bold">
+                <li class="nav-item">
+                    <a class="nav-link text-active-primary ms-0 me-10 py-4" routerLinkActive="active"
+                        routerLink="niveles">
+                        Niveles
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-active-primary ms-0 me-10 py-4" routerLinkActive="active"
+                        routerLink="grados">
+                        Grados
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-toolbar">
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn btn-success btn-sm">
+                    <app-keenicon name="plus" class="me-2"></app-keenicon>
+                    Añadir {{ activeTab === 'niveles' ? 'Nivel' : 'Grado' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body py-4">
+        <router-outlet></router-outlet>
+    </div>
+</div>

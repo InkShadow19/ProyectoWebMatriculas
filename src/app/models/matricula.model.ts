@@ -5,6 +5,7 @@ export interface MatriculaDto {
   identifier: string;
   codigo: number; // En la BD es codigo_matricula, el DTO lo llama codigo
   situacion: SituacionReference;
+  institucion_procendencia: string;
   fechaMatricula: string;
   habilitado: boolean;
   fechaCreacion: string;

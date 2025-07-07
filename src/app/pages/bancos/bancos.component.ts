@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BancoDto } from 'src/app/models/banco.model';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
     CommonModule,
     SharedModule,
     FormsModule,
+    NgbDropdownModule,
   ],
   templateUrl: './bancos.component.html',
   styleUrl: './bancos.component.scss'

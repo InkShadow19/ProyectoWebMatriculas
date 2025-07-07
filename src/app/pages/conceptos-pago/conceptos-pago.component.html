@@ -1,86 +1,81 @@
-<div class="card shadow-sm">
-    <div class="card-header border-0 pt-6">
-        <div class="card-title">
-            <h3>Gestión de Conceptos de Pago</h3>
-        </div>
-        <div class="card-toolbar">
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-success btn-sm" (click)="openAddConceptoModal()">
-                    <app-keenicon name="plus" class="me-2"></app-keenicon>
-                    Nuevo Concepto
+<div class="card">
+  <div class="card-header border-0 pt-6">
+    <div class="card-title">
+      <h3>Gestión de Conceptos de Pago</h3>
+    </div>
+    <div class="card-toolbar">
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-success btn-sm" (click)="openAddConceptoModal()">
+          <app-keenicon name="plus" class="me-2"></app-keenicon>
+          Nuevo Concepto
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body py-4">
+    <div class="table-responsive">
+      <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
+        <thead>
+          <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Monto Sugerido</th>
+            <th class="text-center">Habilitado</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-600 fw-semibold">
+          <tr *ngFor="let concepto of conceptosDePago">
+            <td>
+              {{ concepto.codigo }}
+            </td>
+            <td>
+              {{ concepto.descripcion }}
+            </td>
+            <td>
+              {{ concepto.montoSugerido | currency:'S/ ' }}
+            </td>
+            <td class="text-center">
+              <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
+                <input class="form-check-input" type="checkbox" id="switchConcepto-{{ concepto.identifier }}"
+                  [checked]="concepto.habilitado" (change)="toggleHabilitado(concepto)" />
+              </div>
+            </td>
+            <td class="text-end">
+              <!-- PANTALLAS GRANDES -->
+              <div class="d-none d-md-flex justify-content-end">
+                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditConceptoModal(concepto)">
+                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                  Editar
                 </button>
-            </div>
-        </div>
-    </div>
-    <div class="card-body py-4">
-        <div class="table-responsive">
-            <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
-                <thead>
-                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th>Monto Sugerido</th>
-                        <th class="text-center">Habilitado</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 fw-semibold">
-                    <tr *ngFor="let concepto of conceptosDePago">
-                        <td>
-                            {{ concepto.codigo }}
-                        </td>
-                        <td>
-                            {{ concepto.descripcion }}
-                        </td>
-                        <td>
-                            {{ concepto.montoSugerido | currency:'S/ ' }}
-                        </td>
-                        <td class="text-center">
-                            <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
-                                <input class="form-check-input" type="checkbox"
-                                    id="switchConcepto-{{ concepto.identifier }}" [checked]="concepto.habilitado"
-                                    (change)="toggleHabilitado(concepto)" />
-                            </div>
-                        </td>
-                        <td class="text-end">
-                            <div class="d-none d-md-flex justify-content-end">
-                                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditConceptoModal(concepto)">
-                                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                                    Editar
-                                </button>
-                                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteConcepto(concepto)">
-                                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                                    Eliminar
-                                </button>
-                            </div>
+                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteConcepto(concepto)">
+                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                  Eliminar
+                </button>
+              </div>
 
-                            <div class="d-md-none">
-                                <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
-                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                                </a>
-                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
-                                    data-kt-menu="true">
-                                    <div class="menu-item px-3">
-                                        <button type="button" class="menu-link px-3 text-info" (click)="openEditConceptoModal(concepto)">
-                                            <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                                            Editar
-                                        </button>
-                                    </div>
-                                    <div class="menu-item px-3">
-                                        <button type="button" class="menu-link px-3 text-danger" (click)="confirmDeleteConcepto(concepto)">
-                                            <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                        </tr>
-                </tbody>
-            </table>
-        </div>
+              <!-- PANTALLAS PEQUEÑAS -->
+              <div class="d-md-none text-end" ngbDropdown>
+                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                </button>
+                <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
+                  <button class="menu-btn menu-btn-edit" (click)="openEditConceptoModal(concepto)">
+                    <app-keenicon name="pencil" class="me-2"></app-keenicon>
+                    Editar
+                  </button>
+                  <button class="menu-btn menu-btn-delete" (click)="confirmDeleteConcepto(concepto)">
+                    <app-keenicon name="trash" class="me-2"></app-keenicon>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 </div>
 
 <ng-template #addConceptoModal>
@@ -95,18 +90,24 @@
       <form>
         <div class="mb-5">
           <label for="conceptoCodigo" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="conceptoCodigo" placeholder="Ingrese el código del concepto" [(ngModel)]="newConcepto.codigo" name="newConceptoCodigo" />
+          <input type="text" class="form-control form-control-solid" id="conceptoCodigo"
+            placeholder="Ingrese el código del concepto" [(ngModel)]="newConcepto.codigo" name="newConceptoCodigo" />
         </div>
         <div class="mb-5">
           <label for="conceptoDescripcion" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="conceptoDescripcion" placeholder="Ingrese la descripción del concepto" [(ngModel)]="newConcepto.descripcion" name="newConceptoDescripcion" />
+          <input type="text" class="form-control form-control-solid" id="conceptoDescripcion"
+            placeholder="Ingrese la descripción del concepto" [(ngModel)]="newConcepto.descripcion"
+            name="newConceptoDescripcion" />
         </div>
         <div class="mb-5">
-            <label for="conceptoSugerido" class="form-label required">Monto Sugerido:</label>
-            <input type="number" class="form-control form-control-solid" id="conceptoSugerido" placeholder="Ingrese el monto sugerido" [(ngModel)]="newConcepto.montoSugerido" name="newConceptoSugerido" step="0.01" />
+          <label for="conceptoSugerido" class="form-label required">Monto Sugerido:</label>
+          <input type="number" class="form-control form-control-solid" id="conceptoSugerido"
+            placeholder="Ingrese el monto sugerido" [(ngModel)]="newConcepto.montoSugerido" name="newConceptoSugerido"
+            step="0.01" />
         </div>
         <div class="form-check form-switch form-check-custom form-check-solid mb-5">
-          <input class="form-check-input" type="checkbox" id="conceptoHabilitado" [(ngModel)]="newConcepto.habilitado" name="newConceptoHabilitado" />
+          <input class="form-check-input" type="checkbox" id="conceptoHabilitado" [(ngModel)]="newConcepto.habilitado"
+            name="newConceptoHabilitado" />
           <label class="form-check-label" for="conceptoHabilitado">
             Habilitado
           </label>
@@ -132,18 +133,25 @@
       <form *ngIf="editingConcepto">
         <div class="mb-5">
           <label for="editConceptoCodigo" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="editConceptoCodigo" placeholder="Ingrese el código del concepto" [(ngModel)]="editingConcepto.codigo" name="editConceptoCodigo" />
+          <input type="text" class="form-control form-control-solid" id="editConceptoCodigo"
+            placeholder="Ingrese el código del concepto" [(ngModel)]="editingConcepto.codigo"
+            name="editConceptoCodigo" />
         </div>
         <div class="mb-5">
           <label for="editConceptoDescripcion" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="editConceptoDescripcion" placeholder="Ingrese la descripción del concepto" [(ngModel)]="editingConcepto.descripcion" name="editConceptoDescripcion" />
+          <input type="text" class="form-control form-control-solid" id="editConceptoDescripcion"
+            placeholder="Ingrese la descripción del concepto" [(ngModel)]="editingConcepto.descripcion"
+            name="editConceptoDescripcion" />
         </div>
         <div class="mb-5">
-            <label for="editConceptoSugerido" class="form-label required">Monto Sugerido:</label>
-            <input type="number" class="form-control form-control-solid" id="editConceptoSugerido" placeholder="Ingrese el monto sugerido" [(ngModel)]="editingConcepto.montoSugerido" name="editConceptoSugerido" step="0.01" />
+          <label for="editConceptoSugerido" class="form-label required">Monto Sugerido:</label>
+          <input type="number" class="form-control form-control-solid" id="editConceptoSugerido"
+            placeholder="Ingrese el monto sugerido" [(ngModel)]="editingConcepto.montoSugerido"
+            name="editConceptoSugerido" step="0.01" />
         </div>
         <div class="form-check form-switch form-check-custom form-check-solid mb-5">
-          <input class="form-check-input" type="checkbox" id="editConceptoHabilitado" [(ngModel)]="editingConcepto.habilitado" name="editConceptoHabilitado" />
+          <input class="form-check-input" type="checkbox" id="editConceptoHabilitado"
+            [(ngModel)]="editingConcepto.habilitado" name="editConceptoHabilitado" />
           <label class="form-check-label" for="editConceptoHabilitado">
             Habilitado
           </label>

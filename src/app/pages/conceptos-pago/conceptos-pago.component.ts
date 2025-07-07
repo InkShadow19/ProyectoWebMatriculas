@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Necesario para NgModel en los formularios de los modales
 import { ConceptoPagoDto } from 'src/app/models/concepto-pago.model';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Para el manejo de modales
+import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Para el manejo de modales
 import Swal from 'sweetalert2'; // Para las alertas de confirmación y éxito/error
 
 @Component({
@@ -13,6 +13,7 @@ import Swal from 'sweetalert2'; // Para las alertas de confirmación y éxito/er
     CommonModule,
     SharedModule,
     FormsModule, // Asegúrate de que FormsModule esté incluido aquí
+    NgbDropdownModule
   ],
   templateUrl: './conceptos-pago.component.html',
   styleUrl: './conceptos-pago.component.scss'

@@ -1,0 +1,49 @@
+// Estilos para las tarjetas de reporte, basados en tu prototipo.
+
+.report-card {
+    // Prepara la tarjeta para la animación.
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: 2px solid transparent; // Borde inicial invisible.
+
+    // Efecto al pasar el cursor por encima (hover).
+    &:hover {
+        transform: translateY(-5px); // Eleva la tarjeta 5px.
+        box-shadow: var(--bs-card-box-shadow); // Usa la sombra estándar de Metronic.
+        border-color: var(--bs-primary-light); // Muestra un borde de color primario claro.
+    }
+
+    // Estilo para la tarjeta cuando está seleccionada.
+    &.selected {
+        border-color: var(--bs-primary); // Borde de color primario sólido.
+        // Sombra exterior para un efecto de "resplandor".
+        box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.3);
+    }
+}
+
+// --- Estilos adicionales para las otras secciones (sin cambios) ---
+
+// Contenedor de filtros para una animación suave de aparición.
+.filter-container {
+    transition: all 0.4s ease-out;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-10px);
+    
+    &.visible {
+        max-height: 500px; // Un valor grande para permitir la expansión.
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Animación de aparición para la sección de resultados.
+.result-section {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

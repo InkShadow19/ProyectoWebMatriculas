@@ -1,10 +1,10 @@
-<div class="card">
+<div class="card shadow-sm">
     <div class="card-header border-0 pt-6">
         <div class="card-title">
             <h3>Gestión de Matrículas</h3>
         </div>
         <div class="card-toolbar">
-            <button type="button" class="btn btn-primary btn-sm" (click)="abrirNuevaMatriculaModal()">
+            <button type="button" class="btn btn-success btn-sm" (click)="abrirNuevaMatriculaModal()">
                 <app-keenicon name="plus" class="me-2"></app-keenicon>
                 Nueva Matrícula
             </button>
@@ -13,39 +13,46 @@
 
     <div class="card-body py-4">
         <div class="mb-10">
-            <h4 class="text-muted fw-bold mb-5">Filtros</h4>
+            <h4 class="text-muted fw-bold mb-8">Filtros</h4>
             <div class="row g-3">
                 <div class="col-md-2">
+                    <label class="form-label fw-bold">Año:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroAnio">
                         <option *ngFor="let anio of anios" [value]="anio">{{ anio }}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select class="form-select form-select-solid" [(ngModel)]="filtroNivel" (change)="actualizarGrados()">
+                    <label class="form-label fw-bold">Nivel:</label>
+                    <select class="form-select form-select-solid" [(ngModel)]="filtroNivel"
+                        (change)="actualizarGrados()">
                         <option value="">Todos los Niveles</option>
                         <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label fw-bold">Grado:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroGrado" [disabled]="!filtroNivel">
                         <option value="">Todos los Grados</option>
                         <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label fw-bold">Estado:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroEstado">
                         <option value="true">Vigente</option>
                         <option value="false">Anulada</option>
                     </select>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label fw-bold">Búsqueda Rápida:</label>
                     <input type="text" class="form-control form-control-solid"
                         placeholder="Buscar por estudiante, DNI o cód..." [(ngModel)]="filtroBusqueda" />
                 </div>
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-md-12 text-end">
-                    <button type="button" class="btn btn-light-primary me-3 btn-sm" (click)="limpiarFiltros()">Limpiar</button>
+                    <button type="button" class="btn btn-light-primary me-3 btn-sm"
+                        (click)="limpiarFiltros()">Limpiar</button>
                     <button type="button" class="btn btn-primary btn-sm" (click)="buscar()">Buscar</button>
                 </div>
             </div>
@@ -106,7 +113,8 @@
                                         'text-danger': matricula.habilitado, 
                                         'text-success': !matricula.habilitado
                                     }">
-                                        <app-keenicon [name]="matricula.habilitado ? 'trash' : 'check-circle'" class="fs-5 me-2"></app-keenicon>
+                                        <app-keenicon [name]="matricula.habilitado ? 'trash' : 'check-circle'"
+                                            class="fs-5 me-2"></app-keenicon>
                                         {{ matricula.habilitado ? 'Anular' : 'Reactivar' }}
                                     </a>
                                 </div>
@@ -119,24 +127,27 @@
         <div class="d-flex flex-stack flex-wrap pt-10">
             <div class="fs-6 fw-semibold text-gray-700">
                 Mostrando
-                <span class="fw-bold">{{ filteredMatriculas.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
+                <span class="fw-bold">{{ filteredMatriculas.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0
+                    }}</span>
                 a
                 <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedMatriculas.length }}</span>
                 de <span class="fw-bold">{{ filteredMatriculas.length }}</span> registros
             </div>
             <ul class="pagination" *ngIf="getTotalPages() > 1">
                 <li class="page-item previous" [class.disabled]="currentPage === 1">
-                    <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
+                    <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
+                            class="previous"></i></a>
                 </li>
                 <li *ngFor="let page of pagesArray" class="page-item" [class.active]="page === currentPage">
                     <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
                 </li>
                 <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-                    <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+                    <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i
+                            class="next"></i></a>
                 </li>
             </ul>
         </div>
-        </div>
+    </div>
 </div>
 <div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl" (click)="$event.stopPropagation()">
@@ -155,9 +166,10 @@
                             <div class="card-body pt-1">
                                 <div class="d-flex flex-center flex-column pb-5">
                                     <div class="symbol symbol-100px symbol-circle mb-7">
-                                        <img src="./assets/media/avatars/300-1.jpg" alt="image" />
+                                        <img [src]="selectedMatricula.avatarUrl" alt="Avatar del estudiante" />
                                     </div>
-                                    <a href="#" class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{ selectedMatricula.estudiante }}</a>
+                                    <a href="#" class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{
+                                        selectedMatricula.estudiante }}</a>
                                 </div>
                                 <div class="d-flex flex-stack fs-4 py-3">
                                     <div class="fw-bold">DNI:</div>
@@ -200,7 +212,8 @@
                                     <div class="col-6">
                                         <div class="d-flex flex-stack fs-4 py-3">
                                             <div class="fw-bold">Fecha Matrícula:</div>
-                                            <div class="text-gray-600">{{ selectedMatricula.fechaMatricula | date:'dd/MM/yyyy' }}</div>
+                                            <div class="text-gray-600">{{ selectedMatricula.fechaMatricula |
+                                                date:'dd/MM/yyyy' }}</div>
                                         </div>
                                         <div class="d-flex flex-stack fs-4 py-3">
                                             <div class="fw-bold">Apoderado:</div>
@@ -251,8 +264,10 @@
                                             }">{{ cuota.estadoDeuda }}</span>
                                         </td>
                                     </tr>
-                                    <tr *ngIf="!selectedMatricula.cronogramas || selectedMatricula.cronogramas.length === 0">
-                                        <td colspan="5" class="text-center text-muted">No hay cuotas en el cronograma.</td>
+                                    <tr
+                                        *ngIf="!selectedMatricula.cronogramas || selectedMatricula.cronogramas.length === 0">
+                                        <td colspan="5" class="text-center text-muted">No hay cuotas en el cronograma.
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -267,7 +282,8 @@
     </div>
 </div>
 
-<div class="modal fade" [class.show]="showNuevaMatriculaModal" [style.display]="showNuevaMatriculaModal ? 'block' : 'none'" tabindex="-1">
+<div class="modal fade" [class.show]="showNuevaMatriculaModal"
+    [style.display]="showNuevaMatriculaModal ? 'block' : 'none'" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl" (click)="$event.stopPropagation()">
         <div class="modal-content">
             <div class="modal-header">
@@ -289,8 +305,8 @@
                                 placeholder="Buscar estudiante por Nombre o DNI..."
                                 [(ngModel)]="nuevaMatricula.estudianteBusqueda" />
                         </div>
-                        <button class="btn btn-primary" (click)="buscarEstudiante()">
-                            <app-keenicon name="search" class="fs-4 me-1"></app-keenicon>
+                        <button class="btn btn-primary d-flex align-items-center" (click)="buscarEstudiante()">
+                            <app-keenicon name="search" class="fs-4 me-2"></app-keenicon>
                             Buscar
                         </button>
                     </div>
@@ -302,7 +318,7 @@
                         <h3 class="fs-lg fw-semibold text-dark mb-2">Estudiante Seleccionado</h3>
                         <div class="bg-light p-4 rounded border d-flex align-items-center gap-4">
                             <div class="symbol symbol-50px symbol-circle">
-                                <img src="./assets/media/avatars/300-6.jpg" alt="Foto del estudiante">
+                                <img [src]="nuevaMatricula.avatarUrl" alt="Avatar del estudiante">
                             </div>
                             <div>
                                 <p class="fw-bold text-dark mb-0">{{ nuevaMatricula.estudiante }}</p>
@@ -312,10 +328,11 @@
                     </div>
 
                     <div class="mt-6">
-                        <label for="parent-search" class="form-label fw-bold">Paso 2: Asignar Apoderado Responsable</label>
+                        <label for="parent-search" class="form-label fw-bold">Paso 2: Asignar Apoderado
+                            Responsable</label>
                         <div class="input-group">
                             <span class="input-group-text">
-                                <app-keenicon name="users" class="fs-4"></app-keenicon>
+                                <app-keenicon name="user" class="fs-4"></app-keenicon>
                             </span>
                             <input type="text" id="parent-search" class="form-control form-control-solid"
                                 placeholder="Buscar apoderado por Nombre o DNI..."
@@ -335,27 +352,31 @@
                             <div class="col-md-4">
                                 <label class="form-label">Grado</label>
                                 <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.grado">
-                                    <option>3ro Grado</option> </select>
+                                    <option>3ro Grado</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Situación</label>
-                                <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.situacion" (change)="onSituacionChange($event)">
+                                <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.situacion"
+                                    (change)="onSituacionChange($event)">
                                     <option *ngFor="let s of situaciones" [value]="s">{{ s }}</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div *ngIf="mostrarCamposProcedencia" class="row g-4 mt-1 procedencia-fields">
+                        <div class="procedencia-fields row g-4" [ngClass]="{ 'visible': mostrarCamposProcedencia }">
                             <div class="col-md-6">
                                 <label class="form-label">Procedencia</label>
-                                <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.procedenciaTipo">
+                                <select class="form-select form-select-solid"
+                                    [(ngModel)]="nuevaMatricula.procedenciaTipo">
                                     <option *ngFor="let p of tiposProcedencia" [value]="p">{{ p }}</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Nombre de la Institución</label>
                                 <input type="text" class="form-control form-control-solid"
-                                    placeholder="Ej: Colegio San Agustín" [(ngModel)]="nuevaMatricula.procedenciaNombre">
+                                    placeholder="Ej: Colegio San Agustín"
+                                    [(ngModel)]="nuevaMatricula.procedenciaNombre">
                             </div>
                         </div>
 
@@ -375,14 +396,16 @@
                                             <td class="fw-bold">Matrícula</td>
                                             <td>S/ 280.00</td>
                                             <td>
-                                                <input type="number" class="form-control form-control-solid w-100px" [(ngModel)]="nuevaMatricula.descuentoMatricula" value="0.00">
+                                                <input type="number" class="form-control form-control-solid w-100px"
+                                                    [(ngModel)]="nuevaMatricula.descuentoMatricula" value="0.00">
                                             </td>
                                         </tr>
                                         <tr>
                                             <td class="fw-bold">Pensión Mensual</td>
                                             <td>S/ 300.00</td>
                                             <td>
-                                                <input type="number" class="form-control form-control-solid w-100px" [(ngModel)]="nuevaMatricula.descuentoPension" value="0.00">
+                                                <input type="number" class="form-control form-control-solid w-100px"
+                                                    [(ngModel)]="nuevaMatricula.descuentoPension" value="0.00">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -395,7 +418,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" (click)="cerrarNuevaMatriculaModal()">Cancelar</button>
-                <button type="button" class="btn btn-primary" (click)="registrarMatricula()" [disabled]="!busquedaEstudianteRealizada">
+                <button type="button" class="btn btn-primary" (click)="registrarMatricula()"
+                    [disabled]="!busquedaEstudianteRealizada">
                     Finalizar y Registrar Matrícula
                 </button>
             </div>

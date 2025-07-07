@@ -10,8 +10,8 @@ import { MatriculasComponent } from './matriculas/matriculas.component';
 import { PagosComponent } from './pagos/pagos.component';
 import { UserComponent } from './admin/user/user.component';
 import { RolesComponent } from './roles/roles.component';
-import { GestionAcademicaComponent } from './gestion-academica/gestion-academica.component';
 import { NivelesComponent } from './niveles/niveles.component';
+import { ReportesComponent } from './reportes/reportes.component';
 
 const Routing: Routes = [
   {
@@ -109,24 +109,16 @@ const Routing: Routes = [
     component: RolesComponent,
   },
   {
-    path: 'gestion-academica',
-    component: GestionAcademicaComponent,
-    children: [
-      {
-        path: 'niveles', // Se accede con /gestion-academica/niveles
-        component: NivelesComponent,
-      },
-      {
-        path: 'grados', // Se accede con /gestion-academica/grados
-        component: GradosComponent,
-      },
-      {
-        // Redirección por defecto: si solo entran a /gestion-academica, los manda a la pestaña de niveles
-        path: '',
-        redirectTo: 'niveles',
-        pathMatch: 'full',
-      },
-    ],
+    path: 'niveles',
+    component: NivelesComponent,
+  },
+  {
+    path: 'grados',
+    component: GradosComponent,
+  },
+  {
+    path: 'reportes',
+    component: ReportesComponent,
   },
 ];
 

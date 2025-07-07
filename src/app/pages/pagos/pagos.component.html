@@ -1,1 +1,277 @@
-<p>pagos works!</p>
+<!--begin::Card-->
+<div class="card shadow-sm">
+    <!--begin::Card header-->
+    <div class="card-header border-0 pt-6">
+        <div class="card-title">
+            <h3>Gestión de Pagos</h3>
+        </div>
+        <div class="card-toolbar">
+            <button type="button" class="btn btn-success btn-sm" (click)="abrirRegistrarPagoModal()">
+                <app-keenicon name="plus" class="me-2"></app-keenicon>
+                Nuevo Pago
+            </button>
+        </div>
+    </div>
+    <!--end::Card header-->
+
+    <!--begin::Card body-->
+    <div class="card-body py-4">
+        <div class="mb-10">
+            <h4 class="text-muted fw-bold mb-8">Filtros</h4>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde:</label>
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaDesde" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta:</label>
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaHasta" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Canal:</label>
+                    <select class="form-select form-select-solid" [(ngModel)]="filtros.canal">
+                        <option value="">Todos</option>
+                        <option value="CAJA">Caja</option>
+                        <option value="BANCO">Banco</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Búsqueda Rápida:</label>
+                    <input type="text" class="form-control form-control-solid"
+                        placeholder="Buscar por alumno, DNI, ticket..." [(ngModel)]="filtros.busqueda" />
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-12 text-end">
+                    <button type="button" class="btn btn-light-primary me-3 btn-sm"
+                        (click)="limpiarFiltros()">Limpiar</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="filtrarPagos()">Buscar</button>
+                </div>
+            </div>
+        </div>
+        <!--end::Filtros-->
+
+        <!--begin::Table-->
+        <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-5">
+                <thead>
+                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                        <th class="min-w-100px">Nº Ticket</th>
+                        <th class="min-w-150px">Fecha de Pago</th>
+                        <th class="min-w-200px">Estudiante</th>
+                        <th class="min-w-125px text-end">Monto Pagado</th>
+                        <th class="min-w-100px">Canal</th>
+                        <th class="min-w-125px">Estado</th>
+                        <th class="text-end min-w-125px">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 fw-semibold">
+                    <tr *ngFor="let pago of pagosFiltrados">
+                        <td>{{ pago.numeroTicket }}</td>
+                        <td>{{ pago.fechaPago | date:'dd/MM/yyyy h:mm a' }}</td>
+                        <td>{{ pago.estudiante }}</td>
+                        <td class="text-end">{{ pago.montoTotalPagado | currency:'S/ ' }}</td>
+                        <td>{{ pago.canalPago }}</td>
+                        <td>
+                            <span class="badge"
+                                [ngClass]="{'badge-light-success': pago.estado === 'Confirmado', 'badge-light-danger': pago.estado === 'Anulado'}">
+                                {{ pago.estado }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-light-primary me-2" (click)="abrirDetallePago(pago)">Ver
+                                Detalle</button>
+                            <button *ngIf="pago.estado === 'Confirmado'"
+                                class="btn btn-sm btn-light-danger">Anular</button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="pagosFiltrados.length === 0">
+                        <td colspan="8" class="text-center text-muted py-10">No se encontraron transacciones.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!--end::Table-->
+
+<!-- =================================================== -->
+<!--   MODAL PARA REGISTRAR NUEVO PAGO   -->
+<!-- =================================================== -->
+<div class="modal fade" [class.show]="showRegistrarPagoModal"
+    [style.display]="showRegistrarPagoModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl" (click)="$event.stopPropagation()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Registrar Nuevo Pago</h2>
+                <button type="button" class="btn-close" (click)="cerrarRegistrarPagoModal()"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- PASO 1: BÚSQUEDA DEL ESTUDIANTE -->
+                <div [hidden]="procesoPagoPaso !== 'busqueda'">
+                    <label class="form-label fw-bold">Paso 1: Identificar al Estudiante</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-solid"
+                            placeholder="Buscar estudiante por Nombre o DNI..." [(ngModel)]="busquedaEstudiante"
+                            (keyup.enter)="buscarEstudiante()">
+                        <button class="btn btn-primary" (click)="buscarEstudiante()">Buscar</button>
+                    </div>
+                </div>
+
+                <!-- PASO 2 y 3: SELECCIÓN Y DETALLES (se muestran después de la búsqueda) -->
+                <div *ngIf="procesoPagoPaso === 'seleccion' && estudianteEncontrado">
+                    <button (click)="resetearProcesoPago()" class="btn btn-sm btn-light-primary mb-6">
+                        <app-keenicon name="arrow-left" class="fs-4 me-1"></app-keenicon>
+                        Buscar otro estudiante
+                    </button>
+                    <div>
+                        <h3 class="fs-4 fw-bold">Paso 2: Seleccionar Deudas a Pagar</h3>
+                        <p class="text-muted">Deudas pendientes de: <span class="fw-bolder text-dark">{{
+                                estudianteEncontrado.nombre }}</span></p>
+                        <div class="table-responsive mt-4 border rounded-lg">
+                            <table class="table align-middle">
+                                <thead class="bg-light-secondary">
+                                    <tr class="fw-bold text-muted">
+                                        <th class="w-50px ps-4">Pagar</th>
+                                        <th class="min-w-200px">Descripción</th>
+                                        <th class="min-w-125px">Vencimiento</th>
+                                        <th class="min-w-125px text-end pe-4">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let deuda of estudianteEncontrado.deudas">
+                                        <td class="ps-4">
+                                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="checkbox"
+                                                    [(ngModel)]="deuda.seleccionado" (change)="calcularTotal()">
+                                            </div>
+                                        </td>
+                                        <td>{{ deuda.descripcionPersonalizada }}</td>
+                                        <td>{{ deuda.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+                                        <td class="text-end pe-4 fw-bolder"
+                                            [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">{{ deuda.montoAPagar |
+                                            currency:'S/ ' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="fs-4 fw-bold">Paso 3: Detalles de la Transacción</h3>
+                        <div class="mt-4 row g-5 p-6 rounded-lg">
+                            <div class="col-md-6 d-flex flex-column justify-content-center">
+                                <p class="fs-6 text-muted mb-1">Total a Pagar</p>
+                                <p class="fs-2hx fw-bolder text-primary mb-0">{{ nuevoPago.montoTotal | currency:'S/ '
+                                    }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row g-5">
+                                    <div class="col-12">
+                                        <label class="form-label required">Canal de Pago</label>
+                                        <select class="form-select form-select-solid" [(ngModel)]="nuevoPago.canal">
+                                            <option value="CAJA">Caja</option>
+                                            <option value="BANCO">Banco</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12" *ngIf="nuevoPago.canal === 'BANCO'">
+                                        <label class="form-label required">Banco</label>
+                                        <select class="form-select form-select-solid" [(ngModel)]="nuevoPago.bancoId">
+                                            <option value="" disabled>Seleccione un banco</option>
+                                            <option *ngFor="let banco of bancos" [value]="banco.id">{{ banco.nombre }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Nº Recibo / Operación</label>
+                                        <input type="text" class="form-control form-control-solid"
+                                            [(ngModel)]="nuevoPago.numeroOperacion">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="cerrarRegistrarPagoModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" (click)="registrarPago()"
+                    [disabled]="procesoPagoPaso !== 'seleccion' || nuevoPago.montoTotal <= 0">
+                    Confirmar y Registrar Pago
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =================================================== -->
+<!--   MODAL PARA VER DETALLE DE PAGO   -->
+<!-- =================================================== -->
+<div class="modal fade" [class.show]="showDetallePagoModal" [style.display]="showDetallePagoModal ? 'block' : 'none'"
+    tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-content" *ngIf="pagoSeleccionado">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Detalle de Transacción</h2>
+                    <p class="text-muted fs-7 mb-0">Recibo Nº: <span class="fw-bolder">{{ pagoSeleccionado.numeroTicket
+                            }}</span></p>
+                </div>
+                <button type="button" class="btn-close" (click)="cerrarDetallePago()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-5 mb-8 bg-light-secondary p-6 rounded-lg">
+                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Monto Total Pagado</label>
+                        <div class="fs-3 fw-bolder text-primary">{{ pagoSeleccionado.montoTotalPagado | currency:'S/ '
+                            }}</div>
+                    </div>
+                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Fecha de Pago</label>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.fechaPago | date:'fullDate' }} a las {{
+                            pagoSeleccionado.fechaPago | date:'shortTime' }}</div>
+                    </div>
+                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Estudiante</label>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.estudiante }}</div>
+                    </div>
+                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Canal de Pago</label>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.canalPago }}</div>
+                    </div>
+                    <div class="col-6" *ngIf="pagoSeleccionado.banco"><label
+                            class="fs-7 text-muted fw-semibold">Banco</label>
+                        <div class="fs-6 fw-bolder">{{ getNombreBanco(pagoSeleccionado.banco) }}</div>
+                    </div>
+                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Registrado por</label>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.registradoPor }}</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold mb-4">Desglose de Deudas Cubiertas</h3>
+                    <div class="table-responsive border rounded-lg">
+                        <table class="table align-middle">
+                            <thead class="bg-light-secondary">
+                                <tr class="fw-bolder text-muted fs-7">
+                                    <th class="ps-4">Concepto Pagado</th>
+                                    <th class="text-end pe-4">Monto Aplicado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let detalle of pagoSeleccionado.detalles">
+                                    <td class="ps-4">Pensión/Matrícula (Ejemplo)</td>
+                                    <td class="text-end pe-4 fw-semibold">{{ detalle.montoAplicado | currency:'S/ ' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-primary">Imprimir</button>
+                <button type="button" class="btn btn-light" (click)="cerrarDetallePago()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop para ambos modales -->
+<div class="modal-backdrop fade" [class.show]="showRegistrarPagoModal || showDetallePagoModal"
+    [style.display]="showRegistrarPagoModal || showDetallePagoModal ? 'block' : 'none'"></div>

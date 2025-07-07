@@ -4,9 +4,32 @@
     animation: fadeIn 0.5s ease-in-out;
 }
 
+/* === INICIO DE LA CORRECCIÓN DE ANIMACIÓN === */
+
+/* Contenedor de los campos de procedencia */
 .procedencia-fields {
-    animation: fadeIn 0.4s ease-out;
+    /* Define la transición para todas las propiedades */
+    transition: all 0.4s ease-out;
+    
+    /* Estado inicial (oculto) */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-top: 0;
+    margin-top: 0 !important; /* Anula el margen cuando está oculto */
+    border: none; /* Oculta bordes si los tuviera */
 }
+
+/* Clase que se añade para mostrar los campos */
+.procedencia-fields.visible {
+    /* Estado final (visible) */
+    max-height: 300px; /* Un valor lo suficientemente grande para el contenido */
+    opacity: 1;
+    padding-top: 1rem;
+    margin-top: 1.5rem !important; /* Restaura el margen superior */
+}
+
+/* === FIN DE LA CORRECCIÓN DE ANIMACIÓN === */
 
 @keyframes fadeIn {
     from {

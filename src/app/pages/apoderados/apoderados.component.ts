@@ -1,18 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // Necesario para NgModel
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { ApoderadoDto } from 'src/app/models/apoderado.model';
 import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
+import { NgbModal, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap'; // Para el manejo de modales y dropdown
+import Swal from 'sweetalert2'; // Para las alertas de confirmación y éxito/error
 
 @Component({
   selector: 'app-apoderados',
   standalone: true,
-  imports: [CommonModule, SharedModule],
+  imports: [
+    CommonModule,
+    SharedModule,
+    FormsModule, // Asegúrate de que FormsModule esté incluido aquí
+    NgbDropdownModule // Asegúrate de que NgbDropdownModule esté incluido aquí
+  ],
   templateUrl: './apoderados.component.html',
   styleUrl: './apoderados.component.scss'
 })
 export class ApoderadosComponent implements OnInit {
-  
+
+  // Referencias a las plantillas de los modales
+  @ViewChild('addApoderadoModal') addApoderadoModal: TemplateRef<any>;
+  @ViewChild('editApoderadoModal') editApoderadoModal: TemplateRef<any>;
+
+  // Hacemos el enum GeneroReference accesible desde la plantilla HTML
+  GeneroReference = GeneroReference;
+  // Para iterar sobre el enum en el HTML
+  generoKeys: string[];
+
+  // Objeto para el nuevo apoderado a añadir
+  newApoderado: ApoderadoDto = {
+    identifier: '',
+    dni: '',
+    nombre: '',
+    apellidoPaterno: '',
+    apellidoMaterno: '',
+    parentesco: '',
+    fechaNacimiento: '', // Se inicializará con la fecha actual o vacía
+    genero: GeneroReference.MASCULINO, // Género por defecto
+    email: '',
+    telefono: '',
+    direccion: '',
+    habilitado: true,
+    fechaCreacion: new Date().toISOString(),
+    matriculas: [],
+  };
+
+  // Objeto para el apoderado que se está editando
+  editingApoderado: ApoderadoDto | null = null;
+
+  // --- PROPIEDADES PARA LA PAGINACIÓN ---
+  currentPage: number = 1;
+  itemsPerPage: number = 5; // Puedes cambiar este número para mostrar más o menos items por página
+  pagedApoderados: ApoderadoDto[] = []; // Array para los apoderados de la página actual
+
   apoderados: ApoderadoDto[] = [
     // --- 20 Registros de Apoderados ---
     { identifier: '1', dni: '45678912', nombre: 'Maria', apellidoPaterno: 'Vargas', apellidoMaterno: 'Llosa', parentesco: 'Madre', fechaNacimiento: '1985-02-20', genero: GeneroReference.FEMENINO, telefono: '987654321', email: 'maria.vargas@email.com', direccion: 'Av. Los Proceres 123, Surco', habilitado: true, fechaCreacion: '2024-01-20T09:00:00Z', matriculas: [] },
@@ -37,15 +80,245 @@ export class ApoderadosComponent implements OnInit {
     { identifier: '20', dni: '46813579', nombre: 'Hugo', apellidoPaterno: 'Paz', apellidoMaterno: 'Mendoza', parentesco: 'Padre', fechaNacimiento: '1975-05-05', genero: GeneroReference.MASCULINO, telefono: '968135791', email: 'hugo.paz@email.com', direccion: 'Av. Bolognesi 111, Tacna', habilitado: true, fechaCreacion: '2024-03-07T19:00:00Z', matriculas: [] }
   ];
 
-  constructor() { }
+  constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal) {
+    // Obtener las claves del enum GeneroReference para usar en el select del HTML
+    this.generoKeys = Object.values(GeneroReference) as string[];
+  }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.setPage(1); // Carga la primera página al iniciar
+  }
 
+  // --- MÉTODOS PARA LA PAGINACIÓN ---
+
+  /**
+   * Establece la página actual de la tabla de apoderados.
+   * @param page El número de página a mostrar.
+   */
+  setPage(page: number) {
+    if (page < 1 || page > this.getTotalPages()) {
+      return;
+    }
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage - 1, this.apoderados.length - 1);
+    this.pagedApoderados = this.apoderados.slice(startIndex, endIndex + 1);
+    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+  }
+
+  /**
+   * Calcula el número total de páginas basado en la cantidad de apoderados y los ítems por página.
+   * @returns El número total de páginas.
+   */
+  getTotalPages(): number {
+    return Math.ceil(this.apoderados.length / this.itemsPerPage);
+  }
+
+  /**
+   * Genera un array de números de página para ser usado en la paginación del HTML.
+   * @returns Un array de números de página.
+   */
+  getPagesArray(): number[] {
+    const totalPages = this.getTotalPages();
+    return Array(totalPages).fill(0).map((x, i) => i + 1);
+  }
+
+  // --- FIN DE MÉTODOS PARA LA PAGINACIÓN ---
+
+  /**
+   * Cambia el estado de habilitado de un apoderado.
+   * @param apoderado El objeto ApoderadoDto a modificar.
+   */
   toggleHabilitado(apoderado: ApoderadoDto) {
     apoderado.habilitado = !apoderado.habilitado;
-    console.log(
-      `Cambiando estado de ${apoderado.nombre}. Nuevo estado: ${apoderado.habilitado}`
-    );
-    // Aquí iría tu llamada al servicio para actualizar en el backend
+    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar el switch
+    console.log(`Cambiando estado de ${apoderado.nombre}. Nuevo estado: ${apoderado.habilitado}`);
+    // Aquí iría la llamada al servicio para guardar el cambio en la base de datos
+  }
+
+  // --- Métodos para Añadir Apoderado ---
+
+  /**
+   * Abre el modal para añadir un nuevo apoderado.
+   */
+  openAddApoderadoModal() {
+    // Reinicia el objeto newApoderado al abrir el modal para un formulario limpio
+    this.newApoderado = {
+      identifier: '',
+      dni: '',
+      nombre: '',
+      apellidoPaterno: '',
+      apellidoMaterno: '',
+      parentesco: '',
+      fechaNacimiento: '',
+      genero: GeneroReference.MASCULINO, // Valor por defecto
+      email: '',
+      telefono: '',
+      direccion: '',
+      habilitado: true,
+      fechaCreacion: new Date().toISOString(),
+      matriculas: [],
+    };
+    this.modalService.open(this.addApoderadoModal, { centered: true, size: 'lg' });
+  }
+
+  /**
+   * Maneja la lógica para guardar un nuevo apoderado.
+   */
+  saveApoderado() {
+    // Validación básica de campos obligatorios
+    if (!this.newApoderado.dni || !this.newApoderado.nombre || !this.newApoderado.apellidoPaterno ||
+      !this.newApoderado.parentesco || !this.newApoderado.fechaNacimiento || !this.newApoderado.genero ||
+      !this.newApoderado.email) {
+      Swal.fire('Error', 'Los campos DNI, Nombres, Apellido Paterno, Parentesco, Fecha de Nacimiento, Género y Email son obligatorios.', 'error');
+      return;
+    }
+
+    // Validación de DNI (8 dígitos numéricos)
+    if (!/^\d{8}$/.test(this.newApoderado.dni)) {
+      Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
+      return;
+    }
+
+    // Validación de Email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newApoderado.email)) {
+      Swal.fire('Error', 'El formato del email no es válido.', 'error');
+      return;
+    }
+
+    // Simulación de generación de un identifier único
+    const maxId = Math.max(...this.apoderados.map(a => parseInt(a.identifier || '0')), 0);
+    this.newApoderado.identifier = (maxId + 1).toString();
+
+    // Añade el nuevo apoderado a la lista local (simulación)
+    this.apoderados.push({ ...this.newApoderado });
+
+    // Re-aplicar paginación para que el nuevo apoderado aparezca en la página correcta
+    this.setPage(this.getTotalPages()); // Ir a la última página donde se añadió el nuevo apoderado
+
+    Swal.fire('¡Éxito!', 'Apoderado añadido correctamente.', 'success');
+    console.log('Nuevo apoderado guardado:', this.newApoderado);
+    // Aquí iría la llamada al servicio para persistir en el backend
+    this.dismiss(); // Cierra el modal
+  }
+
+  // --- Métodos para Editar Apoderado ---
+
+  /**
+   * Abre el modal para editar un apoderado existente.
+   * @param apoderado El objeto ApoderadoDto a editar.
+   */
+  openEditApoderadoModal(apoderado: ApoderadoDto) {
+    // Crea una copia del objeto para evitar modificar el original directamente en el formulario
+    // Asegúrate de que la fechaNacimiento sea un string ISO para el input type="date"
+    this.editingApoderado = { ...apoderado };
+    this.modalService.open(this.editApoderadoModal, { centered: true, size: 'lg' });
+  }
+
+  /**
+   * Maneja la lógica para actualizar un apoderado existente.
+   */
+  updateApoderado() {
+    if (!this.editingApoderado) {
+      Swal.fire('Error', 'No hay apoderado seleccionado para editar.', 'error');
+      return;
+    }
+    // Validación básica de campos obligatorios
+    if (!this.editingApoderado.dni || !this.editingApoderado.nombre || !this.editingApoderado.apellidoPaterno ||
+      !this.editingApoderado.parentesco || !this.editingApoderado.fechaNacimiento || !this.editingApoderado.genero ||
+      !this.editingApoderado.email) {
+      Swal.fire('Error', 'Los campos DNI, Nombres, Apellido Paterno, Parentesco, Fecha de Nacimiento, Género y Email son obligatorios para editar.', 'error');
+      return;
+    }
+
+    // Validación de DNI (8 dígitos numéricos)
+    if (!/^\d{8}$/.test(this.editingApoderado.dni)) {
+      Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
+      return;
+    }
+
+    // Validación de Email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.editingApoderado.email)) {
+      Swal.fire('Error', 'El formato del email no es válido.', 'error');
+      return;
+    }
+
+    // Busca el índice del apoderado original en el array y lo actualiza
+    const index = this.apoderados.findIndex(a => a.identifier === this.editingApoderado?.identifier);
+    if (index !== -1) {
+      this.apoderados[index] = { ...this.editingApoderado }; // Actualiza con la copia modificada
+      this.setPage(this.currentPage); // Re-aplicar paginación para actualizar la vista
+      Swal.fire('¡Éxito!', 'Apoderado actualizado correctamente.', 'success');
+      console.log('Apoderado actualizado:', this.editingApoderado);
+      // Aquí iría la llamada al servicio para persistir la actualización en el backend
+    } else {
+      Swal.fire('Error', 'Apoderado no encontrado para actualizar.', 'error');
+    }
+    this.dismiss(); // Cierra el modal
+  }
+
+  // --- Métodos para Eliminar Apoderado ---
+
+  /**
+   * Muestra un diálogo de confirmación de SweetAlert2 antes de eliminar un apoderado.
+   * @param apoderado El objeto ApoderadoDto a eliminar.
+   */
+  confirmDeleteApoderado(apoderado: ApoderadoDto) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¡No podrás revertir esto! Eliminarás al apoderado: ${apoderado.nombre} ${apoderado.apellidoPaterno}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, ¡eliminar!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.deleteApoderado(apoderado.identifier || '');
+      }
+    });
+  }
+
+  /**
+   * Elimina un apoderado de la lista (simulación).
+   * @param identifier El identificador del apoderado a eliminar.
+   */
+  deleteApoderado(identifier: string) {
+    const initialLength = this.apoderados.length;
+    // Filtra el array para eliminar el apoderado con el identifier dado
+    this.apoderados = this.apoderados.filter(apoderado => apoderado.identifier !== identifier);
+
+    // Ajustar la página actual si la última página se queda vacía después de la eliminación
+    if (this.pagedApoderados.length === 1 && this.currentPage > 1 && this.apoderados.length === (this.currentPage - 1) * this.itemsPerPage) {
+      this.setPage(this.currentPage - 1);
+    } else {
+      this.setPage(this.currentPage); // Re-aplicar paginación para actualizar la vista
+    }
+
+    if (this.apoderados.length < initialLength) {
+      Swal.fire(
+        '¡Eliminado!',
+        'El apoderado ha sido eliminado.',
+        'success'
+      );
+      console.log(`Apoderado con ID ${identifier} eliminado.`);
+      // Aquí iría la llamada al servicio para eliminar en el backend
+    } else {
+      Swal.fire(
+        'Error',
+        'No se pudo encontrar el apoderado para eliminar.',
+        'error'
+      );
+    }
+  }
+
+  // --- Método Genérico ---
+
+  /**
+   * Cierra todos los modales abiertos.
+   */
+  dismiss() {
+    this.modalService.dismissAll();
   }
 }

@@ -22,9 +22,9 @@ import { EstudiantesComponent } from './pages/estudiantes/estudiantes.component'
 import { ApoderadosComponent } from './pages/apoderados/apoderados.component';
 import { RolesComponent } from './pages/roles/roles.component';
 import { UserComponent } from './pages/admin/user/user.component';
-import { GestionAcademicaComponent } from './pages/gestion-academica/gestion-academica.component';
 import { NivelesComponent } from './pages/niveles/niveles.component';
 import { GradosComponent } from './pages/grados/grados.component';
+import { ReportesComponent } from './pages/reportes/reportes.component';
 // #fake-end#
 
 function appInitializer(authService: AuthService) {
@@ -49,9 +49,9 @@ function appInitializer(authService: AuthService) {
     ApoderadosComponent,
     RolesComponent,
     UserComponent,
-    GestionAcademicaComponent,
     NivelesComponent,
     GradosComponent,
+    ReportesComponent,
     BrowserModule,
     BrowserAnimationsModule,
     TranslateModule.forRoot(),

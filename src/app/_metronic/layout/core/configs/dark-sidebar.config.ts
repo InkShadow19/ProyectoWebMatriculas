@@ -75,7 +75,7 @@ export const DarkSidebarConfig: ILayout = {
       componentName: 'toolbar',
       display: true,
       layout: 'classic',
-      class: 'py-3 py-lg-6',
+      class: 'py-4',
       container: 'fluid',
       containerClass: 'd-flex flex-stack',
       fixed: {

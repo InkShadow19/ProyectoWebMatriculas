@@ -1,61 +1,79 @@
-<!-- La tarjeta principal ya no es necesaria aquí, porque el componente padre la provee -->
-<div class="table-responsive">
-    <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
-        <thead>
-            <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                <th>Descripción del Nivel</th>
-                <th class="text-center">Habilitado</th>
-                <th class="text-end">Acciones</th>
-            </tr>
-        </thead>
-        <tbody class="text-gray-600 fw-semibold">
-            <tr *ngFor="let nivel of niveles">
-                <td>{{ nivel.descripcion }}</td>
-                <td class="text-center">
-                    <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
-                        <input class="form-check-input" type="checkbox" id="switchNivel-{{ nivel.identifier }}"
-                            [checked]="nivel.habilitado" (change)="toggleHabilitado(nivel)" />
-                    </div>
-                </td>
-                <!--begin::Action-->
-                <td class="text-end">
-                    <!-- ACCIONES PARA PANTALLAS GRANDES (md y superiores) -->
-                    <div class="d-none d-md-flex justify-content-end">
-                        <a href="#" class="btn btn-light-info btn-sm me-3">
-                            <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                            Editar
-                        </a>
-                        <a href="#" class="btn btn-light-danger btn-sm">
-                            <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                            Eliminar
-                        </a>
-                    </div>
+<div class="card shadow-sm">
+    <!--begin::Card header-->
+    <div class="card-header border-0 pt-6">
+        <div class="card-title">
+            <h3>Gestión de Niveles Académicos</h3>
+        </div>
+        <div class="card-toolbar">
+            <button type="button" class="btn btn-success btn-sm">
+                <app-keenicon name="plus" class="ms-2"></app-keenicon>
+                Nuevo Nivel
+            </button>
+        </div>
+    </div>
+    <!--end::Card header-->
 
-                    <!-- ACCIONES PARA PANTALLAS PEQUEÑAS (sm y menores) -->
-                    <div class="d-md-none">
-                        <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
-                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                            <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                        </a>
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
-                            data-kt-menu="true">
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3 text-info">
+    <!--begin::Card body-->
+    <div class="card-body py-4">
+        <div class="table-responsive">
+            <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
+                <thead>
+                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                        <th>Descripción del Nivel</th>
+                        <th class="text-center">Habilitado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 fw-semibold">
+                    <tr *ngFor="let nivel of niveles">
+                        <td>{{ nivel.descripcion }}</td>
+                        <td class="text-center">
+                            <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
+                                <input class="form-check-input" type="checkbox" id="switchNivel-{{ nivel.identifier }}"
+                                    [checked]="nivel.habilitado" (change)="toggleHabilitado(nivel)" />
+                            </div>
+                        </td>
+                        <!--begin::Action-->
+                        <td class="text-end">
+                            <!-- ACCIONES PARA PANTALLAS GRANDES (md y superiores) -->
+                            <div class="d-none d-md-flex justify-content-end">
+                                <a href="#" class="btn btn-light-info btn-sm me-3">
                                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                                     Editar
                                 </a>
-                            </div>
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3 text-danger">
+                                <a href="#" class="btn btn-light-danger btn-sm">
                                     <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                                     Eliminar
                                 </a>
                             </div>
-                        </div>
-                    </div>
-                </td>
-                <!--end::Action-->
-            </tr>
-        </tbody>
-    </table>
+                            <!-- ACCIONES PARA PANTALLAS PEQUEÑAS (sm y menores) -->
+                            <div class="d-md-none">
+                                <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
+                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                                </a>
+                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
+                                    data-kt-menu="true">
+                                    <div class="menu-item px-3">
+                                        <a href="#" class="menu-link px-3 text-info">
+                                            <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                                            Editar
+                                        </a>
+                                    </div>
+                                    <div class="menu-item px-3">
+                                        <a href="#" class="menu-link px-3 text-danger">
+                                            <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                                            Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <!--end::Action-->
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!--end::Card body-->
 </div>

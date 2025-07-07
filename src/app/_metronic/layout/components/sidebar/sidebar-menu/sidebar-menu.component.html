@@ -45,7 +45,7 @@
 
     <!-- Ítem: Reportes -->
     <div class="menu-item">
-      <a class="menu-link without-sub" href="#">
+      <a class="menu-link without-sub" routerLink="/reportes" routerLinkActive="active">
         <span class="menu-icon">
           <app-keenicon name="chart-simple" class="fs-2"></app-keenicon>
         </span>
@@ -142,9 +142,16 @@
             </div>
             <div class="menu-item">
               <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "niveles" por defecto -->
-              <a class="menu-link without-sub" routerLink="/gestion-academica" routerLinkActive="active">
+              <a class="menu-link without-sub" routerLink="/niveles" routerLinkActive="active">
                 <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Niveles y Grados</span>
+                <span class="menu-title">Niveles</span>
+              </a>
+            </div>
+            <div class="menu-item">
+              <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "grados" por defecto -->
+              <a class="menu-link without-sub" routerLink="/grados" routerLinkActive="active">
+                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                <span class="menu-title">Grados</span>
               </a>
             </div>
           </div>

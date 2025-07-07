@@ -1,0 +1,155 @@
+<div class="card shadow-sm">
+    <!-- Se añade padding (p-8) para dar espacio superior al título y a todo el contenido -->
+    <div class="card-body p-8">
+        <!-- Título de la Página -->
+        <div class="mb-10 pt-1">
+            <h3>Gestión de Reportes</h3>
+            <p class="text-muted mt-1">Seleccione un tipo de reporte, aplique los filtros y genere la información que necesita.</p>
+        </div>
+
+        <!-- Selección del Tipo de Reporte -->
+        <div class="mb-10">
+            <h4 class="mb-6">Paso 1: Seleccione el Tipo de Reporte</h4>
+            <!-- Se ajustan las clases de columna para mejorar la responsividad -->
+            <div class="row g-5 g-xl-8">
+                
+                <!-- Tarjeta Estado de Cuenta -->
+                <div class="col-sm-6 col-xl-3">
+                    <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
+                        data-report="estado-cuenta"
+                        (click)="seleccionarReporte('estado-cuenta')"
+                        [ngClass]="{'selected': reporteSeleccionado === 'estado-cuenta'}">
+                        <app-keenicon name="profile-circle" class="fs-2x text-primary mb-4"></app-keenicon>
+                        <h4 class="fw-bold text-center">Estado de Cuenta</h4>
+                        <p class="text-sm text-muted mt-1 text-center">Detalle financiero de un solo alumno.</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Morosidad -->
+                <div class="col-sm-6 col-xl-3">
+                    <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
+                        data-report="morosidad"
+                        (click)="seleccionarReporte('morosidad')"
+                        [ngClass]="{'selected': reporteSeleccionado === 'morosidad'}">
+                        <app-keenicon name="shield-cross" class="fs-2x text-danger mb-4"></app-keenicon>
+                        <h4 class="fw-bold text-center">Reporte de Morosidad</h4>
+                        <p class="text-sm text-muted mt-1 text-center">Alumnos con pagos vencidos.</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Pagos por Período -->
+                <div class="col-sm-6 col-xl-3">
+                    <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
+                        data-report="pagos-periodo"
+                        (click)="seleccionarReporte('pagos-periodo')"
+                        [ngClass]="{'selected': reporteSeleccionado === 'pagos-periodo'}">
+                        <app-keenicon name="dollar" class="fs-2x text-success mb-4"></app-keenicon>
+                        <h4 class="fw-bold text-center">Pagos por Período</h4>
+                        <p class="text-sm text-muted mt-1 text-center">Ingresos en un rango de fechas.</p>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Alumnos por Grado -->
+                <div class="col-sm-6 col-xl-3">
+                    <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
+                        data-report="alumnos-grado"
+                        (click)="seleccionarReporte('alumnos-grado')"
+                        [ngClass]="{'selected': reporteSeleccionado === 'alumnos-grado'}">
+                        <app-keenicon name="abstract-28" class="fs-2x text-info mb-4"></app-keenicon>
+                        <h4 class="fw-bold text-center">Alumnos por Grado</h4>
+                        <p class="text-sm text-muted mt-1 text-center">Lista de alumnos por aula.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Panel de Filtros (Contextual) -->
+        <div class="filter-container" [class.visible]="reporteSeleccionado">
+            <h4 class="mb-5">Paso 2: Aplique los Filtros</h4>
+            <div class="py-3 rounded-lg">
+                <!-- Filtros para Estado de Cuenta -->
+                <div *ngIf="reporteSeleccionado === 'estado-cuenta'" class="filter-section">
+                    <label class="form-label fw-bold">Buscar Estudiante</label>
+                    <input type="text" class="form-control form-control-solid mw-400px" 
+                        placeholder="Ingrese nombre o DNI..." [(ngModel)]="filtros.busquedaEstudiante">
+                </div>
+                
+                <!-- Filtros para Morosidad o Alumnos por Grado -->
+                <div *ngIf="reporteSeleccionado === 'morosidad' || reporteSeleccionado === 'alumnos-grado'" class="filter-section row g-5">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Nivel</label>
+                        <select class="form-select form-select-solid" [(ngModel)]="filtros.nivel">
+                            <option value="">Todos</option>
+                            <option *ngFor="let n of niveles" [value]="n">{{n}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Grado</label>
+                         <select class="form-select form-select-solid" [(ngModel)]="filtros.grado">
+                             <option value="">Todos</option>
+                            <option *ngFor="let g of grados" [value]="g">{{g}}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filtros para Pagos por Período -->
+                <div *ngIf="reporteSeleccionado === 'pagos-periodo'" class="filter-section row g-5">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha de Inicio</label>
+                        <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaInicio">
+                    </div>
+                     <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha de Fin</label>
+                        <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaFin">
+                    </div>
+                </div>
+            </div>
+             <!-- Botón para generar el reporte -->
+            <div class="d-flex justify-content-end mt-6">
+                <button (click)="generarReporte()" class="btn btn-success">
+                    <app-keenicon name="search-list" class="fs-3 me-2"></app-keenicon>
+                    Generar Reporte
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Resultados -->
+        <div *ngIf="mostrarResultados" class="mt-10 result-section">
+            <div class="separator separator-dashed mb-8"></div>
+            <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
+                <h2 class="fs-2 fw-bold text-dark mb-0">{{ tituloReporteGenerado }}</h2>
+                <div>
+                    <button class="btn btn-sm btn-light-danger me-3">Exportar a PDF</button>
+                    <button class="btn btn-sm btn-light-success">Exportar a Excel</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                    <thead>
+                        <tr class="fw-bold text-muted">
+                            <th class="min-w-200px">Alumno</th>
+                            <th class="min-w-150px">Apoderado</th>
+                            <th class="min-w-150px">Concepto Adeudado</th>
+                            <th class="min-w-125px text-end">Monto Pendiente</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td><a href="#" class="text-dark fw-bold text-hover-primary fs-6">Campos Díaz, Lucas</a></td>
+                            <td><span class="text-muted fw-semibold d-block fs-7">Carlos Campos Luna</span></td>
+                            <td><span class="text-muted fw-semibold d-block fs-7">Pensión Marzo 2025</span></td>
+                            <td class="text-end"><span class="text-danger fw-bold fs-6">S/ 300.00</span></td>
+                        </tr>
+                         <tr>
+                            <td><a href="#" class="text-dark fw-bold text-hover-primary fs-6">Torres Rojas, Sofía</a></td>
+                            <td><span class="text-muted fw-semibold d-block fs-7">Juan Torres Vega</span></td>
+                            <td><span class="text-muted fw-semibold d-block fs-7">Pensión Abril 2025</span></td>
+                            <td class="text-end"><span class="text-danger fw-bold fs-6">S/ 310.00</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

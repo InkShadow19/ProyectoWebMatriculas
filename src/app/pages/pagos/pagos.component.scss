@@ -1,0 +1,20 @@
+// Estilos para el modal de registro de pago
+.modal {
+  // Asegura que el modal sea visible cuando se aplica la clase .show
+  &.show {
+    display: block;
+  }
+}
+
+// Estilos para la animación de las secciones del formulario
+.details-section {
+    transition: all 0.5s ease-in-out;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.details-section.visible {
+    max-height: 1500px; /* Un valor grande para permitir la expansión */
+    opacity: 1;
+}

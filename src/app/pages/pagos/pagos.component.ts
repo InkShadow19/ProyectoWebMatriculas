@@ -39,8 +39,15 @@ export class PagosComponent implements OnInit {
     fechaDesde: '',
     fechaHasta: '',
     canal: '',
+    estado: '',
     busqueda: ''
   };
+
+  // --- Paginación ---
+  currentPage: number = 1;
+  itemsPerPage: number = 5; // Puedes ajustar este número
+  pagedPagos: PagoMostrado[] = [];
+  pagesArray: number[] = [];
 
   // --- Estado del Modal "Registrar Pago" ---
   showRegistrarPagoModal = false;
@@ -75,9 +82,13 @@ export class PagosComponent implements OnInit {
 
   cargarPagosDeEjemplo() {
     this.pagos = [
-      { identifier: 'p-1', numeroTicket: 'V-0015', fechaPago: '2025-07-04T10:30:00Z', estudiante: 'Sofía Torres Rojas', montoTotalPagado: 580.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [{ identifier: 'pd-1', montoAplicado: 280, habilitado: true, fechaCreacion: '', cronograma: '', pago: '' }, { identifier: 'pd-2', montoAplicado: 300, habilitado: true, fechaCreacion: '', cronograma: '', pago: '' }] },
-      { identifier: 'p-2', numeroTicket: '987654', fechaPago: '2025-07-03T15:15:00Z', estudiante: 'Lucas Campos Díaz', montoTotalPagado: 300.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'bcp', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [{ identifier: 'pd-3', montoAplicado: 300, habilitado: true, fechaCreacion: '', cronograma: '', pago: '' }] },
-      { identifier: 'p-3', numeroTicket: 'V-0013', fechaPago: '2025-07-02T11:00:00Z', estudiante: 'Ana Quispe Flores', montoTotalPagado: 300.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Anulado', habilitado: false, fechaCreacion: '', detalles: [{ identifier: 'pd-4', montoAplicado: 300, habilitado: true, fechaCreacion: '', cronograma: '', pago: '' }] }
+      { identifier: 'p-1', numeroTicket: 'V-0015', fechaPago: '2025-07-04T10:30:00Z', estudiante: 'Sofía Torres Rojas', montoTotalPagado: 580.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-2', numeroTicket: '987654', fechaPago: '2025-07-03T15:15:00Z', estudiante: 'Lucas Campos Díaz', montoTotalPagado: 300.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'bcp', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-3', numeroTicket: 'V-0013', fechaPago: '2025-07-02T11:00:00Z', estudiante: 'Ana Quispe Flores', montoTotalPagado: 300.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Anulado', habilitado: false, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-4', numeroTicket: 'V-0016', fechaPago: '2025-07-05T09:00:00Z', estudiante: 'Mario Vargas Llosa', montoTotalPagado: 450.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-5', numeroTicket: 'V-0017', fechaPago: '2025-07-06T12:00:00Z', estudiante: 'Juana de Arco', montoTotalPagado: 150.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-6', numeroTicket: '987655', fechaPago: '2025-07-07T14:00:00Z', estudiante: 'Pedro Castillo', montoTotalPagado: 600.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'interbank', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-7', numeroTicket: 'V-0018', fechaPago: '2025-07-08T16:00:00Z', estudiante: 'Alan García Pérez', montoTotalPagado: 250.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Anulado', habilitado: false, fechaCreacion: '', detalles: [] }
     ];
   }
 
@@ -85,20 +96,17 @@ export class PagosComponent implements OnInit {
     let data = [...this.pagos];
     const busquedaLower = this.filtros.busqueda.toLowerCase().trim();
 
-    if (busquedaLower) {
-      data = data.filter(p =>
-        p.estudiante.toLowerCase().includes(busquedaLower) ||
-        p.numeroTicket?.toLowerCase().includes(busquedaLower)
-      );
-    }
-    if (this.filtros.canal) {
-      data = data.filter(p => p.canalPago === this.filtros.canal);
-    }
-    if (this.filtros.fechaDesde && this.filtros.fechaHasta) {
-      data = data.filter(p => p.fechaPago >= this.filtros.fechaDesde && p.fechaPago <= this.filtros.fechaHasta + 'T23:59:59Z');
-    }
+    this.pagosFiltrados = data.filter(p => {
+        const matchBusqueda = !this.filtros.busqueda || p.estudiante.toLowerCase().includes(busquedaLower) || p.numeroTicket?.toLowerCase().includes(busquedaLower);
+        const matchCanal = !this.filtros.canal || p.canalPago === this.filtros.canal;
+        const matchEstado = !this.filtros.estado || p.estado === this.filtros.estado;
+        const matchFecha = (!this.filtros.fechaDesde || !this.filtros.fechaHasta) || (p.fechaPago >= this.filtros.fechaDesde && p.fechaPago <= this.filtros.fechaHasta + 'T23:59:59Z');
+        
+        return matchBusqueda && matchCanal && matchEstado && matchFecha;
+    });
 
-    this.pagosFiltrados = data;
+    // Resetear a la primera página después de filtrar
+    this.setPage(1);
   }
 
   limpiarFiltros(): void {
@@ -106,9 +114,31 @@ export class PagosComponent implements OnInit {
       fechaDesde: '',
       fechaHasta: '',
       canal: '',
+      estado: '',
       busqueda: ''
     };
     this.filtrarPagos();
+  }
+  
+  // --- Lógica de Paginación ---
+  getTotalPages(): number {
+    return Math.ceil(this.pagosFiltrados.length / this.itemsPerPage);
+  }
+
+  setPage(page: number): void {
+    const totalPages = this.getTotalPages();
+    if (page < 1 || page > totalPages) {
+      if (this.pagedPagos.length === 0 && totalPages > 0) {
+          page = totalPages;
+      } else {
+          return;
+      }
+    }
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.itemsPerPage;
+    this.pagedPagos = this.pagosFiltrados.slice(startIndex, startIndex + this.itemsPerPage);
+    this.pagesArray = Array(totalPages).fill(0).map((x, i) => i + 1);
+    this.cdr.detectChanges();
   }
 
   abrirRegistrarPagoModal(): void {

@@ -30,7 +30,7 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let usuario of usuarios">
+          <tr r *ngFor="let usuario of pagedUsuarios">
             <td>{{ usuario.usuario }}</td>
             <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
             <td>{{ usuario.dni }}</td>
@@ -38,15 +38,21 @@
             <td>{{ usuario.genero }}</td>
             <td>{{ usuario.rol }}</td>
             <td class="text-center">
-              <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
-                <input class="form-check-input" type="checkbox" id="switchUsuario-{{ usuario.identifier }}"
-                  [checked]="usuario.habilitado" (change)="toggleHabilitado(usuario)" />
-              </div>
+              <span class="badge" [ngClass]="{
+                'badge-light-success': usuario.habilitado,
+                'badge-light-danger': !usuario.habilitado
+                }">
+                {{ usuario.habilitado ? 'Activo' : 'Inactivo' }}
+              </span>
             </td>
             <!--begin::Action-->
             <td class="text-end">
               <!-- ACCIONES PARA PANTALLAS GRANDES (md y superiores) -->
               <div class="d-none d-md-flex justify-content-end">
+                <button type="button" class="btn btn-light-primary btn-sm me-3" (click)="toggleHabilitado(usuario)">
+                  <app-keenicon [name]="usuario.habilitado ? 'ban' : 'check-circle'" class="fs-5 me-2"></app-keenicon>
+                  {{ usuario.habilitado ? 'Inactivar' : 'Activar' }}
+                </button>
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditUserModal(usuario)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                   Editar
@@ -63,6 +69,11 @@
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
                 <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
+                  <button class="menu-btn menu-btn-toggle mb-2" (click)="toggleHabilitado(usuario)">
+                    <app-keenicon [name]="usuario.habilitado ? 'ban' : 'check-circle'" class="me-2"></app-keenicon>
+                    {{ usuario.habilitado ? 'Inactivar' : 'Activar' }}
+                  </button>
+
                   <button class="menu-btn menu-btn-edit mb-2" (click)="openEditUserModal(usuario)">
                     <app-keenicon name="pencil" class="me-2"></app-keenicon>
                     Editar
@@ -79,6 +90,38 @@
         </tbody>
       </table>
     </div>
+  </div>
+  <!-- PAGINACIÓN ESTILO ESTUDIANTES -->
+  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="usuarios.length > 0">
+    <div class="fs-6 fw-semibold text-gray-700">
+      Mostrando
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+      a
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedUsuarios.length }}</span>
+      de
+      <span class="fw-bold">{{ usuarios.length }}</span> registros
+    </div>
+
+    <ul class="pagination">
+      <!-- Botón Anterior -->
+      <li class="page-item previous" [class.disabled]="currentPage === 1">
+        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+          <i class="previous"></i>
+        </a>
+      </li>
+
+      <!-- Páginas -->
+      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+      </li>
+
+      <!-- Botón Siguiente -->
+      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+          <i class="next"></i>
+        </a>
+      </li>
+    </ul>
   </div>
 </div>
 

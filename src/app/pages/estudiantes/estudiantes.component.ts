@@ -50,13 +50,10 @@ export class EstudiantesComponent implements OnInit {
   // Objeto para el estudiante que se está editando
   editingEstudiante: EstudianteDto | null = null;
 
-  // --- PROPIEDADES PARA LA PAGINACIÓN ---
-  currentPage: number = 1;
-  itemsPerPage: number = 5; // Puedes cambiar este número para mostrar más o menos items por página
-  pagedEstudiantes: EstudianteDto[] = []; // Array para los estudiantes de la página actual
-
-  estudiantes: EstudianteDto[] = [
-    // --- Registros de Estudiantes ---
+  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+  filtroBusqueda: string = ''; // Nuevo: Propiedad para el campo de búsqueda rápida
+  allEstudiantes: EstudianteDto[] = [
+    // --- Registros de Estudiantes (Datos de ejemplo) ---
     { identifier: '1', dni: '78945612', nombre: 'Carlos', apellidoPaterno: 'Vargas', apellidoMaterno: 'Llosa', fechaNacimiento: '2010-05-15', genero: GeneroReference.MASCULINO, direccion: 'Av. Los Proceres 123, Surco', telefono: '987654321', email: 'carlos.vargas@email.com', habilitado: true, fechaCreacion: '2024-01-20T10:00:00Z', matriculas: [] },
     { identifier: '2', dni: '71234567', nombre: 'Ana', apellidoPaterno: 'Ruiz', apellidoMaterno: 'Torres', fechaNacimiento: '2011-08-22', genero: GeneroReference.FEMENINO, direccion: 'Jr. de la Union 456, Lima', telefono: '912345678', email: 'ana.ruiz@email.com', habilitado: true, fechaCreacion: '2024-01-22T11:30:00Z', matriculas: [] },
     { identifier: '3', dni: '75689123', nombre: 'Pedro', apellidoPaterno: 'Gomez', apellidoMaterno: 'Perez', fechaNacimiento: '2010-03-10', genero: GeneroReference.MASCULINO, direccion: 'Calle Las Begonias 789, San Isidro', telefono: '998877665', email: 'pedro.gomez@email.com', habilitado: false, fechaCreacion: '2023-11-05T14:00:00Z', matriculas: [] },
@@ -68,6 +65,11 @@ export class EstudiantesComponent implements OnInit {
     { identifier: '9', dni: '78765432', nombre: 'Diego', apellidoPaterno: 'Ramos', apellidoMaterno: 'Morales', fechaNacimiento: '2010-02-14', genero: GeneroReference.MASCULINO, direccion: 'Av. Benavides 1540, Miraflores', telefono: '921345678', email: 'diego.ramos@email.com', habilitado: true, fechaCreacion: '2024-02-12T18:10:00Z', matriculas: [] },
     { identifier: '10', dni: '71122334', nombre: 'Camila', apellidoPaterno: 'Castro', apellidoMaterno: 'Silva', fechaNacimiento: '2012-12-01', genero: GeneroReference.FEMENINO, direccion: 'Jr. Huiracocha 2050, Jesus Maria', telefono: '911223344', email: 'camila.castro@email.com', habilitado: false, fechaCreacion: '2024-02-15T10:00:00Z', matriculas: [] },
   ];
+  filteredEstudiantes: EstudianteDto[] = []; // Almacena los estudiantes después de aplicar el filtro de búsqueda
+
+  currentPage: number = 1;
+  itemsPerPage: number = 5; // Puedes cambiar este número para mostrar más o menos items por página
+  pagedEstudiantes: EstudianteDto[] = []; // Array para los estudiantes de la página actual
 
   constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal) {
     // Obtener las claves del enum GeneroReference para usar en el select del HTML
@@ -75,32 +77,83 @@ export class EstudiantesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.setPage(1); // Carga la primera página al iniciar
+    // Inicialmente, filteredEstudiantes es igual a allEstudiantes, y luego se pagina
+    this.aplicarFiltroYPaginar();
   }
 
-  // --- MÉTODOS PARA LA PAGINACIÓN ---
+  // --- Métodos para el filtro de búsqueda rápida y paginación ---
 
-  setPage(page: number) {
-    if (page < 1 || page > this.getTotalPages()) {
-      return;
+  /**
+   * Aplica el filtro de búsqueda rápida y luego actualiza la paginación.
+   */
+  aplicarFiltroYPaginar(): void {
+    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+
+    if (searchTerm) {
+      this.filteredEstudiantes = this.allEstudiantes.filter(estudiante => {
+        const nombreCompleto = `${estudiante.nombre} ${estudiante.apellidoPaterno} ${estudiante.apellidoMaterno || ''}`.toLowerCase();
+        const dni = estudiante.dni; // DNI ya es un string, no necesita toLowerCase si solo contiene números
+        return nombreCompleto.includes(searchTerm) || dni.includes(searchTerm);
+      });
+    } else {
+      this.filteredEstudiantes = [...this.allEstudiantes]; // Si no hay término de búsqueda, muestra todos
     }
-    this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage - 1, this.estudiantes.length - 1);
-    this.pagedEstudiantes = this.estudiantes.slice(startIndex, endIndex + 1);
+
+    this.setPage(1); // Siempre vuelve a la primera página después de un nuevo filtro
+  }
+
+  /**
+   * Actualiza los estudiantes que se muestran en la página actual.
+   * @param page El número de página a mostrar.
+   */
+  setPage(page: number) {
+    const totalPages = this.getTotalPages();
+    if (page < 1 || page > totalPages) {
+      // Si no hay resultados filtrados y se intenta ir a una página, y ya no hay páginas válidas
+      if (this.filteredEstudiantes.length === 0 && totalPages === 0) {
+        this.pagedEstudiantes = []; // Asegurarse de que la tabla esté vacía
+        this.currentPage = 1; // Resetea la página actual
+        this.cdr.detectChanges();
+        return;
+      }
+      // Si la página solicitada es inválida pero hay resultados, ajusta a la última página si es posible
+      if (page > totalPages && totalPages > 0) {
+        this.currentPage = totalPages;
+      } else if (page < 1 && totalPages > 0) {
+        this.currentPage = 1;
+      } else {
+        return; // Si no hay páginas válidas ni resultados, simplemente retorna
+      }
+    } else {
+      this.currentPage = page;
+    }
+
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage - 1, this.filteredEstudiantes.length - 1);
+    this.pagedEstudiantes = this.filteredEstudiantes.slice(startIndex, endIndex + 1);
     this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
   }
 
+  /**
+   * Calcula el número total de páginas basado en los estudiantes filtrados.
+   * @returns El número total de páginas.
+   */
   getTotalPages(): number {
-    return Math.ceil(this.estudiantes.length / this.itemsPerPage);
+    return Math.ceil(this.filteredEstudiantes.length / this.itemsPerPage);
   }
 
+  /**
+   * Genera un array de números de página para la paginación.
+   * @returns Un array de números de página.
+   */
   getPagesArray(): number[] {
     const totalPages = this.getTotalPages();
     return Array(totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- FIN DE MÉTODOS PARA LA PAGINACIÓN ---
+  // --- FIN DE MÉTODOS PARA LA PAGINACIÓN Y FILTRO ---
+
 
   /**
    * Cambia el estado de habilitado de un estudiante.
@@ -162,14 +215,15 @@ export class EstudiantesComponent implements OnInit {
     }
 
     // Simulación de generación de un identifier único
-    const maxId = Math.max(...this.estudiantes.map(e => parseInt(e.identifier || '0')), 0);
+    // Busca el ID máximo en allEstudiantes para asegurar unicidad
+    const maxId = Math.max(...this.allEstudiantes.map(e => parseInt(e.identifier || '0')), 0);
     this.newEstudiante.identifier = (maxId + 1).toString();
 
-    // Añade el nuevo estudiante a la lista local (simulación)
-    this.estudiantes.push({ ...this.newEstudiante });
+    // Añade el nuevo estudiante a la lista completa de estudiantes
+    this.allEstudiantes.push({ ...this.newEstudiante });
 
-    // Re-aplicar paginación para que el nuevo estudiante aparezca en la página correcta
-    this.setPage(this.getTotalPages()); // Ir a la última página donde se añadió el nuevo estudiante
+    // Vuelve a aplicar los filtros y la paginación para que el nuevo estudiante aparezca
+    this.aplicarFiltroYPaginar();
 
     Swal.fire('¡Éxito!', 'Estudiante añadido correctamente.', 'success');
     console.log('Nuevo estudiante guardado:', this.newEstudiante);
@@ -185,7 +239,6 @@ export class EstudiantesComponent implements OnInit {
    */
   openEditEstudianteModal(estudiante: EstudianteDto) {
     // Crea una copia del objeto para evitar modificar el original directamente en el formulario
-    // Asegúrate de que la fechaNacimiento sea un string ISO para el input type="date"
     this.editingEstudiante = { ...estudiante };
     this.modalService.open(this.editEstudianteModal, { centered: true, size: 'lg' });
   }
@@ -217,11 +270,11 @@ export class EstudiantesComponent implements OnInit {
       return;
     }
 
-    // Busca el índice del estudiante original en el array y lo actualiza
-    const index = this.estudiantes.findIndex(e => e.identifier === this.editingEstudiante?.identifier);
+    // Busca el índice del estudiante original en el array allEstudiantes y lo actualiza
+    const index = this.allEstudiantes.findIndex(e => e.identifier === this.editingEstudiante?.identifier);
     if (index !== -1) {
-      this.estudiantes[index] = { ...this.editingEstudiante }; // Actualiza con la copia modificada
-      this.setPage(this.currentPage); // Re-aplicar paginación para actualizar la vista
+      this.allEstudiantes[index] = { ...this.editingEstudiante }; // Actualiza con la copia modificada
+      this.aplicarFiltroYPaginar(); // Vuelve a aplicar filtros y paginar para reflejar el cambio
       Swal.fire('¡Éxito!', 'Estudiante actualizado correctamente.', 'success');
       console.log('Estudiante actualizado:', this.editingEstudiante);
       // Aquí iría la llamada al servicio para persistir la actualización en el backend
@@ -259,18 +312,14 @@ export class EstudiantesComponent implements OnInit {
    * @param identifier El identificador del estudiante a eliminar.
    */
   deleteEstudiante(identifier: string) {
-    const initialLength = this.estudiantes.length;
-    // Filtra el array para eliminar el estudiante con el identifier dado
-    this.estudiantes = this.estudiantes.filter(estudiante => estudiante.identifier !== identifier);
+    const initialLength = this.allEstudiantes.length;
+    // Filtra el array allEstudiantes para eliminar el estudiante con el identifier dado
+    this.allEstudiantes = this.allEstudiantes.filter(estudiante => estudiante.identifier !== identifier);
 
-    // Ajustar la página actual si la última página se queda vacía después de la eliminación
-    if (this.pagedEstudiantes.length === 1 && this.currentPage > 1 && this.estudiantes.length === (this.currentPage - 1) * this.itemsPerPage) {
-      this.setPage(this.currentPage - 1);
-    } else {
-      this.setPage(this.currentPage); // Re-aplicar paginación para actualizar la vista
-    }
+    // Vuelve a aplicar los filtros y la paginación para actualizar la vista
+    this.aplicarFiltroYPaginar();
 
-    if (this.estudiantes.length < initialLength) {
+    if (this.allEstudiantes.length < initialLength) {
       Swal.fire(
         '¡Eliminado!',
         'El estudiante ha sido eliminado.',
@@ -285,6 +334,11 @@ export class EstudiantesComponent implements OnInit {
         'error'
       );
     }
+  }
+
+  limpiarFiltros(): void {
+    this.filtroBusqueda = ''; 
+    this.aplicarFiltroYPaginar();
   }
 
   // --- Método Genérico ---

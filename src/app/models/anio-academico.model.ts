@@ -5,7 +5,6 @@ export interface AnioAcademicoDto {
   identifier: string;
   anio: number;
   estado: EstadoAcademicoReference;
-  habilitado: boolean;
   fechaCreacion: string;
   matriculas: MatriculaDto[];
 }

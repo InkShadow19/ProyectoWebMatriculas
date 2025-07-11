@@ -25,7 +25,7 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let rol of roles">
+          <tr *ngFor="let rol of pagedRoles">
             <td>{{ rol.descripcion }}</td>
             <td class="text-center">
               <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
@@ -71,6 +71,39 @@
       </table>
     </div>
   </div>
+  <!-- PAGINACIÓN -->
+<div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="roles.length > 0">
+  <div class="fs-6 fw-semibold text-gray-700">
+    Mostrando
+    <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+    a
+    <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedRoles.length }}</span>
+    de
+    <span class="fw-bold">{{ roles.length }}</span> registros
+  </div>
+
+  <ul class="pagination">
+    <!-- Botón Anterior -->
+    <li class="page-item previous" [class.disabled]="currentPage === 1">
+      <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+        <i class="previous"></i>
+      </a>
+    </li>
+
+    <!-- Páginas -->
+    <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+      <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+    </li>
+
+    <!-- Botón Siguiente -->
+    <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+      <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+        <i class="next"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
 </div>
 
 <!-- Diseño del Modal Añadir Rol -->

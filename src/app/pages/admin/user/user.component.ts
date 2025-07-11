@@ -59,6 +59,31 @@ export class UserComponent implements OnInit {
   // Objeto para el usuario que se está editando
   editingUser: UsuarioDto | null = null;
 
+  currentPage = 1;
+  itemsPerPage = 5;
+  pagedUsuarios: UsuarioDto[] = [];
+
+  setPage(page: number) {
+    const totalPages = this.getTotalPages();
+    if (page < 1 || page > totalPages) return;
+
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.usuarios.length);
+    this.pagedUsuarios = this.usuarios.slice(startIndex, endIndex);
+    this.cdr.detectChanges();
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.usuarios.length / this.itemsPerPage);
+  }
+
+  getPagesArray(): number[] {
+    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+  }
+
+
+
   usuarios: UsuarioDto[] = [
     {
       identifier: '1',
@@ -95,10 +120,10 @@ export class UserComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Establecer el rol por defecto para el nuevo usuario si hay roles disponibles
     if (this.rolesDisponibles.length > 0 && !this.newUsuario.rol) {
       this.newUsuario.rol = this.rolesDisponibles[0].descripcion;
     }
+    this.setPage(1);
   }
 
   /**
@@ -106,11 +131,32 @@ export class UserComponent implements OnInit {
    * @param usuario El objeto UsuarioDto a modificar.
    */
   toggleHabilitado(usuario: UsuarioDto) {
-    usuario.habilitado = !usuario.habilitado;
-    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar el switch
-    console.log(`Cambiando estado de ${usuario.usuario}. Nuevo estado: ${usuario.habilitado}`);
-    // Aquí iría la llamada al servicio para guardar el cambio en la base de datos
+    const nuevoEstado = !usuario.habilitado;
+    const accion = nuevoEstado ? 'activar' : 'inactivar';
+    const confirmButtonText = nuevoEstado ? 'Sí, activar' : 'Sí, inactivar';
+
+    Swal.fire({
+      title: `¿Estás seguro de ${accion} al usuario?`,
+      text: `Esto cambiará el estado del usuario: ${usuario.nombres} ${usuario.apellidos}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText,
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        usuario.habilitado = nuevoEstado;
+        this.cdr.detectChanges();
+
+        Swal.fire('¡Actualizado!', `El usuario ha sido ${nuevoEstado ? 'activado' : 'inactivado'}.`, 'success');
+
+        // Aquí podrías llamar a un servicio para guardar el cambio en el backend
+        console.log(`Estado de ${usuario.usuario} cambiado a: ${usuario.habilitado}`);
+      }
+    });
   }
+
 
   // --- Métodos para Añadir Usuario ---
 
@@ -141,8 +187,8 @@ export class UserComponent implements OnInit {
   saveUser() {
     // Validación básica de campos obligatorios
     if (!this.newUsuario.usuario || !this.newUsuario.nombres || !this.newUsuario.apellidos ||
-        !this.newUsuario.dni || !this.newUsuario.fechaNacimiento || !this.newUsuario.genero ||
-        !this.newUsuario.rol) {
+      !this.newUsuario.dni || !this.newUsuario.fechaNacimiento || !this.newUsuario.genero ||
+      !this.newUsuario.rol) {
       Swal.fire('Error', 'Todos los campos obligatorios deben ser completados.', 'error');
       return;
     }
@@ -153,20 +199,23 @@ export class UserComponent implements OnInit {
       return;
     }
 
-    // Simulación de generación de un identifier único
+    // Generar un nuevo identifier único
     const maxId = Math.max(...this.usuarios.map(u => parseInt(u.identifier || '0')), 0);
     this.newUsuario.identifier = (maxId + 1).toString();
 
-    // Añade el nuevo usuario a la lista local (simulación)
+    // Añadir nuevo usuario a la lista
     this.usuarios.push({ ...this.newUsuario });
 
-    this.cdr.detectChanges(); // Forzar la detección de cambios para actualizar la tabla
+    // Actualizar la paginación (última página)
+    this.setPage(this.getTotalPages());
 
+    this.cdr.detectChanges(); // Refrescar tabla
     Swal.fire('¡Éxito!', 'Usuario añadido correctamente.', 'success');
     console.log('Nuevo usuario guardado:', this.newUsuario);
-    // Aquí iría la llamada al servicio para persistir en el backend
-    this.dismiss(); // Cierra el modal
+
+    this.dismiss(); // Cierra modal
   }
+
 
   // --- Métodos para Editar Usuario ---
 
@@ -189,33 +238,35 @@ export class UserComponent implements OnInit {
       Swal.fire('Error', 'No hay usuario seleccionado para editar.', 'error');
       return;
     }
-    // Validación básica de campos obligatorios
+
     if (!this.editingUser.usuario || !this.editingUser.nombres || !this.editingUser.apellidos ||
-        !this.editingUser.dni || !this.editingUser.fechaNacimiento || !this.editingUser.genero ||
-        !this.editingUser.rol) {
+      !this.editingUser.dni || !this.editingUser.fechaNacimiento || !this.editingUser.genero ||
+      !this.editingUser.rol) {
       Swal.fire('Error', 'Todos los campos obligatorios deben ser completados para editar.', 'error');
       return;
     }
 
-    // Validación de DNI (8 dígitos numéricos)
     if (!/^\d{8}$/.test(this.editingUser.dni)) {
       Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
       return;
     }
 
-    // Busca el índice del usuario original en el array y lo actualiza
     const index = this.usuarios.findIndex(u => u.identifier === this.editingUser?.identifier);
     if (index !== -1) {
-      this.usuarios[index] = { ...this.editingUser }; // Actualiza con la copia modificada
-      this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+      this.usuarios[index] = { ...this.editingUser };
+
+      this.setPage(this.currentPage);
+
+      this.cdr.detectChanges(); // Forzar la detección de cambios
       Swal.fire('¡Éxito!', 'Usuario actualizado correctamente.', 'success');
       console.log('Usuario actualizado:', this.editingUser);
-      // Aquí iría la llamada al servicio para persistir la actualización en el backend
     } else {
       Swal.fire('Error', 'Usuario no encontrado para actualizar.', 'error');
     }
+
     this.dismiss(); // Cierra el modal
   }
+
 
   // --- Métodos para Eliminar Usuario ---
 
@@ -246,26 +297,28 @@ export class UserComponent implements OnInit {
    */
   deleteUser(identifier: string) {
     const initialLength = this.usuarios.length;
-    // Filtra el array para eliminar el usuario con el identifier dado
+
+    // Eliminar usuario por ID
     this.usuarios = this.usuarios.filter(usuario => usuario.identifier !== identifier);
-    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+
+    // Verificar si la página actual quedó vacía
+    const totalPages = this.getTotalPages();
+    if (this.currentPage > totalPages) {
+      this.setPage(totalPages); // Retroceder a la última página válida
+    } else {
+      this.setPage(this.currentPage); // Mantener la página actual
+    }
+
+    this.cdr.detectChanges(); // Refrescar tabla
 
     if (this.usuarios.length < initialLength) {
-      Swal.fire(
-        '¡Eliminado!',
-        'El usuario ha sido eliminado.',
-        'success'
-      );
+      Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
       console.log(`Usuario con ID ${identifier} eliminado.`);
-      // Aquí iría la llamada al servicio para eliminar en el backend
     } else {
-      Swal.fire(
-        'Error',
-        'No se pudo encontrar el usuario para eliminar.',
-        'error'
-      );
+      Swal.fire('Error', 'No se pudo encontrar el usuario para eliminar.', 'error');
     }
   }
+
 
   // --- Método Genérico ---
 

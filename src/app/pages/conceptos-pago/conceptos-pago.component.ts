@@ -57,13 +57,55 @@ export class ConceptosPagoComponent implements OnInit {
       habilitado: true,
       fechaCreacion: '2024-01-11T11:00:00Z',
       cronogramas: [],
-    }
+    },
   ];
+
+  // Variables de estado para la paginación
+  currentPage = 1;
+  itemsPerPage = 5; // Cantidad de elementos por página
+  pagedConceptos: ConceptoPagoDto[] = []; // Array que contendrá los conceptos de la página actual
+
 
   // Inyección de servicios: NgbModal para modales y ChangeDetectorRef para forzar la detección de cambios
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.setPage(1); // Inicializa la paginación al cargar el componente
+  }
+
+  /**
+   * Calcula la porción del array de conceptos a mostrar en la página actual.
+   * @param page El número de página al que se desea ir.
+   */
+  setPage(page: number) {
+    const totalPages = this.getTotalPages();
+    if (page < 1 || page > totalPages) {
+      return; // Evita ir a páginas inválidas
+    }
+
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.conceptosDePago.length);
+    this.pagedConceptos = this.conceptosDePago.slice(startIndex, endIndex);
+    this.cdr.detectChanges(); // Fuerza la detección de cambios para actualizar la tabla
+  }
+
+  /**
+   * Calcula el número total de páginas.
+   * @returns El número total de páginas.
+   */
+  getTotalPages(): number {
+    return Math.ceil(this.conceptosDePago.length / this.itemsPerPage);
+  }
+
+  /**
+   * Genera un array con los números de página disponibles.
+   * @returns Un array de números representando las páginas.
+   */
+  getPagesArray(): number[] {
+    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+  }
+
 
   /**
    * Cambia el estado de habilitado de un concepto de pago.
@@ -116,8 +158,8 @@ export class ConceptosPagoComponent implements OnInit {
     // Añade el nuevo concepto a la lista local (simulación de guardado)
     this.conceptosDePago.push({ ...this.newConcepto }); // Se añade una copia para evitar problemas de referencia
 
-    // Forzar la detección de cambios para que la tabla se actualice visualmente de inmediato
-    this.cdr.detectChanges();
+    // Actualiza la paginación para mostrar el nuevo elemento, generalmente en la última página
+    this.setPage(this.getTotalPages());
 
     Swal.fire('¡Éxito!', 'Concepto de pago añadido correctamente.', 'success');
     console.log('Nuevo concepto de pago guardado:', this.newConcepto);
@@ -160,7 +202,9 @@ export class ConceptosPagoComponent implements OnInit {
     const index = this.conceptosDePago.findIndex(c => c.identifier === this.editingConcepto?.identifier);
     if (index !== -1) {
       this.conceptosDePago[index] = { ...this.editingConcepto }; // Actualiza el concepto con la copia
-      this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+      // Mantiene la paginación en la página actual
+      this.setPage(this.currentPage);
+
       Swal.fire('¡Éxito!', 'Concepto de pago actualizado correctamente.', 'success');
       console.log('Concepto de pago actualizado:', this.editingConcepto);
       // Aquí iría la llamada al servicio para persistir la actualización en el backend
@@ -201,7 +245,19 @@ export class ConceptosPagoComponent implements OnInit {
     const initialLength = this.conceptosDePago.length;
     // Filtra el array para eliminar el concepto con el identifier dado
     this.conceptosDePago = this.conceptosDePago.filter(c => c.identifier !== identifier);
-    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+
+    // Ajusta la paginación después de la eliminación
+    const totalPages = this.getTotalPages();
+    if (this.currentPage > totalPages && totalPages > 0) {
+      this.setPage(totalPages); // Si la página actual quedó vacía, ve a la última válida
+    } else if (totalPages === 0) {
+      this.pagedConceptos = []; // Si no quedan elementos, vacía la página
+      this.currentPage = 1;
+    }
+    else {
+      this.setPage(this.currentPage); // Permanece en la página actual o reajusta si es necesario
+    }
+
 
     if (this.conceptosDePago.length < initialLength) {
       Swal.fire(

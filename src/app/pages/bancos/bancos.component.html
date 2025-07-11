@@ -23,7 +23,8 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let banco of bancos">
+          <!-- Modificado para usar pagedBancos -->
+          <tr *ngFor="let banco of pagedBancos">
             <td>
               {{ banco.codigo }}
             </td>
@@ -70,6 +71,39 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- PAGINACIÓN ESTILO ESTUDIANTES - Añadido aquí -->
+  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="bancos.length > 0">
+    <div class="fs-6 fw-semibold text-gray-700">
+      Mostrando
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+      a
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedBancos.length }}</span>
+      de
+      <span class="fw-bold">{{ bancos.length }}</span> registros
+    </div>
+
+    <ul class="pagination">
+      <!-- Botón Anterior -->
+      <li class="page-item previous" [class.disabled]="currentPage === 1">
+        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+          <i class="previous"></i>
+        </a>
+      </li>
+
+      <!-- Páginas -->
+      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+      </li>
+
+      <!-- Botón Siguiente -->
+      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+          <i class="next"></i>
+        </a>
+      </li>
+    </ul>
   </div>
 </div>
 

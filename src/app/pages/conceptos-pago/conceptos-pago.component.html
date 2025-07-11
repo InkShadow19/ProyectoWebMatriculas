@@ -25,7 +25,7 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let concepto of conceptosDePago">
+          <tr *ngFor="let concepto of pagedConceptos">
             <td>
               {{ concepto.codigo }}
             </td>
@@ -42,7 +42,6 @@
               </div>
             </td>
             <td class="text-end">
-              <!-- PANTALLAS GRANDES -->
               <div class="d-none d-md-flex justify-content-end">
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditConceptoModal(concepto)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
@@ -54,7 +53,6 @@
                 </button>
               </div>
 
-              <!-- PANTALLAS PEQUEÑAS -->
               <div class="d-md-none text-end" ngbDropdown>
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
@@ -75,6 +73,34 @@
         </tbody>
       </table>
     </div>
+  </div>
+  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="conceptosDePago.length > 0">
+    <div class="fs-6 fw-semibold text-gray-700">
+      Mostrando
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+      a
+      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedConceptos.length }}</span>
+      de
+      <span class="fw-bold">{{ conceptosDePago.length }}</span> registros
+    </div>
+
+    <ul class="pagination">
+      <li class="page-item previous" [class.disabled]="currentPage === 1">
+        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+          <i class="previous"></i>
+        </a>
+      </li>
+
+      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+      </li>
+
+      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+          <i class="next"></i>
+        </a>
+      </li>
+    </ul>
   </div>
 </div>
 

@@ -2,5 +2,7 @@ export enum EstadoAcademicoReference {
   ACTIVO = 'ACTIVO',
   CERRADO = 'CERRADO',
   FUTURO = 'FUTURO',
+  RETIRADO = 'RETIRADO',
+  EGRESADO = 'EGRESADO',
   UNDEFINED = 'UNDEFINED'
 }

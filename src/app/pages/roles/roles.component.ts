@@ -36,6 +36,30 @@ export class RolesComponent implements OnInit {
   // Objeto para el rol que se está editando
   editingRol: RolDto | null = null;
 
+  currentPage = 1;
+  itemsPerPage = 5;
+  pagedRoles: RolDto[] = [];
+
+  setPage(page: number) {
+    const totalPages = this.getTotalPages();
+    if (page < 1 || page > totalPages) return;
+
+    this.currentPage = page;
+    const startIndex = (page - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.roles.length);
+    this.pagedRoles = this.roles.slice(startIndex, endIndex);
+    this.cdr.detectChanges();
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.roles.length / this.itemsPerPage);
+  }
+
+  getPagesArray(): number[] {
+    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+  }
+
+
   roles: RolDto[] = [
     {
       identifier: '1',
@@ -56,7 +80,9 @@ export class RolesComponent implements OnInit {
   // Inyección de NgbModal y ChangeDetectorRef
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.setPage(1);
+  }
 
   /**
    * Cambia el estado de habilitado de un rol.
@@ -90,26 +116,26 @@ export class RolesComponent implements OnInit {
    * Maneja la lógica para guardar un nuevo rol.
    */
   saveRol() {
-    // Validación básica de campos obligatorios
     if (!this.newRol.descripcion) {
       Swal.fire('Error', 'La descripción del rol es obligatoria.', 'error');
       return;
     }
 
-    // Simulación de generación de un identifier único
     const maxId = Math.max(...this.roles.map(r => parseInt(r.identifier || '0')), 0);
     this.newRol.identifier = (maxId + 1).toString();
 
-    // Añade el nuevo rol a la lista local (simulación)
     this.roles.push({ ...this.newRol });
 
-    this.cdr.detectChanges(); // Forzar la detección de cambios para actualizar la tabla
+    // Actualizar la página a la última para ver el nuevo rol
+    this.setPage(this.getTotalPages());
 
+    this.cdr.detectChanges();
     Swal.fire('¡Éxito!', 'Rol añadido correctamente.', 'success');
     console.log('Nuevo rol guardado:', this.newRol);
-    // Aquí iría la llamada al servicio para persistir en el backend
+
     this.dismiss(); // Cierra el modal
   }
+
 
   // --- Métodos para Editar Rol ---
 
@@ -131,25 +157,29 @@ export class RolesComponent implements OnInit {
       Swal.fire('Error', 'No hay rol seleccionado para editar.', 'error');
       return;
     }
-    // Validación básica de campos obligatorios
+
     if (!this.editingRol.descripcion) {
       Swal.fire('Error', 'La descripción del rol es obligatoria para editar.', 'error');
       return;
     }
 
-    // Busca el índice del rol original en el array y lo actualiza
     const index = this.roles.findIndex(r => r.identifier === this.editingRol?.identifier);
     if (index !== -1) {
-      this.roles[index] = { ...this.editingRol }; // Actualiza con la copia modificada
-      this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+      this.roles[index] = { ...this.editingRol };
+
+      // 🔁 ¡ACTUALIZA la lista de la página actual!
+      this.setPage(this.currentPage);
+
+      this.cdr.detectChanges();
       Swal.fire('¡Éxito!', 'Rol actualizado correctamente.', 'success');
       console.log('Rol actualizado:', this.editingRol);
-      // Aquí iría la llamada al servicio para persistir la actualización en el backend
     } else {
       Swal.fire('Error', 'Rol no encontrado para actualizar.', 'error');
     }
+
     this.dismiss(); // Cierra el modal
   }
+
 
   // --- Métodos para Eliminar Rol ---
 
@@ -180,26 +210,26 @@ export class RolesComponent implements OnInit {
    */
   deleteRol(identifier: string) {
     const initialLength = this.roles.length;
-    // Filtra el array para eliminar el rol con el identifier dado
     this.roles = this.roles.filter(rol => rol.identifier !== identifier);
-    this.cdr.detectChanges(); // Forzar detección de cambios para actualizar la tabla
+
+    // Ajusta la página actual si al eliminar queda vacía
+    const totalPages = this.getTotalPages();
+    if (this.currentPage > totalPages) {
+      this.setPage(totalPages);
+    } else {
+      this.setPage(this.currentPage);
+    }
+
+    this.cdr.detectChanges();
 
     if (this.roles.length < initialLength) {
-      Swal.fire(
-        '¡Eliminado!',
-        'El rol ha sido eliminado.',
-        'success'
-      );
+      Swal.fire('¡Eliminado!', 'El rol ha sido eliminado.', 'success');
       console.log(`Rol con ID ${identifier} eliminado.`);
-      // Aquí iría la llamada al servicio para eliminar en el backend
     } else {
-      Swal.fire(
-        'Error',
-        'No se pudo encontrar el rol para eliminar.',
-        'error'
-      );
+      Swal.fire('Error', 'No se pudo encontrar el rol para eliminar.', 'error');
     }
   }
+
 
   // --- Método Genérico ---
 

@@ -5,7 +5,7 @@ import { BancoDto } from 'src/app/models/banco.model';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
-import { EstadoReference } from 'src/app/models/enums/estado-reference.enum'; // <--- IMPORTADO
+import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 
 @Component({
   selector: 'app-bancos',
@@ -23,7 +23,6 @@ export class BancosComponent implements OnInit {
   @ViewChild('addBankModal') addBankModal: TemplateRef<any>;
   @ViewChild('editBankModal') editBankModal: TemplateRef<any>;
 
-  // Propiedades para manejar el estado
   EstadoReference = EstadoReference;
   estadoKeys: string[];
 
@@ -38,69 +37,74 @@ export class BancosComponent implements OnInit {
 
   editingBank: BancoDto | null = null;
 
-  bancos: BancoDto[] = [
-    {
-      identifier: '1',
-      codigo: 'BCP',
-      descripcion: 'Banco de Crédito del Perú',
-      estado: EstadoReference.ACTIVO,
-      fechaCreacion: '2023-01-15T09:00:00Z',
-      pagos: [],
-    },
-    {
-      identifier: '2',
-      codigo: 'IBK',
-      descripcion: 'Interbank',
-      estado: EstadoReference.ACTIVO,
-      fechaCreacion: '2023-02-20T11:30:00Z',
-      pagos: [],
-    },
-    {
-      identifier: '3',
-      codigo: 'BBVA',
-      descripcion: 'BBVA Continental',
-      estado: EstadoReference.ACTIVO, 
-      fechaCreacion: '2023-03-10T14:00:00Z',
-      pagos: [],
-    },
-    {
-      identifier: '4',
-      codigo: 'SCO',
-      descripcion: 'Scotiabank Perú',
-      estado: EstadoReference.INACTIVO, 
-      fechaCreacion: '2023-04-05T16:45:00Z',
-      pagos: [],
-    },
+  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+  allBancos: BancoDto[] = [
+    { identifier: '1', codigo: 'BCP', descripcion: 'Banco de Crédito del Perú', estado: EstadoReference.ACTIVO, fechaCreacion: '2023-01-15T09:00:00Z', pagos: [] },
+    { identifier: '2', codigo: 'IBK', descripcion: 'Interbank', estado: EstadoReference.ACTIVO, fechaCreacion: '2023-02-20T11:30:00Z', pagos: [] },
+    { identifier: '3', codigo: 'BBVA', descripcion: 'BBVA Continental', estado: EstadoReference.ACTIVO, fechaCreacion: '2023-03-10T14:00:00Z', pagos: [] },
+    { identifier: '4', codigo: 'SCO', descripcion: 'Scotiabank Perú', estado: EstadoReference.INACTIVO, fechaCreacion: '2023-04-05T16:45:00Z', pagos: [] },
   ];
-
-  currentPage = 1;
-  itemsPerPage = 5;
+  filteredBancos: BancoDto[] = [];
   pagedBancos: BancoDto[] = [];
 
+  filtroBusqueda: string = '';
+  filtroEstado: string = '';
+  currentPage = 1;
+  itemsPerPage = 5;
+
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
-    this.estadoKeys = Object.values(EstadoReference) as string[]; // <--- AÑADIDO
+    this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
+    this.aplicarFiltroYPaginar();
+  }
+
+  // --- Métodos de Filtro y Paginación ---
+  aplicarFiltroYPaginar(): void {
+    let bancosTemp = [...this.allBancos];
+    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+
+    if (this.filtroEstado) {
+      bancosTemp = bancosTemp.filter(banco => banco.estado === this.filtroEstado);
+    }
+
+    if (searchTerm) {
+      bancosTemp = bancosTemp.filter(banco =>
+        banco.descripcion.toLowerCase().includes(searchTerm) ||
+        banco.codigo.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    this.filteredBancos = bancosTemp;
     this.setPage(1);
   }
 
-  // ELIMINADO: El método toggleHabilitado() ya no es necesario.
+  limpiarFiltros(): void {
+    this.filtroBusqueda = '';
+    this.filtroEstado = '';
+    this.aplicarFiltroYPaginar();
+  }
 
-  // --- Métodos de Paginación ---
   setPage(page: number) {
     const totalPages = this.getTotalPages();
-    if (page < 1 || page > totalPages) return;
-
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
     this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.bancos.length);
-    this.pagedBancos = this.bancos.slice(startIndex, endIndex);
+
+    if (this.filteredBancos.length === 0) {
+      this.pagedBancos = [];
+      return;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredBancos.length);
+    this.pagedBancos = this.filteredBancos.slice(startIndex, endIndex);
     this.cdr.detectChanges();
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.bancos.length / this.itemsPerPage);
+    return Math.ceil(this.filteredBancos.length / this.itemsPerPage);
   }
 
   getPagesArray(): number[] {
@@ -113,7 +117,7 @@ export class BancosComponent implements OnInit {
       identifier: '',
       codigo: '',
       descripcion: '',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+      estado: EstadoReference.ACTIVO,
       fechaCreacion: new Date().toISOString(),
       pagos: []
     };
@@ -121,15 +125,14 @@ export class BancosComponent implements OnInit {
   }
 
   saveBank() {
-    if (!this.newBank.codigo || !this.newBank.descripcion || !this.newBank.estado) { // <--- VALIDACIÓN ACTUALIZADA
+    if (!this.newBank.codigo || !this.newBank.descripcion || !this.newBank.estado) {
       Swal.fire('Error', 'Código, descripción y estado son campos obligatorios.', 'error');
       return;
     }
-    const maxId = Math.max(...this.bancos.map(b => parseInt(b.identifier || '0')), 0);
+    const maxId = Math.max(...this.allBancos.map(b => parseInt(b.identifier || '0')), 0);
     this.newBank.identifier = (maxId + 1).toString();
-    this.bancos.push({ ...this.newBank });
-    this.setPage(this.getTotalPages());
-    this.cdr.detectChanges();
+    this.allBancos.push({ ...this.newBank });
+    this.aplicarFiltroYPaginar();
     Swal.fire('¡Éxito!', 'Banco añadido correctamente.', 'success');
     this.dismiss();
   }
@@ -141,19 +144,15 @@ export class BancosComponent implements OnInit {
   }
 
   updateBank() {
-    if (!this.editingBank) {
-      Swal.fire('Error', 'No hay banco seleccionado para editar.', 'error');
-      return;
-    }
-    if (!this.editingBank.codigo || !this.editingBank.descripcion || !this.editingBank.estado) { // <--- VALIDACIÓN ACTUALIZADA
+    if (!this.editingBank) { return; }
+    if (!this.editingBank.codigo || !this.editingBank.descripcion || !this.editingBank.estado) {
       Swal.fire('Error', 'Código, descripción y estado son campos obligatorios.', 'error');
       return;
     }
-    const index = this.bancos.findIndex(b => b.identifier === this.editingBank?.identifier);
+    const index = this.allBancos.findIndex(b => b.identifier === this.editingBank?.identifier);
     if (index !== -1) {
-      this.bancos[index] = { ...this.editingBank };
-      this.setPage(this.currentPage);
-      this.cdr.detectChanges();
+      this.allBancos[index] = { ...this.editingBank };
+      this.aplicarFiltroYPaginar();
       Swal.fire('¡Éxito!', 'Banco actualizado correctamente.', 'success');
     } else {
       Swal.fire('Error', 'Banco no encontrado para actualizar.', 'error');
@@ -180,19 +179,10 @@ export class BancosComponent implements OnInit {
   }
 
   deleteBank(identifier: string) {
-    const initialLength = this.bancos.length;
-    this.bancos = this.bancos.filter(banco => banco.identifier !== identifier);
-    const totalPages = this.getTotalPages();
-    if (this.currentPage > totalPages && totalPages > 0) {
-      this.setPage(totalPages);
-    } else if (totalPages === 0) {
-      this.pagedBancos = [];
-      this.currentPage = 1;
-    } else {
-      this.setPage(this.currentPage);
-    }
-    this.cdr.detectChanges();
-    if (this.bancos.length < initialLength) {
+    const initialLength = this.allBancos.length;
+    this.allBancos = this.allBancos.filter(banco => banco.identifier !== identifier);
+    this.aplicarFiltroYPaginar();
+    if (this.allBancos.length < initialLength) {
       Swal.fire('¡Eliminado!', 'El banco ha sido eliminado.', 'success');
     } else {
       Swal.fire('Error', 'No se pudo encontrar el banco para eliminar.', 'error');

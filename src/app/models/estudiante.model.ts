@@ -1,3 +1,4 @@
+import { EstadoAcademicoReference } from "./enums/estado-academico-reference.enum";
 import { GeneroReference } from "./enums/genero-reference.enum";
 import { MatriculaDto } from "./matricula.model";
 
@@ -12,7 +13,7 @@ export interface EstudianteDto {
   direccion?: string;
   telefono?: string;
   email?: string;
-  habilitado: boolean;
+  estado: EstadoAcademicoReference;
   fechaCreacion: string;
   matriculas: MatriculaDto[];
 }

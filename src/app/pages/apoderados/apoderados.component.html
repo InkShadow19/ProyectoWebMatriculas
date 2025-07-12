@@ -1,201 +1,107 @@
 <div class="card">
-    <div class="card-header border-0 pt-6">
-        <div class="card-title">
-            <h3>Gestión de Apoderados</h3>
-        </div>
-        <div class="card-toolbar">
-            <div class="d-flex justify-content-end">
-                <!-- Botón para activar el modal de Añadir Apoderado -->
-                <button type="button" class="btn btn-success btn-sm" (click)="openAddApoderadoModal()">
-                    <app-keenicon name="plus" class="me-2"></app-keenicon>
-                    Nuevo Apoderado
+  <div class="card-header border-0 pt-6">
+    <div class="card-title">
+      <h3>Gestión de Apoderados</h3>
+    </div>
+    <div class="card-toolbar">
+      <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-success btn-sm" (click)="openAddApoderadoModal()">
+          <app-keenicon name="plus" class="me-2"></app-keenicon>
+          Nuevo Apoderado
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body py-4">
+    <div class="table-responsive">
+      <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
+        <thead>
+          <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+            <th>DNI</th>
+            <th>Nombre Completo</th>
+            <th>Parentesco</th>
+            <th>Fecha de Nacimiento</th>
+            <th>Género</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th class="text-center">Estado</th> <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-600 fw-semibold">
+          <tr *ngFor="let apoderado of pagedApoderados">
+            <td>{{ apoderado.dni }}</td>
+            <td>{{ apoderado.nombre }} {{ apoderado.apellidoPaterno }} {{ apoderado.apellidoMaterno }}</td>
+            <td>{{ apoderado.parentesco }}</td>
+            <td>{{ apoderado.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+            <td>{{ apoderado.genero }}</td>
+            <td>{{ apoderado.email }}</td>
+            <td>{{ apoderado.telefono }}</td>
+            <td>{{ apoderado.direccion }}</td>
+            <td class="text-center">
+              <div class="badge" [ngClass]="{
+                'badge-light-success': apoderado.estado === EstadoReference.ACTIVO,
+                'badge-light-danger': apoderado.estado === EstadoReference.INACTIVO,
+                'badge-secondary': apoderado.estado === EstadoReference.UNDEFINED
+              }">
+                {{ apoderado.estado.replace('_', ' ') }}
+              </div>
+            </td>
+            <td class="text-end">
+              <div class="text-end" ngbDropdown>
+                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
-            </div>
-        </div>
+                <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
+                  <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3 text-info"
+                      (click)="openEditApoderadoModal(apoderado); $event.preventDefault()">
+                      <app-keenicon name="pencil" class="me-2"></app-keenicon>
+                      Editar
+                    </a>
+                  </div>
+                  <div class="menu-item px-3">
+                    <a href="#" class="menu-link px-3 text-danger"
+                      (click)="confirmDeleteApoderado(apoderado); $event.preventDefault()">
+                      <app-keenicon name="trash" class="me-2"></app-keenicon>
+                      Eliminar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="card-body py-4">
-        <div class="table-responsive">
-            <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
-                <thead>
-                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                        <th>DNI</th>
-                        <th>Nombre Completo</th>
-                        <th>Parentesco</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Género</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th class="text-center">Habilitado</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 fw-semibold">
-                    <tr *ngFor="let apoderado of pagedApoderados">
-                        <td>{{ apoderado.dni }}</td>
-                        <td>
-                            {{ apoderado.nombre }} {{ apoderado.apellidoPaterno }}
-                            {{ apoderado.apellidoMaterno }}
-                        </td>
-                        <td>{{ apoderado.parentesco }}</td>
-                        <td>{{ apoderado.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
-                        <td>{{ apoderado.genero }}</td>
-                        <td>{{ apoderado.email }}</td>
-                        <td>{{ apoderado.telefono }}</td>
-                        <td>{{ apoderado.direccion }}</td>
-                        <td class="text-center">
-                            <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
-                                <input class="form-check-input" type="checkbox"
-                                    id="switchApoderado-{{ apoderado.identifier }}" [checked]="apoderado.habilitado"
-                                    (change)="toggleHabilitado(apoderado)" />
-                            </div>
-                        </td>
-                        <td class="text-end">
-                            <!-- ACCIONES SIEMPRE EN MENÚ DESPLEGABLE -->
-                            <div class="text-end" ngbDropdown>
-                                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
-                                    ngbDropdownToggle>
-                                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                                </button>
-                                <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
-                                    <div class="menu-item px-3">
-                                        <a href="#" class="menu-link px-3 text-info"
-                                            (click)="openEditApoderadoModal(apoderado); $event.preventDefault()">
-                                            <app-keenicon name="pencil" class="me-2"></app-keenicon>
-                                            Editar
-                                        </a>
-                                    </div>
-                                    <div class="menu-item px-3">
-                                        <a href="#" class="menu-link px-3 text-danger"
-                                            (click)="confirmDeleteApoderado(apoderado); $event.preventDefault()">
-                                            <app-keenicon name="trash" class="me-2"></app-keenicon>
-                                            Eliminar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
 
-        <div class="d-flex flex-stack flex-wrap pt-10">
-            <div class="fs-6 fw-semibold text-gray-700">
-                Mostrando
-                <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-                a
-                <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedApoderados.length }}</span>
-                de <span class="fw-bold">{{ apoderados.length }}</span> registros
-            </div>
-
-            <ul class="pagination">
-                <li class="page-item previous" [class.disabled]="currentPage === 1">
-                    <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
-                            class="previous"></i></a>
-                </li>
-
-                <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-                    <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
-                </li>
-
-                <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-                    <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i
-                            class="next"></i></a>
-                </li>
-            </ul>
-        </div>
+    <div class="d-flex flex-stack flex-wrap pt-10">
+      <div class="fs-6 fw-semibold text-gray-700">
+        Mostrando
+        <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+        a
+        <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedApoderados.length }}</span>
+        de <span class="fw-bold">{{ apoderados.length }}</span> registros
+      </div>
+      <ul class="pagination">
+        <li class="page-item previous" [class.disabled]="currentPage === 1">
+          <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
+        </li>
+        <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+          <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+        </li>
+        <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+          <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+        </li>
+      </ul>
     </div>
+  </div>
 </div>
 
-<!-- Diseño del Modal Añadir Apoderado -->
 <ng-template #addApoderadoModal>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Añadir Nuevo Apoderado</h2>
-            <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-                <app-keenicon name="cross" class="fs-1"></app-keenicon>
-            </div>
-        </div>
-        <div class="modal-body">
-            <form>
-                <div class="row">
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">DNI:</label>
-                        <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.dni"
-                            name="newApoderadoDNI" maxlength="8" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Nombres:</label>
-                        <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.nombre"
-                            name="newApoderadoNombre" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Apellido Paterno:</label>
-                        <input type="text" class="form-control form-control-solid"
-                            [(ngModel)]="newApoderado.apellidoPaterno" name="newApoderadoApellidoPaterno" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label">Apellido Materno:</label>
-                        <input type="text" class="form-control form-control-solid"
-                            [(ngModel)]="newApoderado.apellidoMaterno" name="newApoderadoApellidoMaterno" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Parentesco:</label>
-                        <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.parentesco"
-                            name="newApoderadoParentesco" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Fecha de Nacimiento:</label>
-                        <input type="date" class="form-control form-control-solid"
-                            [(ngModel)]="newApoderado.fechaNacimiento" name="newApoderadoFechaNacimiento" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Género:</label>
-                        <select class="form-select form-select-solid" [(ngModel)]="newApoderado.genero"
-                            name="newApoderadoGenero">
-                            <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label required">Email:</label>
-                        <input type="email" class="form-control form-control-solid" [(ngModel)]="newApoderado.email"
-                            name="newApoderadoEmail" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label">Teléfono:</label>
-                        <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.telefono"
-                            name="newApoderadoTelefono" maxlength="9" />
-                    </div>
-                    <div class="mb-5 col-md-6">
-                        <label class="form-label">Dirección:</label>
-                        <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.direccion"
-                            name="newApoderadoDireccion" />
-                    </div>
-                    <div class="mb-5 col-12">
-                        <div class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" [(ngModel)]="newApoderado.habilitado"
-                                name="newHabilitado" />
-                            <label class="form-check-label">Habilitado</label>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-            <button type="button" class="btn btn-primary" (click)="saveApoderado()">Guardar</button>
-        </div>
-    </div>
-</ng-template>
-
-<!-- Diseño del Modal Editar Apoderado -->
-<ng-template #editApoderadoModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Editar Apoderado</h2>
+      <h2>Añadir Nuevo Apoderado</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
@@ -205,63 +111,121 @@
         <div class="row">
           <div class="mb-5 col-md-6">
             <label class="form-label required">DNI:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.dni"
-              name="editApoderadoDNI" maxlength="8" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.dni" name="newApoderadoDNI" maxlength="8" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Nombres:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.nombre"
-              name="editApoderadoNombre" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.nombre" name="newApoderadoNombre" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Apellido Paterno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.apellidoPaterno"
-              name="editApoderadoApellidoPaterno" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.apellidoPaterno" name="newApoderadoApellidoPaterno" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label">Apellido Materno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.apellidoMaterno"
-              name="editApoderadoApellidoMaterno" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.apellidoMaterno" name="newApoderadoApellidoMaterno" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Parentesco:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.parentesco"
-              name="editApoderadoParentesco" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.parentesco" name="newApoderadoParentesco" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Fecha de Nacimiento:</label>
-            <input type="date" class="form-control form-control-solid"
-              [(ngModel)]="editingApoderado!.fechaNacimiento" name="editApoderadoFechaNacimiento" />
+            <input type="date" class="form-control form-control-solid" [(ngModel)]="newApoderado.fechaNacimiento" name="newApoderadoFechaNacimiento" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Género:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="editingApoderado!.genero"
-              name="editApoderadoGenero">
+            <select class="form-select form-select-solid" [(ngModel)]="newApoderado.genero" name="newApoderadoGenero">
               <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
             </select>
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Email:</label>
-            <input type="email" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.email"
-              name="editApoderadoEmail" />
+            <input type="email" class="form-control form-control-solid" [(ngModel)]="newApoderado.email" name="newApoderadoEmail" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label">Teléfono:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.telefono"
-              name="editApoderadoTelefono" maxlength="9" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.telefono" name="newApoderadoTelefono" maxlength="9" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label">Dirección:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado!.direccion"
-              name="editApoderadoDireccion" />
+            <input type="text" class="form-control form-control-solid" [(ngModel)]="newApoderado.direccion" name="newApoderadoDireccion" />
           </div>
-          <div class="mb-5 col-12">
-            <div class="form-check form-switch form-check-custom form-check-solid">
-              <input class="form-check-input" type="checkbox" [(ngModel)]="editingApoderado!.habilitado"
-                name="editApoderadoHabilitado" />
-              <label class="form-check-label">Habilitado</label>
+          <div class="mb-5 col-md-6">
+              <label class="form-label required">Estado:</label>
+              <select class="form-select form-select-solid" [(ngModel)]="newApoderado.estado" name="newApoderadoEstado">
+                <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+              </select>
             </div>
-          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
+      <button type="button" class="btn btn-primary" (click)="saveApoderado()">Guardar</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #editApoderadoModal>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Editar Apoderado</h2>
+      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
+        <app-keenicon name="cross" class="fs-1"></app-keenicon>
+      </div>
+    </div>
+    <div class="modal-body">
+      <form *ngIf="editingApoderado">
+        <div class="row">
+            <div class="mb-5 col-md-6">
+                <label class="form-label required">DNI:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.dni" name="editApoderadoDNI" maxlength="8" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Nombres:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.nombre" name="editApoderadoNombre" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Apellido Paterno:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.apellidoPaterno" name="editApoderadoApellidoPaterno" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label">Apellido Materno:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.apellidoMaterno" name="editApoderadoApellidoMaterno" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Parentesco:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.parentesco" name="editApoderadoParentesco" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Fecha de Nacimiento:</label>
+                <input type="date" class="form-control form-control-solid" [(ngModel)]="editingApoderado.fechaNacimiento" name="editApoderadoFechaNacimiento" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Género:</label>
+                <select class="form-select form-select-solid" [(ngModel)]="editingApoderado.genero" name="editApoderadoGenero">
+                  <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
+                </select>
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Email:</label>
+                <input type="email" class="form-control form-control-solid" [(ngModel)]="editingApoderado.email" name="editApoderadoEmail" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label">Teléfono:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.telefono" name="editApoderadoTelefono" maxlength="9" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label">Dirección:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingApoderado.direccion" name="editApoderadoDireccion" />
+              </div>
+             <div class="mb-5 col-md-6">
+                <label class="form-label required">Estado:</label>
+                <select class="form-select form-select-solid" [(ngModel)]="editingApoderado.estado" name="editApoderadoEstado">
+                  <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+                </select>
+              </div>
         </div>
       </form>
     </div>

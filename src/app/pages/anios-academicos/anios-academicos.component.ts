@@ -53,7 +53,12 @@ export class AniosAcademicosComponent implements OnInit {
   ];
 
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
-    this.estadoAcademicoKeys = Object.values(EstadoAcademicoReference) as string[];
+    this.estadoAcademicoKeys = [
+      EstadoAcademicoReference.ACTIVO,
+      EstadoAcademicoReference.CERRADO,
+      EstadoAcademicoReference.FUTURO,
+      EstadoAcademicoReference.UNDEFINED,
+    ];
   }
 
   ngOnInit(): void {

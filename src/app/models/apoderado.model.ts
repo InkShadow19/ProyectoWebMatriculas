@@ -1,3 +1,4 @@
+import { EstadoReference } from "./enums/estado-reference.enum";
 import { GeneroReference } from "./enums/genero-reference.enum";
 import { MatriculaDto } from "./matricula.model";
 
@@ -13,7 +14,7 @@ export interface ApoderadoDto {
   telefono?: string;
   email?: string;
   direccion?: string;
-  habilitado: boolean;
+  estado: EstadoReference;
   fechaCreacion: string;
   matriculas: MatriculaDto[];
 }

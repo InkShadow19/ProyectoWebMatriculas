@@ -18,27 +18,24 @@
           <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
             <th>Código</th>
             <th>Descripción</th>
-            <th class="text-center">Habilitado</th>
+            <th class="text-center">Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <!-- Modificado para usar pagedBancos -->
           <tr *ngFor="let banco of pagedBancos">
-            <td>
-              {{ banco.codigo }}
-            </td>
-            <td>
-              {{ banco.descripcion }}
-            </td>
+            <td>{{ banco.codigo }}</td>
+            <td>{{ banco.descripcion }}</td>
             <td class="text-center">
-              <div class="form-check form-switch form-check-custom form-check-solid d-inline-block">
-                <input class="form-check-input" type="checkbox" id="switchBanco-{{ banco.identifier }}"
-                  [checked]="banco.habilitado" (change)="toggleHabilitado(banco)" />
+              <div class="badge" [ngClass]="{
+                'badge-light-success': banco.estado === EstadoReference.ACTIVO,
+                'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
+                'badge-secondary': banco.estado === EstadoReference.UNDEFINED
+              }">
+                {{ banco.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <!-- ACCIONES PARA PANTALLAS GRANDES (md y superiores) -->
               <div class="d-none d-md-flex justify-content-end">
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditBankModal(banco)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
@@ -49,8 +46,6 @@
                   Eliminar
                 </button>
               </div>
-
-              <!-- ACCIONES PARA PANTALLAS PEQUEÑAS (sm y menores) -->
               <div class="d-md-none text-end" ngbDropdown>
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
@@ -73,7 +68,6 @@
     </div>
   </div>
 
-  <!-- PAGINACIÓN ESTILO ESTUDIANTES - Añadido aquí -->
   <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="bancos.length > 0">
     <div class="fs-6 fw-semibold text-gray-700">
       Mostrando
@@ -83,25 +77,15 @@
       de
       <span class="fw-bold">{{ bancos.length }}</span> registros
     </div>
-
     <ul class="pagination">
-      <!-- Botón Anterior -->
       <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
-          <i class="previous"></i>
-        </a>
+        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
       </li>
-
-      <!-- Páginas -->
       <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
         <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
       </li>
-
-      <!-- Botón Siguiente -->
       <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
-          <i class="next"></i>
-        </a>
+        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
       </li>
     </ul>
   </div>
@@ -128,12 +112,11 @@
             placeholder="Ingrese la descripción del banco" [(ngModel)]="newBank.descripcion"
             name="newBankDescripcion" />
         </div>
-        <div class="form-check form-switch form-check-custom form-check-solid mb-5">
-          <input class="form-check-input" type="checkbox" id="bankEnabled" [(ngModel)]="newBank.habilitado"
-            name="newBankHabilitado" />
-          <label class="form-check-label" for="bankEnabled">
-            Habilitado
-          </label>
+        <div class="mb-5">
+          <label class="form-label required">Estado:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="newBank.estado" name="newBankEstado">
+            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+          </select>
         </div>
       </form>
     </div>
@@ -165,12 +148,11 @@
             placeholder="Ingrese la descripción del banco" [(ngModel)]="editingBank.descripcion"
             name="editBankDescripcion" />
         </div>
-        <div class="form-check form-switch form-check-custom form-check-solid mb-5">
-          <input class="form-check-input" type="checkbox" id="editBankEnabled" [(ngModel)]="editingBank.habilitado"
-            name="editBankHabilitado" />
-          <label class="form-check-label" for="editBankEnabled">
-            Habilitado
-          </label>
+        <div class="mb-5">
+          <label class="form-label required">Estado:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="editingBank.estado" name="editBankEstado">
+            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+          </select>
         </div>
       </form>
     </div>

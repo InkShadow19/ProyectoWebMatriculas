@@ -12,6 +12,34 @@
   </div>
 
   <div class="card-body py-4">
+    <div class="mb-10">
+      <h4 class="text-muted fw-bold mb-8">Filtros</h4>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Búsqueda Rápida:</label>
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar por descripción..."
+            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Nivel:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="filtroNivel" (change)="aplicarFiltroYPaginar()">
+            <option value="">Todos</option>
+            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-bold">Estado:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+            <option value="">Todos</option>
+            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+          </select>
+        </div>
+        <div class="col-md-2 text-end d-flex align-items-end justify-content-end">
+          <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar Filtros</button>
+        </div>
+      </div>
+    </div>
+
     <div class="table-responsive">
       <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
         <thead>
@@ -64,14 +92,14 @@
     </div>
   </div>
 
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="grados.length > 0">
+  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allGrados.length > 0">
     <div class="fs-6 fw-semibold text-gray-700">
       Mostrando
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+      <span class="fw-bold">{{ filteredGrados.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
       a
       <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedGrados.length }}</span>
       de
-      <span class="fw-bold">{{ grados.length }}</span> registros
+      <span class="fw-bold">{{ filteredGrados.length }}</span> registros
     </div>
     <ul class="pagination">
       <li class="page-item previous" [class.disabled]="currentPage === 1">
@@ -104,8 +132,9 @@
         </div>
         <div class="mb-5">
           <label class="form-label required">Nivel Académico:</label>
-          <input class="form-control form-control-solid" placeholder="Ej: Primaria" [(ngModel)]="newGrado.nivel"
-            name="newGradoNivel" />
+          <select class="form-select form-select-solid" [(ngModel)]="newGrado.nivel" name="newGradoNivel">
+            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
+          </select>
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>
@@ -139,8 +168,9 @@
         </div>
         <div class="mb-5">
           <label class="form-label required">Nivel Académico:</label>
-          <input class="form-control form-control-solid" placeholder="Ej: Primaria" [(ngModel)]="editingGrado.nivel"
-            name="editGradoNivel" />
+          <select class="form-select form-select-solid" [(ngModel)]="editingGrado.nivel" name="editGradoNivel">
+            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
+          </select>
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>

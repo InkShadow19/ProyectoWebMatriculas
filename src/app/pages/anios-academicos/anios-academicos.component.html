@@ -13,20 +13,39 @@
     </div>
   </div>
   <div class="card-body py-4">
+    <div class="mb-10">
+      <h4 class="text-muted fw-bold mb-8">Filtros</h4>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Búsqueda Rápida:</label>
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar..."
+            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Estado:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+            <option value="">Todos</option>
+            <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+          </select>
+        </div>
+        <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
+          <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar Filtros</button>
+        </div>
+      </div>
+    </div>
+
     <div class="table-responsive">
       <table class="table align-middle table-row-dashed fs-6 gy-5">
         <thead>
           <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
             <th class="min-w-150px">Año</th>
-            <th class="min-w-150px text-center" >Estado</th>
+            <th class="min-w-150px text-center">Estado</th>
             <th class="text-end min-w-100px">Acciones</th>
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
           <tr *ngFor="let anio of pagedAniosAcademicos">
-            <td>
-              {{ anio.anio }}
-            </td>
+            <td>{{ anio.anio }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
                   'badge-light-success': anio.estado === EstadoAcademicoReference.ACTIVO,
@@ -68,31 +87,24 @@
       </table>
     </div>
   </div>
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="aniosAcademicos.length > 0">
+  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allAniosAcademicos.length > 0">
     <div class="fs-6 fw-semibold text-gray-700">
       Mostrando
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+      <span class="fw-bold">{{ filteredAniosAcademicos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
       a
       <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedAniosAcademicos.length }}</span>
       de
-      <span class="fw-bold">{{ aniosAcademicos.length }}</span> registros
+      <span class="fw-bold">{{ filteredAniosAcademicos.length }}</span> registros
     </div>
-
     <ul class="pagination">
       <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
-          <i class="previous"></i>
-        </a>
+        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
       </li>
-
       <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
         <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
       </li>
-
       <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
-          <i class="next"></i>
-        </a>
+        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
       </li>
     </ul>
   </div>

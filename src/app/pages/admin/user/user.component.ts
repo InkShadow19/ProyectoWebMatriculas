@@ -23,11 +23,8 @@ import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
   styleUrl: './user.component.scss',
 })
 export class UserComponent implements OnInit {
-  // Enums para acceso desde el template
   EstadoReference = EstadoReference;
   GeneroReference = GeneroReference;
-
-  // Arrays de claves para los desplegables (select)
   generoKeys: string[];
   estadoKeys: string[];
 
@@ -48,78 +45,92 @@ export class UserComponent implements OnInit {
     fechaNacimiento: '',
     genero: GeneroReference.MASCULINO,
     rol: '',
-    estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+    estado: EstadoReference.ACTIVO,
     fechaCreacion: new Date().toISOString(),
     pagos: [],
   };
 
   editingUser: UsuarioDto | null = null;
+  
+  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+  allUsuarios: UsuarioDto[] = [
+    { identifier: '1', usuario: 'pfuertes', nombres: 'Percy', apellidos: 'Fuertes Anaya', dni: '45871236', fechaNacimiento: '1976-01-15T10:00:00Z', genero: GeneroReference.MASCULINO, rol: 'Administrador', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-15T10:00:00Z', pagos: [] },
+    { identifier: '2', usuario: 'emartinez', nombres: 'Emily', apellidos: 'Martinez Diaz', dni: '41257896', fechaNacimiento: '1997-12-02T10:00:00Z', genero: GeneroReference.FEMENINO, rol: 'Secretaria', estado: EstadoReference.INACTIVO, fechaCreacion: '2024-02-01T11:30:00Z', pagos: [] }
+  ];
+  filteredUsuarios: UsuarioDto[] = [];
+  pagedUsuarios: UsuarioDto[] = [];
+  
+  filtroBusqueda: string = '';
+  filtroEstado: string = '';
   currentPage = 1;
   itemsPerPage = 5;
-  pagedUsuarios: UsuarioDto[] = [];
-
-  usuarios: UsuarioDto[] = [
-    {
-      identifier: '1',
-      usuario: 'pfuertes',
-      nombres: 'Percy',
-      apellidos: 'Fuertes Anaya',
-      dni: '45871236',
-      fechaNacimiento: '1976-01-15T10:00:00Z',
-      genero: GeneroReference.MASCULINO,
-      rol: 'Administrador',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
-      fechaCreacion: '2024-01-15T10:00:00Z',
-      pagos: [],
-    },
-    {
-      identifier: '2',
-      usuario: 'emartinez',
-      nombres: 'Emily',
-      apellidos: 'Martinez Diaz',
-      dni: '41257896',
-      fechaNacimiento: '1997-12-02T10:00:00Z',
-      genero: GeneroReference.FEMENINO,
-      rol: 'Secretaria',
-      estado: EstadoReference.INACTIVO, // <--- CAMBIADO
-      fechaCreacion: '2024-02-01T11:30:00Z',
-      pagos: [],
-    }
-  ];
 
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
     this.generoKeys = Object.values(GeneroReference) as string[];
-    this.estadoKeys = Object.values(EstadoReference) as string[]; // <--- AÑADIDO
+    this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
     if (this.rolesDisponibles.length > 0 && !this.newUsuario.rol) {
       this.newUsuario.rol = this.rolesDisponibles[0].descripcion;
     }
+    this.aplicarFiltroYPaginar();
+  }
+
+  // --- Métodos de Filtro y Paginación ---
+  aplicarFiltroYPaginar(): void {
+    let usuariosTemp = [...this.allUsuarios];
+    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+
+    // 1. Filtrar por estado
+    if (this.filtroEstado) {
+      usuariosTemp = usuariosTemp.filter(user => user.estado === this.filtroEstado);
+    }
+
+    // 2. Filtrar por búsqueda de texto
+    if (searchTerm) {
+      usuariosTemp = usuariosTemp.filter(user => 
+        user.nombres.toLowerCase().includes(searchTerm) ||
+        user.apellidos.toLowerCase().includes(searchTerm) ||
+        user.dni.includes(searchTerm) ||
+        user.usuario.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    this.filteredUsuarios = usuariosTemp;
     this.setPage(1);
   }
 
-  // --- Métodos de Paginación ---
+  limpiarFiltros(): void {
+    this.filtroBusqueda = '';
+    this.filtroEstado = '';
+    this.aplicarFiltroYPaginar();
+  }
+
   setPage(page: number) {
     const totalPages = this.getTotalPages();
-    if (page < 1 || page > totalPages) return;
-
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
     this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.usuarios.length);
-    this.pagedUsuarios = this.usuarios.slice(startIndex, endIndex);
+
+    if (this.filteredUsuarios.length === 0) {
+      this.pagedUsuarios = [];
+      return;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredUsuarios.length);
+    this.pagedUsuarios = this.filteredUsuarios.slice(startIndex, endIndex);
     this.cdr.detectChanges();
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.usuarios.length / this.itemsPerPage);
+    return Math.ceil(this.filteredUsuarios.length / this.itemsPerPage);
   }
 
   getPagesArray(): number[] {
     return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
   }
-
-  // ELIMINADO: El método toggleHabilitado ya no es necesario.
 
   // --- Métodos para Añadir Usuario ---
   openAddUserModal() {
@@ -132,7 +143,7 @@ export class UserComponent implements OnInit {
       fechaNacimiento: '',
       genero: GeneroReference.MASCULINO,
       rol: this.rolesDisponibles.length > 0 ? this.rolesDisponibles[0].descripcion : '',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+      estado: EstadoReference.ACTIVO,
       fechaCreacion: new Date().toISOString(),
       pagos: [],
     };
@@ -142,23 +153,20 @@ export class UserComponent implements OnInit {
   saveUser() {
     if (!this.newUsuario.usuario || !this.newUsuario.nombres || !this.newUsuario.apellidos ||
       !this.newUsuario.dni || !this.newUsuario.fechaNacimiento || !this.newUsuario.genero ||
-      !this.newUsuario.rol || !this.newUsuario.estado) { // Se añade validación de estado
+      !this.newUsuario.rol || !this.newUsuario.estado) {
       Swal.fire('Error', 'Todos los campos obligatorios deben ser completados.', 'error');
       return;
     }
-
     if (!/^\d{8}$/.test(this.newUsuario.dni)) {
       Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
       return;
     }
 
-    const maxId = Math.max(...this.usuarios.map(u => parseInt(u.identifier || '0')), 0);
+    const maxId = Math.max(...this.allUsuarios.map(u => parseInt(u.identifier || '0')), 0);
     this.newUsuario.identifier = (maxId + 1).toString();
-    this.usuarios.push({ ...this.newUsuario });
-    this.setPage(this.getTotalPages());
-    this.cdr.detectChanges();
+    this.allUsuarios.push({ ...this.newUsuario });
+    this.aplicarFiltroYPaginar();
     Swal.fire('¡Éxito!', 'Usuario añadido correctamente.', 'success');
-    console.log('Nuevo usuario guardado:', this.newUsuario);
     this.dismiss();
   }
 
@@ -169,13 +177,10 @@ export class UserComponent implements OnInit {
   }
 
   updateUser() {
-    if (!this.editingUser) {
-      Swal.fire('Error', 'No hay usuario seleccionado para editar.', 'error');
-      return;
-    }
+    if (!this.editingUser) { return; }
     if (!this.editingUser.usuario || !this.editingUser.nombres || !this.editingUser.apellidos ||
       !this.editingUser.dni || !this.editingUser.fechaNacimiento || !this.editingUser.genero ||
-      !this.editingUser.rol || !this.editingUser.estado) { // Se añade validación de estado
+      !this.editingUser.rol || !this.editingUser.estado) {
       Swal.fire('Error', 'Todos los campos obligatorios deben ser completados para editar.', 'error');
       return;
     }
@@ -183,13 +188,11 @@ export class UserComponent implements OnInit {
       Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
       return;
     }
-    const index = this.usuarios.findIndex(u => u.identifier === this.editingUser?.identifier);
+    const index = this.allUsuarios.findIndex(u => u.identifier === this.editingUser?.identifier);
     if (index !== -1) {
-      this.usuarios[index] = { ...this.editingUser };
-      this.setPage(this.currentPage);
-      this.cdr.detectChanges();
+      this.allUsuarios[index] = { ...this.editingUser };
+      this.aplicarFiltroYPaginar();
       Swal.fire('¡Éxito!', 'Usuario actualizado correctamente.', 'success');
-      console.log('Usuario actualizado:', this.editingUser);
     } else {
       Swal.fire('Error', 'Usuario no encontrado para actualizar.', 'error');
     }
@@ -215,18 +218,11 @@ export class UserComponent implements OnInit {
   }
 
   deleteUser(identifier: string) {
-    const initialLength = this.usuarios.length;
-    this.usuarios = this.usuarios.filter(usuario => usuario.identifier !== identifier);
-    const totalPages = this.getTotalPages();
-    if (this.currentPage > totalPages) {
-      this.setPage(totalPages);
-    } else {
-      this.setPage(this.currentPage);
-    }
-    this.cdr.detectChanges();
-    if (this.usuarios.length < initialLength) {
+    const initialLength = this.allUsuarios.length;
+    this.allUsuarios = this.allUsuarios.filter(usuario => usuario.identifier !== identifier);
+    this.aplicarFiltroYPaginar();
+    if (this.allUsuarios.length < initialLength) {
       Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
-      console.log(`Usuario con ID ${identifier} eliminado.`);
     } else {
       Swal.fire('Error', 'No se pudo encontrar el usuario para eliminar.', 'error');
     }

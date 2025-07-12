@@ -6,7 +6,7 @@ import { ApoderadoDto } from 'src/app/models/apoderado.model';
 import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
 import { NgbModal, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
-import { EstadoReference } from 'src/app/models/enums/estado-reference.enum'; // <--- IMPORTADO
+import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 
 @Component({
   selector: 'app-apoderados',
@@ -25,9 +25,9 @@ export class ApoderadosComponent implements OnInit {
   @ViewChild('editApoderadoModal') editApoderadoModal: TemplateRef<any>;
 
   GeneroReference = GeneroReference;
-  EstadoReference = EstadoReference; // <--- AÑADIDO
+  EstadoReference = EstadoReference;
   generoKeys: string[];
-  estadoKeys: string[]; // <--- AÑADIDO
+  estadoKeys: string[];
 
   newApoderado: ApoderadoDto = {
     identifier: '',
@@ -41,52 +41,86 @@ export class ApoderadosComponent implements OnInit {
     email: '',
     telefono: '',
     direccion: '',
-    estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+    estado: EstadoReference.ACTIVO,
     fechaCreacion: new Date().toISOString(),
     matriculas: [],
   };
-
   editingApoderado: ApoderadoDto | null = null;
-  currentPage: number = 1;
-  itemsPerPage: number = 5;
-  pagedApoderados: ApoderadoDto[] = [];
 
-  apoderados: ApoderadoDto[] = [
+  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+  allApoderados: ApoderadoDto[] = [
     { identifier: '1', dni: '45678912', nombre: 'Maria', apellidoPaterno: 'Vargas', apellidoMaterno: 'Llosa', parentesco: 'Madre', fechaNacimiento: '1985-02-20', genero: GeneroReference.FEMENINO, telefono: '987654321', email: 'maria.vargas@email.com', direccion: 'Av. Los Proceres 123, Surco', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-20T09:00:00Z', matriculas: [] },
     { identifier: '2', dni: '41234567', nombre: 'Juan', apellidoPaterno: 'Ruiz', apellidoMaterno: 'Torres', parentesco: 'Padre', fechaNacimiento: '1982-11-30', genero: GeneroReference.MASCULINO, telefono: '912345678', email: 'juan.ruiz@email.com', direccion: 'Jr. de la Union 456, Lima', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-22T11:00:00Z', matriculas: [] },
     { identifier: '5', dni: '40123456', nombre: 'Carmen', apellidoPaterno: 'Quispe', apellidoMaterno: 'Mamani', parentesco: 'Abuela', fechaNacimiento: '1965-12-25', genero: GeneroReference.FEMENINO, telefono: '987123456', email: 'carmen.quispe@email.com', direccion: 'Urb. Santa Patricia, La Molina', estado: EstadoReference.INACTIVO, fechaCreacion: '2024-02-05T12:05:00Z', matriculas: [] },
   ];
+  filteredApoderados: ApoderadoDto[] = []; // Almacena los apoderados después de aplicar filtros
+  pagedApoderados: ApoderadoDto[] = []; // Almacena los apoderados de la página actual
+
+  filtroBusqueda: string = '';
+  filtroEstado: string = '';
+  currentPage: number = 1;
+  itemsPerPage: number = 5;
 
   constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal) {
     this.generoKeys = Object.values(GeneroReference) as string[];
-    this.estadoKeys = Object.values(EstadoReference) as string[]; // <--- AÑADIDO
+    this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
-    this.setPage(1);
+    this.aplicarFiltroYPaginar(); // Carga inicial
   }
 
-  // ELIMINADO: El método toggleHabilitado() ya no es necesario.
+  // --- Métodos de Filtro y Paginación ---
+  aplicarFiltroYPaginar(): void {
+    let apoderadosTemp = [...this.allApoderados];
+    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
 
-  // --- Métodos de Paginación ---
+    // 1. Filtrar por estado
+    if (this.filtroEstado) {
+      apoderadosTemp = apoderadosTemp.filter(apoderado => apoderado.estado === this.filtroEstado);
+    }
+
+    // 2. Filtrar por búsqueda de texto
+    if (searchTerm) {
+      apoderadosTemp = apoderadosTemp.filter(apoderado => {
+        const nombreCompleto = `${apoderado.nombre} ${apoderado.apellidoPaterno} ${apoderado.apellidoMaterno || ''}`.toLowerCase();
+        return nombreCompleto.includes(searchTerm) || apoderado.dni.includes(searchTerm);
+      });
+    }
+
+    this.filteredApoderados = apoderadosTemp;
+    this.setPage(1); // Siempre vuelve a la primera página después de un nuevo filtro
+  }
+
+  limpiarFiltros(): void {
+    this.filtroBusqueda = '';
+    this.filtroEstado = '';
+    this.aplicarFiltroYPaginar();
+  }
+
   setPage(page: number) {
-    if (page < 1 || page > this.getTotalPages()) {
+    const totalPages = this.getTotalPages();
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    this.currentPage = page;
+
+    if (this.filteredApoderados.length === 0) {
+      this.pagedApoderados = [];
       return;
     }
-    this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.apoderados.length);
-    this.pagedApoderados = this.apoderados.slice(startIndex, endIndex);
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredApoderados.length);
+    this.pagedApoderados = this.filteredApoderados.slice(startIndex, endIndex);
     this.cdr.detectChanges();
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.apoderados.length / this.itemsPerPage);
+    return Math.ceil(this.filteredApoderados.length / this.itemsPerPage);
   }
 
   getPagesArray(): number[] {
-    const totalPages = this.getTotalPages();
-    return Array(totalPages).fill(0).map((x, i) => i + 1);
+    return Array(this.getTotalPages()).fill(0).map((x, i) => i + 1);
   }
 
   // --- Métodos CRUD ---
@@ -103,7 +137,7 @@ export class ApoderadosComponent implements OnInit {
       email: '',
       telefono: '',
       direccion: '',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+      estado: EstadoReference.ACTIVO,
       fechaCreacion: new Date().toISOString(),
       matriculas: [],
     };
@@ -113,15 +147,14 @@ export class ApoderadosComponent implements OnInit {
   saveApoderado() {
     if (!this.newApoderado.dni || !this.newApoderado.nombre || !this.newApoderado.apellidoPaterno ||
       !this.newApoderado.parentesco || !this.newApoderado.fechaNacimiento || !this.newApoderado.genero ||
-      !this.newApoderado.email || !this.newApoderado.estado) { // <--- VALIDACIÓN ACTUALIZADA
+      !this.newApoderado.email || !this.newApoderado.estado) {
       Swal.fire('Error', 'Todos los campos requeridos deben ser completados.', 'error');
       return;
     }
-    // ... resto de validaciones ...
-    const maxId = Math.max(...this.apoderados.map(a => parseInt(a.identifier || '0')), 0);
+    const maxId = Math.max(...this.allApoderados.map(a => parseInt(a.identifier || '0')), 0);
     this.newApoderado.identifier = (maxId + 1).toString();
-    this.apoderados.push({ ...this.newApoderado });
-    this.setPage(this.getTotalPages());
+    this.allApoderados.push({ ...this.newApoderado });
+    this.aplicarFiltroYPaginar(); // Actualiza la vista
     Swal.fire('¡Éxito!', 'Apoderado añadido correctamente.', 'success');
     this.dismiss();
   }
@@ -132,18 +165,17 @@ export class ApoderadosComponent implements OnInit {
   }
 
   updateApoderado() {
-    if (!this.editingApoderado) { /* ... */ return; }
+    if (!this.editingApoderado) { return; }
     if (!this.editingApoderado.dni || !this.editingApoderado.nombre || !this.editingApoderado.apellidoPaterno ||
       !this.editingApoderado.parentesco || !this.editingApoderado.fechaNacimiento || !this.editingApoderado.genero ||
-      !this.editingApoderado.email || !this.editingApoderado.estado) { // <--- VALIDACIÓN ACTUALIZADA
+      !this.editingApoderado.email || !this.editingApoderado.estado) {
       Swal.fire('Error', 'Todos los campos requeridos deben ser completados.', 'error');
       return;
     }
-    // ... resto de validaciones ...
-    const index = this.apoderados.findIndex(a => a.identifier === this.editingApoderado?.identifier);
+    const index = this.allApoderados.findIndex(a => a.identifier === this.editingApoderado?.identifier);
     if (index !== -1) {
-      this.apoderados[index] = { ...this.editingApoderado };
-      this.setPage(this.currentPage);
+      this.allApoderados[index] = { ...this.editingApoderado };
+      this.aplicarFiltroYPaginar(); // Actualiza la vista
       Swal.fire('¡Éxito!', 'Apoderado actualizado correctamente.', 'success');
     } else {
       Swal.fire('Error', 'Apoderado no encontrado para actualizar.', 'error');
@@ -168,39 +200,14 @@ export class ApoderadosComponent implements OnInit {
     });
   }
 
-  /**
-   * Elimina un apoderado de la lista y actualiza la paginación correctamente.
-   * @param identifier El identificador del apoderado a eliminar.
-   */
   deleteApoderado(identifier: string) {
-    const initialLength = this.apoderados.length;
-    this.apoderados = this.apoderados.filter(apoderado => apoderado.identifier !== identifier);
-    const totalPages = this.getTotalPages();
-
-    if (this.currentPage > totalPages) {
-      this.currentPage = totalPages;
-    }
-
-    if (totalPages === 0) {
-      this.pagedApoderados = [];
-      this.currentPage = 1;
+    const initialLength = this.allApoderados.length;
+    this.allApoderados = this.allApoderados.filter(apoderado => apoderado.identifier !== identifier);
+    this.aplicarFiltroYPaginar(); // Actualiza la vista
+    if (this.allApoderados.length < initialLength) {
+      Swal.fire('¡Eliminado!', 'El apoderado ha sido eliminado.', 'success');
     } else {
-      this.setPage(this.currentPage);
-    }
-
-    if (this.apoderados.length < initialLength) {
-      Swal.fire(
-        '¡Eliminado!',
-        'El apoderado ha sido eliminado.',
-        'success'
-      );
-      console.log(`Apoderado con ID ${identifier} eliminado.`);
-    } else {
-      Swal.fire(
-        'Error',
-        'No se pudo encontrar el apoderado para eliminar.',
-        'error'
-      );
+      Swal.fire('Error', 'No se pudo encontrar el apoderado para eliminar.', 'error');
     }
   }
 

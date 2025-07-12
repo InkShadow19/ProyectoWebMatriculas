@@ -5,7 +5,7 @@ import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { RolDto } from 'src/app/models/rol.model';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
-import { EstadoReference } from 'src/app/models/enums/estado-reference.enum'; // <--- IMPORTADO
+import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 
 @Component({
   selector: 'app-roles',
@@ -20,67 +20,90 @@ import { EstadoReference } from 'src/app/models/enums/estado-reference.enum'; //
   styleUrl: './roles.component.scss'
 })
 export class RolesComponent implements OnInit {
-
   @ViewChild('addRolModal') addRolModal: TemplateRef<any>;
   @ViewChild('editRolModal') editRolModal: TemplateRef<any>;
 
-  // Propiedades para manejar el estado
   EstadoReference = EstadoReference;
   estadoKeys: string[];
 
   newRol: RolDto = {
     identifier: '',
     descripcion: '',
-    estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+    estado: EstadoReference.ACTIVO,
     fechaCreacion: new Date().toISOString(),
     usuarios: [],
   };
 
   editingRol: RolDto | null = null;
-  currentPage = 1;
-  itemsPerPage = 5;
+
+  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
+  allRoles: RolDto[] = [
+    { identifier: '1', descripcion: 'Administrador', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-10T09:00:00Z', usuarios: [] },
+    { identifier: '2', descripcion: 'Secretaria', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-11T10:30:00Z', usuarios: [] },
+    { identifier: '3', descripcion: 'Profesor', estado: EstadoReference.INACTIVO, fechaCreacion: '2024-01-12T11:00:00Z', usuarios: [] },
+  ];
+  filteredRoles: RolDto[] = [];
   pagedRoles: RolDto[] = [];
 
-  roles: RolDto[] = [
-    {
-      identifier: '1',
-      descripcion: 'Administrador',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
-      fechaCreacion: '2024-01-10T09:00:00Z',
-      usuarios: [],
-    },
-    {
-      identifier: '2',
-      descripcion: 'Secretaria',
-      estado: EstadoReference.INACTIVO, // <--- CAMBIADO
-      fechaCreacion: '2024-01-11T10:30:00Z',
-      usuarios: [],
-    }
-  ];
+  filtroBusqueda: string = '';
+  filtroEstado: string = '';
+  currentPage = 1;
+  itemsPerPage = 5;
 
   constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
-    this.estadoKeys = Object.values(EstadoReference) as string[]; // <--- AÑADIDO
+    this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
+    this.aplicarFiltroYPaginar();
+  }
+
+  // --- Métodos de Filtro y Paginación ---
+  aplicarFiltroYPaginar(): void {
+    let rolesTemp = [...this.allRoles];
+    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+
+    // 1. Filtrar por estado
+    if (this.filtroEstado) {
+      rolesTemp = rolesTemp.filter(rol => rol.estado === this.filtroEstado);
+    }
+
+    // 2. Filtrar por búsqueda de texto
+    if (searchTerm) {
+      rolesTemp = rolesTemp.filter(rol =>
+        rol.descripcion.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    this.filteredRoles = rolesTemp;
     this.setPage(1);
   }
 
-  // ELIMINADO: El método toggleHabilitado() ya no es necesario.
+  limpiarFiltros(): void {
+    this.filtroBusqueda = '';
+    this.filtroEstado = '';
+    this.aplicarFiltroYPaginar();
+  }
 
-  // --- Métodos de Paginación ---
   setPage(page: number) {
     const totalPages = this.getTotalPages();
-    if (page < 1 || page > totalPages) return;
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
     this.currentPage = page;
-    const startIndex = (page - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.roles.length);
-    this.pagedRoles = this.roles.slice(startIndex, endIndex);
+
+    if (this.filteredRoles.length === 0) {
+      this.pagedRoles = [];
+      return;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredRoles.length);
+    this.pagedRoles = this.filteredRoles.slice(startIndex, endIndex);
     this.cdr.detectChanges();
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.roles.length / this.itemsPerPage);
+    return Math.ceil(this.filteredRoles.length / this.itemsPerPage);
   }
 
   getPagesArray(): number[] {
@@ -92,7 +115,7 @@ export class RolesComponent implements OnInit {
     this.newRol = {
       identifier: '',
       descripcion: '',
-      estado: EstadoReference.ACTIVO, // <--- CAMBIADO
+      estado: EstadoReference.ACTIVO,
       fechaCreacion: new Date().toISOString(),
       usuarios: [],
     };
@@ -100,16 +123,15 @@ export class RolesComponent implements OnInit {
   }
 
   saveRol() {
-    if (!this.newRol.descripcion || !this.newRol.estado) { // <--- VALIDACIÓN AÑADIDA
+    if (!this.newRol.descripcion || !this.newRol.estado) {
       Swal.fire('Error', 'La descripción y el estado del rol son obligatorios.', 'error');
       return;
     }
 
-    const maxId = Math.max(...this.roles.map(r => parseInt(r.identifier || '0')), 0);
+    const maxId = Math.max(...this.allRoles.map(r => parseInt(r.identifier || '0')), 0);
     this.newRol.identifier = (maxId + 1).toString();
-    this.roles.push({ ...this.newRol });
-    this.setPage(this.getTotalPages());
-    this.cdr.detectChanges();
+    this.allRoles.push({ ...this.newRol });
+    this.aplicarFiltroYPaginar();
     Swal.fire('¡Éxito!', 'Rol añadido correctamente.', 'success');
     this.dismiss();
   }
@@ -121,20 +143,16 @@ export class RolesComponent implements OnInit {
   }
 
   updateRol() {
-    if (!this.editingRol) {
-      Swal.fire('Error', 'No hay rol seleccionado para editar.', 'error');
-      return;
-    }
-    if (!this.editingRol.descripcion || !this.editingRol.estado) { // <--- VALIDACIÓN AÑADIDA
+    if (!this.editingRol) { return; }
+    if (!this.editingRol.descripcion || !this.editingRol.estado) {
       Swal.fire('Error', 'La descripción y el estado del rol son obligatorios para editar.', 'error');
       return;
     }
 
-    const index = this.roles.findIndex(r => r.identifier === this.editingRol?.identifier);
+    const index = this.allRoles.findIndex(r => r.identifier === this.editingRol?.identifier);
     if (index !== -1) {
-      this.roles[index] = { ...this.editingRol };
-      this.setPage(this.currentPage);
-      this.cdr.detectChanges();
+      this.allRoles[index] = { ...this.editingRol };
+      this.aplicarFiltroYPaginar();
       Swal.fire('¡Éxito!', 'Rol actualizado correctamente.', 'success');
     } else {
       Swal.fire('Error', 'Rol no encontrado para actualizar.', 'error');
@@ -161,16 +179,10 @@ export class RolesComponent implements OnInit {
   }
 
   deleteRol(identifier: string) {
-    const initialLength = this.roles.length;
-    this.roles = this.roles.filter(rol => rol.identifier !== identifier);
-    const totalPages = this.getTotalPages();
-    if (this.currentPage > totalPages && totalPages > 0) {
-      this.setPage(totalPages);
-    } else {
-      this.setPage(this.currentPage);
-    }
-    this.cdr.detectChanges();
-    if (this.roles.length < initialLength) {
+    const initialLength = this.allRoles.length;
+    this.allRoles = this.allRoles.filter(rol => rol.identifier !== identifier);
+    this.aplicarFiltroYPaginar();
+    if (this.allRoles.length < initialLength) {
       Swal.fire('¡Eliminado!', 'El rol ha sido eliminado.', 'success');
     } else {
       Swal.fire('Error', 'No se pudo encontrar el rol para eliminar.', 'error');

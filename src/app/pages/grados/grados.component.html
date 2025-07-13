@@ -170,9 +170,11 @@
           <input class="form-control form-control-solid" placeholder="Ej: 1er Grado"
             [(ngModel)]="editingGrado.descripcion" name="editGradoDescripcion" />
         </div>
+
         <div class="mb-5">
           <label class="form-label required">Nivel Académico:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingGrado.nivel" name="editGradoNivel">
+          <select class="form-select form-select-solid" [(ngModel)]="editingGrado.nivel" name="editGradoNivel"
+            [disabled]="true">
             <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
           </select>
         </div>

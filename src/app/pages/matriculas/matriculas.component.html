@@ -17,7 +17,7 @@
             <div class="row g-3">
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Año:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtroAnio">
+                    <select class="form-select form-select-solid" [(ngModel)]="filtroAnio" (ngModelChange)="buscar()">
                         <option *ngFor="let anio of anios" [value]="anio">{{ anio }}</option>
                     </select>
                 </div>
@@ -31,14 +31,16 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Grado:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtroGrado" [disabled]="!filtroNivel">
+                    <select class="form-select form-select-solid" [(ngModel)]="filtroGrado" (ngModelChange)="buscar()"
+                        [disabled]="!filtroNivel">
                         <option value="">Todos los Grados</option>
                         <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold">Estado:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtroEstado">
+                    <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (ngModelChange)="buscar()">
+                        <option value="">Todos</option>
                         <option value="true">Vigente</option>
                         <option value="false">Anulada</option>
                     </select>
@@ -46,14 +48,14 @@
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Búsqueda Rápida:</label>
                     <input type="text" class="form-control form-control-solid"
-                        placeholder="Buscar por estudiante, DNI o cód..." [(ngModel)]="filtroBusqueda" />
+                        placeholder="Buscar por estudiante, DNI o cód..." [(ngModel)]="filtroBusqueda"
+                        (input)="buscar()" />
                 </div>
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-md-12 text-end">
                     <button type="button" class="btn btn-light-primary me-3 btn-sm"
                         (click)="limpiarFiltros()">Limpiar</button>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="buscar()">Buscar</button>
                 </div>
             </div>
         </div>

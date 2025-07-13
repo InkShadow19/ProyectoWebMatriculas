@@ -67,7 +67,7 @@ export class MatriculasComponent implements OnInit {
   filtroAnio: string = '2025';
   filtroNivel: string = '';
   filtroGrado: string = '';
-  filtroEstado: string = 'true';
+  filtroEstado: string = '';
   filtroBusqueda: string = '';
 
   // --- Datos para los Selectores ---
@@ -231,7 +231,7 @@ export class MatriculasComponent implements OnInit {
     this.filtroAnio = '2025';
     this.filtroNivel = '';
     this.filtroGrado = '';
-    this.filtroEstado = 'true';
+    this.filtroEstado = '';
     this.filtroBusqueda = '';
     this.actualizarGrados();
     this.buscar();

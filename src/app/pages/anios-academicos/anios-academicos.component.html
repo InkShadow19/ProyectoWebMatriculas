@@ -66,17 +66,19 @@
                   Eliminar
                 </button>
               </div>
+
               <div class="d-md-none text-end" ngbDropdown>
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
-                <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
-                  <button class="menu-btn menu-btn-edit mb-2" (click)="openEditAnioAcademicoModal(anio)">
-                    <app-keenicon name="pencil" class="me-2"></app-keenicon>
+
+                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                  <button class="dropdown-item text-info" (click)="openEditAnioAcademicoModal(anio)">
+                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="menu-btn menu-btn-delete" (click)="confirmDeleteAnioAcademico(anio)">
-                    <app-keenicon name="trash" class="me-2"></app-keenicon>
+                  <button class="dropdown-item text-danger" (click)="confirmDeleteAnioAcademico(anio)">
+                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>

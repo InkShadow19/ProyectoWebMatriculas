@@ -19,8 +19,8 @@
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar"
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar" [(ngModel)]="filtroBusqueda"
+            (input)="aplicarFiltroYPaginar()" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Estado:</label>
@@ -67,6 +67,7 @@
               </div>
             </td>
             <td class="text-end">
+              <!-- Botones para PANTALLAS GRANDES (Sin cambios) -->
               <div class="d-none d-md-flex justify-content-end">
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditUserModal(usuario)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
@@ -77,17 +78,18 @@
                   Eliminar
                 </button>
               </div>
+
               <div class="d-md-none text-end" ngbDropdown>
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
-                <div ngbDropdownMenu class="dropdown-menu-end py-2 px-3">
-                  <button class="menu-btn menu-btn-edit mb-2" (click)="openEditUserModal(usuario)">
-                    <app-keenicon name="pencil" class="me-2"></app-keenicon>
+                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                  <button class="dropdown-item text-info" (click)="openEditUserModal(usuario)">
+                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="menu-btn menu-btn-delete" (click)="confirmDeleteUser(usuario)">
-                    <app-keenicon name="trash" class="me-2"></app-keenicon>
+                  <button class="dropdown-item text-danger" (click)="confirmDeleteUser(usuario)">
+                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>
@@ -132,50 +134,58 @@
     </div>
     <div class="modal-body">
       <form>
-        <div class="mb-5">
-          <label for="newUsuario" class="form-label required">Usuario:</label>
-          <input type="text" class="form-control form-control-solid" id="newUsuario"
-            placeholder="Ingrese el nombre de usuario" [(ngModel)]="newUsuario.usuario" name="newUsuarioUserName" />
-        </div>
-        <div class="mb-5">
-          <label for="newNombres" class="form-label required">Nombres:</label>
-          <input type="text" class="form-control form-control-solid" id="newNombres" placeholder="Ingrese los nombres"
-            [(ngModel)]="newUsuario.nombres" name="newUsuarioNombres" />
-        </div>
-        <div class="mb-5">
-          <label for="newApellidos" class="form-label required">Apellidos:</label>
-          <input type="text" class="form-control form-control-solid" id="newApellidos"
-            placeholder="Ingrese los apellidos" [(ngModel)]="newUsuario.apellidos" name="newUsuarioApellidos" />
-        </div>
-        <div class="mb-5">
-          <label for="newDNI" class="form-label required">DNI:</label>
-          <input type="text" class="form-control form-control-solid" id="newDNI" placeholder="Ingrese el DNI"
-            [(ngModel)]="newUsuario.dni" name="newUsuarioDNI" maxlength="8" />
-        </div>
-        <div class="mb-5">
-          <label for="newFechaNacimiento" class="form-label required">Fecha de Nacimiento:</label>
-          <input type="date" class="form-control form-control-solid" id="newFechaNacimiento"
-            [(ngModel)]="newUsuario.fechaNacimiento" name="newUsuarioFechaNacimiento" />
-        </div>
-        <div class="mb-5">
-          <label for="newGenero" class="form-label required">Género:</label>
-          <select class="form-select form-select-solid" id="newGenero" [(ngModel)]="newUsuario.genero"
-            name="newUsuarioGenero">
-            <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
-          </select>
-        </div>
-        <div class="mb-5">
-          <label for="newRol" class="form-label required">Rol:</label>
-          <select class="form-select form-select-solid" id="newRol" [(ngModel)]="newUsuario.rol" name="newUsuarioRol">
-            <option *ngFor="let rol of rolesDisponibles" [value]="rol.descripcion">{{ rol.descripcion }}</option>
-          </select>
-        </div>
-        <div class="mb-5">
-          <label for="newEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="newEstado" [(ngModel)]="newUsuario.estado"
-            name="newUsuarioEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
+        <div class="row g-5">
+          <div class="col-md-6">
+            <div class="mb-5">
+              <label for="newUsuario" class="form-label required">Usuario:</label>
+              <input type="text" class="form-control form-control-solid" id="newUsuario"
+                placeholder="Ingrese el nombre de usuario" [(ngModel)]="newUsuario.usuario" name="newUsuarioUserName" />
+            </div>
+            <div class="mb-5">
+              <label for="newNombres" class="form-label required">Nombres:</label>
+              <input type="text" class="form-control form-control-solid" id="newNombres"
+                placeholder="Ingrese los nombres" [(ngModel)]="newUsuario.nombres" name="newUsuarioNombres" />
+            </div>
+            <div class="mb-5">
+              <label for="newApellidos" class="form-label required">Apellidos:</label>
+              <input type="text" class="form-control form-control-solid" id="newApellidos"
+                placeholder="Ingrese los apellidos" [(ngModel)]="newUsuario.apellidos" name="newUsuarioApellidos" />
+            </div>
+            <div class="mb-5">
+              <label for="newDNI" class="form-label required">DNI:</label>
+              <input type="text" class="form-control form-control-solid" id="newDNI" placeholder="Ingrese el DNI"
+                [(ngModel)]="newUsuario.dni" name="newUsuarioDNI" maxlength="8" />
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-5">
+              <label for="newFechaNacimiento" class="form-label required">Fecha de Nacimiento:</label>
+              <input type="date" class="form-control form-control-solid" id="newFechaNacimiento"
+                [(ngModel)]="newUsuario.fechaNacimiento" name="newUsuarioFechaNacimiento" />
+            </div>
+            <div class="mb-5">
+              <label for="newGenero" class="form-label required">Género:</label>
+              <select class="form-select form-select-solid" id="newGenero" [(ngModel)]="newUsuario.genero"
+                name="newUsuarioGenero">
+                <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
+              </select>
+            </div>
+            <div class="mb-5">
+              <label for="newRol" class="form-label required">Rol:</label>
+              <select class="form-select form-select-solid" id="newRol" [(ngModel)]="newUsuario.rol"
+                name="newUsuarioRol">
+                <option *ngFor="let rol of rolesDisponibles" [value]="rol.descripcion">{{ rol.descripcion }}</option>
+              </select>
+            </div>
+            <div class="mb-5">
+              <label for="newEstado" class="form-label required">Estado:</label>
+              <select class="form-select form-select-solid" id="newEstado" [(ngModel)]="newUsuario.estado"
+                name="newUsuarioEstado">
+                <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+              </select>
+            </div>
+          </div>
         </div>
       </form>
     </div>
@@ -196,51 +206,59 @@
     </div>
     <div class="modal-body">
       <form *ngIf="editingUser">
-        <div class="mb-5">
-          <label for="editUsuario" class="form-label required">Usuario:</label>
-          <input type="text" class="form-control form-control-solid" id="editUsuario"
-            placeholder="Ingrese el nombre de usuario" [(ngModel)]="editingUser.usuario" name="editUsuarioUserName" />
-        </div>
-        <div class="mb-5">
-          <label for="editNombres" class="form-label required">Nombres:</label>
-          <input type="text" class="form-control form-control-solid" id="editNombres" placeholder="Ingrese los nombres"
-            [(ngModel)]="editingUser.nombres" name="editUsuarioNombres" />
-        </div>
-        <div class="mb-5">
-          <label for="editApellidos" class="form-label required">Apellidos:</label>
-          <input type="text" class="form-control form-control-solid" id="editApellidos"
-            placeholder="Ingrese los apellidos" [(ngModel)]="editingUser.apellidos" name="editUsuarioApellidos" />
-        </div>
-        <div class="mb-5">
-          <label for="editDNI" class="form-label required">DNI:</label>
-          <input type="text" class="form-control form-control-solid" id="editDNI" placeholder="Ingrese el DNI"
-            [(ngModel)]="editingUser.dni" name="editUsuarioDNI" maxlength="8" />
-        </div>
-        <div class="mb-5">
-          <label for="editFechaNacimiento" class="form-label required">Fecha de Nacimiento:</label>
-          <input type="date" class="form-control form-control-solid" id="editFechaNacimiento"
-            [(ngModel)]="editingUser.fechaNacimiento" name="editUsuarioFechaNacimiento" />
-        </div>
-        <div class="mb-5">
-          <label for="editGenero" class="form-label required">Género:</label>
-          <select class="form-select form-select-solid" id="editGenero" [(ngModel)]="editingUser.genero"
-            name="editUsuarioGenero">
-            <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
-          </select>
-        </div>
-        <div class="mb-5">
-          <label for="editRol" class="form-label required">Rol:</label>
-          <select class="form-select form-select-solid" id="editRol" [(ngModel)]="editingUser.rol"
-            name="editUsuarioRol">
-            <option *ngFor="let rol of rolesDisponibles" [value]="rol.descripcion">{{ rol.descripcion }}</option>
-          </select>
-        </div>
-        <div class="mb-5">
-          <label for="editEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="editEstado" [(ngModel)]="editingUser.estado"
-            name="editUsuarioEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
+        <div class="row g-5">
+          <div class="col-md-6">
+            <div class="mb-5">
+              <label for="editUsuario" class="form-label required">Usuario:</label>
+              <input type="text" class="form-control form-control-solid" id="editUsuario"
+                placeholder="Ingrese el nombre de usuario" [(ngModel)]="editingUser.usuario"
+                name="editUsuarioUserName" />
+            </div>
+            <div class="mb-5">
+              <label for="editNombres" class="form-label required">Nombres:</label>
+              <input type="text" class="form-control form-control-solid" id="editNombres"
+                placeholder="Ingrese los nombres" [(ngModel)]="editingUser.nombres" name="editUsuarioNombres" />
+            </div>
+            <div class="mb-5">
+              <label for="editApellidos" class="form-label required">Apellidos:</label>
+              <input type="text" class="form-control form-control-solid" id="editApellidos"
+                placeholder="Ingrese los apellidos" [(ngModel)]="editingUser.apellidos" name="editUsuarioApellidos" />
+            </div>
+            <div class="mb-5">
+              <label for="editDNI" class="form-label required">DNI:</label>
+              <input type="text" class="form-control form-control-solid" id="editDNI" placeholder="Ingrese el DNI"
+                [(ngModel)]="editingUser.dni" name="editUsuarioDNI" maxlength="8" />
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-5">
+              <label for="editFechaNacimiento" class="form-label required">Fecha de Nacimiento:</label>
+              <input type="date" class="form-control form-control-solid" id="editFechaNacimiento"
+                [(ngModel)]="editingUser.fechaNacimiento" name="editUsuarioFechaNacimiento" />
+            </div>
+            <div class="mb-5">
+              <label for="editGenero" class="form-label required">Género:</label>
+              <select class="form-select form-select-solid" id="editGenero" [(ngModel)]="editingUser.genero"
+                name="editUsuarioGenero">
+                <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
+              </select>
+            </div>
+            <div class="mb-5">
+              <label for="editRol" class="form-label required">Rol:</label>
+              <select class="form-select form-select-solid" id="editRol" [(ngModel)]="editingUser.rol"
+                name="editUsuarioRol">
+                <option *ngFor="let rol of rolesDisponibles" [value]="rol.descripcion">{{ rol.descripcion }}</option>
+              </select>
+            </div>
+            <div class="mb-5">
+              <label for="editEstado" class="form-label required">Estado:</label>
+              <select class="form-select form-select-solid" id="editEstado" [(ngModel)]="editingUser.estado"
+                name="editUsuarioEstado">
+                <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+              </select>
+            </div>
+          </div>
         </div>
       </form>
     </div>

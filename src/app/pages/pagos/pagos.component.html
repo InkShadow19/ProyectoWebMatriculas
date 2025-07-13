@@ -21,15 +21,18 @@
             <div class="row g-3">
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label fw-bold">Desde:</label>
-                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaDesde" />
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaDesde"
+                        (change)="filtrarPagos()" />
                 </div>
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label fw-bold">Hasta:</label>
-                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaHasta" />
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaHasta"
+                        (change)="filtrarPagos()" />
                 </div>
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label fw-bold">Canal:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtros.canal">
+                    <select class="form-select form-select-solid" [(ngModel)]="filtros.canal"
+                        (ngModelChange)="filtrarPagos()">
                         <option value="">Todos</option>
                         <option value="CAJA">Caja</option>
                         <option value="BANCO">Banco</option>
@@ -37,7 +40,8 @@
                 </div>
                 <div class="col-lg-2 col-md-4">
                     <label class="form-label fw-bold">Estado:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtros.estado">
+                    <select class="form-select form-select-solid" [(ngModel)]="filtros.estado"
+                        (ngModelChange)="filtrarPagos()">
                         <option value="">Todos</option>
                         <option value="Confirmado">Confirmado</option>
                         <option value="Anulado">Anulado</option>
@@ -46,14 +50,14 @@
                 <div class="col-lg-4 col-md-8">
                     <label class="form-label fw-bold">Búsqueda Rápida:</label>
                     <input type="text" class="form-control form-control-solid"
-                        placeholder="Buscar por alumno, DNI, ticket..." [(ngModel)]="filtros.busqueda" />
+                        placeholder="Buscar por alumno, DNI, ticket..." [(ngModel)]="filtros.busqueda"
+                        (input)="filtrarPagos()" />
                 </div>
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-12 text-end">
                     <button type="button" class="btn btn-light-primary me-3 btn-sm"
                         (click)="limpiarFiltros()">Limpiar</button>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="filtrarPagos()">Buscar</button>
                 </div>
             </div>
         </div>
@@ -89,7 +93,8 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-light-primary me-2" (click)="abrirDetallePago(pago)">Ver Detalle</button>
+                                <button class="btn btn-sm btn-light-primary me-2" (click)="abrirDetallePago(pago)">Ver
+                                    Detalle</button>
                                 <button *ngIf="pago.estado === 'Confirmado'"
                                     class="btn btn-sm btn-light-danger">Anular</button>
                             </td>

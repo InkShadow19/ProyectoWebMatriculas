@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { ApoderadoDto } from 'src/app/models/apoderado.model';
@@ -7,6 +7,8 @@ import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
 import { NgbModal, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
+import { ApoderadoService } from 'src/app/services/apoderado.service';
+import { ApoderadoDomainService } from 'src/app/domains/apoderado-domain.service';
 
 @Component({
   selector: 'app-apoderados',
@@ -61,13 +63,25 @@ export class ApoderadosComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 5;
 
-  constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal) {
+  constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal, private apoderadoService: ApoderadoDomainService) {
     this.generoKeys = Object.values(GeneroReference) as string[];
     this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
-    this.aplicarFiltroYPaginar(); // Carga inicial
+    //this.aplicarFiltroYPaginar(); // Carga inicial
+    this.cargarApoderadosDesdeApi();
+  }
+
+  cargarApoderadosDesdeApi(): void {
+    this.apoderadoService.getList(0, 100).subscribe(response => {
+      if (response && response.content) {
+        this.allApoderados = response.content;
+        this.aplicarFiltroYPaginar();
+      } else {
+        this.allApoderados = [];
+      }
+    });
   }
 
   // --- Métodos de Filtro y Paginación ---
@@ -144,7 +158,7 @@ export class ApoderadosComponent implements OnInit {
     this.modalService.open(this.addApoderadoModal, { centered: true, size: 'lg' });
   }
 
-  saveApoderado() {
+  /*saveApoderado() {
     if (!this.newApoderado.dni || !this.newApoderado.nombre || !this.newApoderado.apellidoPaterno ||
       !this.newApoderado.parentesco || !this.newApoderado.fechaNacimiento || !this.newApoderado.genero ||
       !this.newApoderado.email || !this.newApoderado.estado) {
@@ -157,6 +171,27 @@ export class ApoderadosComponent implements OnInit {
     this.aplicarFiltroYPaginar(); // Actualiza la vista
     Swal.fire('¡Éxito!', 'Apoderado añadido correctamente.', 'success');
     this.dismiss();
+  }*/
+
+  saveApoderado() {
+    if (!this.newApoderado.dni || !this.newApoderado.nombre || !this.newApoderado.apellidoPaterno ||
+      !this.newApoderado.parentesco || !this.newApoderado.fechaNacimiento || !this.newApoderado.genero ||
+      !this.newApoderado.email || !this.newApoderado.estado) {
+      Swal.fire('Error', 'Todos los campos requeridos deben ser completados.', 'error');
+      return;
+    }
+
+    this.apoderadoService.add(this.newApoderado).subscribe((apoderadoAgregado) => {
+      if (apoderadoAgregado) {
+        console.log("Se agregó correctamente:", apoderadoAgregado);
+        this.allApoderados.push(apoderadoAgregado);
+        this.aplicarFiltroYPaginar();
+        this.modalService.dismissAll();
+        Swal.fire('¡Éxito!', 'Apoderado añadido correctamente.', 'success');
+      } else {
+        Swal.fire('Error', 'No se pudo agregar el apoderado.', 'error');
+      }
+    });
   }
 
   openEditApoderadoModal(apoderado: ApoderadoDto) {
@@ -164,7 +199,7 @@ export class ApoderadosComponent implements OnInit {
     this.modalService.open(this.editApoderadoModal, { centered: true, size: 'lg' });
   }
 
-  updateApoderado() {
+  /*updateApoderado() {
     if (!this.editingApoderado) { return; }
     if (!this.editingApoderado.dni || !this.editingApoderado.nombre || !this.editingApoderado.apellidoPaterno ||
       !this.editingApoderado.parentesco || !this.editingApoderado.fechaNacimiento || !this.editingApoderado.genero ||
@@ -181,6 +216,32 @@ export class ApoderadosComponent implements OnInit {
       Swal.fire('Error', 'Apoderado no encontrado para actualizar.', 'error');
     }
     this.dismiss();
+  }*/
+
+  updateApoderado() {
+    if (!this.editingApoderado) { return; }
+
+    if (!this.editingApoderado.dni || !this.editingApoderado.nombre || !this.editingApoderado.apellidoPaterno ||
+      !this.editingApoderado.parentesco || !this.editingApoderado.fechaNacimiento || !this.editingApoderado.genero ||
+      !this.editingApoderado.email || !this.editingApoderado.estado) {
+      Swal.fire('Error', 'Todos los campos requeridos deben ser completados.', 'error');
+      return;
+    }
+
+    this.apoderadoService.update(this.editingApoderado.identifier!, this.editingApoderado).subscribe({
+      next: (updated) => {
+        const index = this.allApoderados.findIndex(a => a.identifier === updated.identifier);
+        if (index !== -1) {
+          this.allApoderados[index] = updated;
+          this.aplicarFiltroYPaginar();
+          Swal.fire('¡Éxito!', 'Apoderado actualizado correctamente.', 'success');
+        }
+        this.dismiss();
+      },
+      error: () => {
+        Swal.fire('Error', 'Hubo un problema al actualizar el apoderado.', 'error');
+      }
+    });
   }
 
   confirmDeleteApoderado(apoderado: ApoderadoDto) {
@@ -200,7 +261,7 @@ export class ApoderadosComponent implements OnInit {
     });
   }
 
-  deleteApoderado(identifier: string) {
+  /*deleteApoderado(identifier: string) {
     const initialLength = this.allApoderados.length;
     this.allApoderados = this.allApoderados.filter(apoderado => apoderado.identifier !== identifier);
     this.aplicarFiltroYPaginar(); // Actualiza la vista
@@ -209,6 +270,19 @@ export class ApoderadosComponent implements OnInit {
     } else {
       Swal.fire('Error', 'No se pudo encontrar el apoderado para eliminar.', 'error');
     }
+  }*/
+
+  deleteApoderado(identifier: string) {
+    this.apoderadoService.delete(identifier).subscribe({
+      next: () => {
+        this.allApoderados = this.allApoderados.filter(apoderado => apoderado.identifier !== identifier);
+        this.aplicarFiltroYPaginar();
+        Swal.fire('¡Eliminado!', 'El apoderado ha sido eliminado.', 'success');
+      },
+      error: () => {
+        Swal.fire('Error', 'No se pudo eliminar el apoderado.', 'error');
+      }
+    });
   }
 
   dismiss() {

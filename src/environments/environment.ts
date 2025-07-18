@@ -4,10 +4,11 @@
 
 export const environment = {
   production: false,
-  appVersion: '1.0.3',
+  appVersion: '1.2.2',
   USERDATA_KEY: 'authf649fc9a5f55',
   isMockEnabled: true,
-  apiUrl: 'api',
+  //apiUrl: 'api',
+  apiUrl: 'http://localhost:8080',
   appThemeName: 'Metronic',
   appPurchaseUrl: 'https://1.envato.market/EA4JP',
   appHTMLIntegration:

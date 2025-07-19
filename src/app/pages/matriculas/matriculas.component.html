@@ -105,16 +105,15 @@
                                         <app-keenicon name="eye" class="fs-5 me-2"></app-keenicon>Ver Detalle
                                     </a>
                                 </div>
+                                <!-- ***** LÍNEA MODIFICADA ***** -->
                                 <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3 text-primary">
+                                    <a (click)="abrirEditarModal(matricula)" class="menu-link px-3 text-primary">
                                         <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>Editar
                                     </a>
                                 </div>
+                                <!-- ************************** -->
                                 <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3" [ngClass]="{
-                                        'text-danger': matricula.habilitado, 
-                                        'text-success': !matricula.habilitado
-                                    }">
+                                    <a href="#" class="menu-link px-3" [ngClass]="{'text-danger': matricula.habilitado,'text-success': !matricula.habilitado}">
                                         <app-keenicon [name]="matricula.habilitado ? 'trash' : 'check-circle'"
                                             class="fs-5 me-2"></app-keenicon>
                                         {{ matricula.habilitado ? 'Anular' : 'Reactivar' }}
@@ -429,6 +428,121 @@
     </div>
 </div>
 
-<div class="modal-backdrop fade" [class.show]="showModal || showNuevaMatriculaModal"
-    [style.display]="showModal || showNuevaMatriculaModal ? 'block' : 'none'">
+<div class="modal fade" [class.show]="showEditarMatriculaModal" [style.display]="showEditarMatriculaModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl" (click)="$event.stopPropagation()">
+        <div class="modal-content" *ngIf="matriculaAEditar">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Matrícula (Cód: {{ matriculaAEditar.codigo }})</h2>
+                <button type="button" class="btn-close" (click)="cerrarEditarModal()"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-6">Modifique los detalles de la matrícula. Los campos se bloquearán si existen pagos asociados.</p>
+
+                <!-- SE ELIMINÓ EL SIMULADOR DE ESTADO -->
+                <hr class="mb-6">
+
+                <!-- Formulario de Edición -->
+                <div class="py-2">
+                    <!-- Estudiante Seleccionado -->
+                    <div class="mb-6">
+                        <h3 class="fs-lg fw-semibold text-dark mb-2">Estudiante Seleccionado</h3>
+                        <div class="bg-light p-4 rounded border d-flex align-items-center gap-4">
+                            <div class="symbol symbol-50px symbol-circle">
+                                <img [src]="matriculaAEditar.avatarUrl" alt="Avatar del estudiante">
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="fw-bold text-dark mb-0">{{ matriculaAEditar.estudiante }}</p>
+                                <p class="text-muted fs-sm mb-0">DNI: {{ matriculaAEditar.dniEstudiante }}</p>
+                            </div>
+                            <button class="btn btn-sm btn-light-primary" [disabled]="tienePagosRegistrados">Cambiar</button>
+                        </div>
+                    </div>
+
+                    <!-- Apoderado Responsable -->
+                    <div class="mb-6">
+                        <label class="form-label fw-bold">Apoderado Responsable</label>
+                        <div class="bg-light p-4 rounded border d-flex align-items-center gap-4">
+                            <div class="flex-grow-1">
+                                <p class="fw-bold text-dark mb-0">{{ matriculaAEditar.apoderado }}</p>
+                            </div>
+                            <button class="btn btn-sm btn-light-primary" [disabled]="tienePagosRegistrados">Cambiar</button>
+                        </div>
+                    </div>
+
+                    <!-- Detalles Académicos y Financieros -->
+                    <div>
+                        <h3 class="fs-lg fw-semibold text-dark mb-4">Detalles Académicos y Financieros</h3>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Nivel</label>
+                                <select class="form-select form-select-solid" [(ngModel)]="matriculaAEditar.nivel" [disabled]="tienePagosRegistrados">
+                                    <option *ngFor="let n of niveles" [value]="n">{{ n }}</option>
+                                </select>
+                                <div *ngIf="tienePagosRegistrados" class="form-text text-danger mt-1">No se puede cambiar porque existen pagos.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grado</label>
+                                <select class="form-select form-select-solid" [(ngModel)]="matriculaAEditar.grado" [disabled]="tienePagosRegistrados">
+                                     <option>3ro Grado</option>
+                                     <option>4to Grado</option>
+                                </select>
+                                <div *ngIf="tienePagosRegistrados" class="form-text text-danger mt-1">No se puede cambiar porque existen pagos.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Situación</label>
+                                <select class="form-select form-select-solid" [(ngModel)]="matriculaAEditar.situacion">
+                                    <option *ngFor="let s of situaciones" [value]="s">{{ s }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Campos de procedencia condicionales -->
+                        <div class="row g-4 mt-1" *ngIf="matriculaAEditar.situacion === SituacionReference.INGRESANTE">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre de la Institución de Procedencia</label>
+                                <input type="text" class="form-control form-control-solid" [(ngModel)]="matriculaAEditar.institucion_procendencia">
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Descuentos -->
+                        <div class="mt-6">
+                            <p class="form-label fw-bold mb-2">Descuentos a Aplicar (Opcional)</p>
+                            <div class="table-responsive">
+                                <table class="table table-row-bordered gy-5">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-muted">
+                                            <th>Concepto</th>
+                                            <th>Monto Base</th>
+                                            <th>Descuento (S/)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-gray-600">
+                                        <tr>
+                                            <td class="fw-bold">Matrícula</td>
+                                            <td>S/ 280.00</td>
+                                            <td><input type="number" class="form-control form-control-solid w-100px" value="50.00"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Pensión Mensual</td>
+                                            <td>S/ 300.00</td>
+                                            <td><input type="number" class="form-control form-control-solid w-100px" value="0.00"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="cerrarEditarModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" (click)="guardarCambiosMatricula()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-backdrop fade" [class.show]="showModal || showNuevaMatriculaModal || showEditarMatriculaModal"
+    [style.display]="showModal || showNuevaMatriculaModal || showEditarMatriculaModal ? 'block' : 'none'">
 </div>

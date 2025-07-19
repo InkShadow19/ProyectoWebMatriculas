@@ -36,6 +36,9 @@ interface NuevaMatriculaForm {
   avatarUrl?: string; // NUEVO: Para el avatar dinámico
 }
 
+interface EditarMatriculaForm extends Partial<MatriculaCompleta> {
+    // Se pueden añadir propiedades específicas para la edición si es necesario
+}
 
 @Component({
   selector: 'app-matriculas',
@@ -54,6 +57,11 @@ export class MatriculasComponent implements OnInit {
   nuevaMatricula: Partial<NuevaMatriculaForm> = {};
   busquedaEstudianteRealizada: boolean = false;
   mostrarCamposProcedencia: boolean = false;
+
+  // --- Propiedades para el Modal de Edición ---
+  showEditarMatriculaModal: boolean = false;
+  matriculaAEditar: EditarMatriculaForm = {};
+  tienePagosRegistrados: boolean = false; // Lógica real de bloqueo
 
   // Hacemos los enums accesibles desde la plantilla
   SituacionReference = SituacionReference;
@@ -180,6 +188,7 @@ export class MatriculasComponent implements OnInit {
     this.busquedaEstudianteRealizada = false;
     this.mostrarCamposProcedencia = false;
   }
+  
 
   buscarEstudiante(): void {
     if (this.nuevaMatricula.estudianteBusqueda) {
@@ -199,6 +208,41 @@ export class MatriculasComponent implements OnInit {
   registrarMatricula(): void {
     console.log('Datos de la nueva matrícula:', this.nuevaMatricula);
     this.cerrarNuevaMatriculaModal();
+  }
+
+  // --- Métodos para Modal de Edición (Lógica de bloqueo actualizada) ---
+  abrirEditarModal(matricula: MatriculaCompleta): void {
+    // Creamos una copia profunda para no modificar el objeto original en la tabla
+    this.matriculaAEditar = JSON.parse(JSON.stringify(matricula));
+    this.matriculaAEditar.avatarUrl = this.generarAvatarUrl(this.matriculaAEditar.estudiante!);
+    
+    // LÓGICA REAL: Verificar si existen pagos registrados
+    if (this.matriculaAEditar.cronogramas && this.matriculaAEditar.cronogramas.length > 0) {
+        this.tienePagosRegistrados = this.matriculaAEditar.cronogramas.some(c => c.estadoDeuda === EstadoDeudaReference.PAGADO);
+    } else {
+        this.tienePagosRegistrados = false;
+    }
+
+    this.showEditarMatriculaModal = true;
+  }
+
+  cerrarEditarModal(): void {
+    this.showEditarMatriculaModal = false;
+    this.matriculaAEditar = {};
+    this.tienePagosRegistrados = false; // Reiniciar estado
+  }
+
+  guardarCambiosMatricula(): void {
+    console.log('Guardando cambios para:', this.matriculaAEditar);
+    
+    // Lógica para actualizar el registro en la lista principal
+    const index = this.allMatriculas.findIndex(m => m.identifier === this.matriculaAEditar.identifier);
+    if (index !== -1) {
+        this.allMatriculas[index] = { ...this.allMatriculas[index], ...this.matriculaAEditar };
+    }
+
+    this.buscar(); // Refrescamos la tabla para que se vean los cambios
+    this.cerrarEditarModal();
   }
 
   // --- Métodos de Filtro y Paginación (sin cambios) ---

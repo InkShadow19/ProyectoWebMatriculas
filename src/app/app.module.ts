@@ -28,15 +28,6 @@ import { GradosComponent } from './pages/grados/grados.component';
 import { ReportesComponent } from './pages/reportes/reportes.component';
 // #fake-end#
 
-function appInitializer(authService: AuthService) {
-  return () => {
-    return new Promise((resolve) => {
-      //@ts-ignore
-      authService.getUserByToken().subscribe().add(resolve);
-    });
-  };
-}
-
 @NgModule({
   declarations: [
     AppComponent,
@@ -77,12 +68,7 @@ function appInitializer(authService: AuthService) {
     SweetAlert2Module.forRoot(),
   ],
   providers: [
-    {
-      provide: APP_INITIALIZER,
-      useFactory: appInitializer,
-      multi: true,
-      deps: [AuthService],
-    },
+    
   ],
   bootstrap: [AppComponent],
 })

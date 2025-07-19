@@ -1,4 +1,5 @@
 import { CanalReference } from "./enums/canal-reference.enum";
+import { EstadoPagoReference } from "./enums/estado-pago-reference.enum";
 import { PagoDetalleDto } from "./pago-detalle.model";
 
 export interface PagoDto {
@@ -7,7 +8,7 @@ export interface PagoDto {
   numeroTicket?: string;
   montoTotalPagado: number;
   fechaPago: string;
-  habilitado: boolean;
+  estado: EstadoPagoReference;
   fechaCreacion: string;
   usuario: string; // Identifier
   banco?: string; // Identifier, opcional porque banco_id puede ser NULL

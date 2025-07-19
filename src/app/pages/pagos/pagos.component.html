@@ -89,14 +89,14 @@
                             <td>{{ pago.registradoPor }}</td>
                             <td>
                                 <span class="badge"
-                                    [ngClass]="{'badge-light-success': pago.estado === 'Confirmado', 'badge-light-danger': pago.estado === 'Anulado'}">
+                                    [ngClass]="{'badge-light-success': pago.estado, 'badge-light-danger': pago.estado}">
                                     {{ pago.estado }}
                                 </span>
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-light-primary me-2" (click)="abrirDetallePago(pago)">Ver
                                     Detalle</button>
-                                <button *ngIf="pago.estado === 'Confirmado'"
+                                <button *ngIf="pago.estado"
                                     class="btn btn-sm btn-light-danger">Anular</button>
                             </td>
                         </tr>

@@ -12,17 +12,18 @@
   </div>
 
   <div class="card-body py-4">
+    <!-- Filtros -->
     <div class="mb-10">
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar por descripción..."
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -33,6 +34,7 @@
       </div>
     </div>
 
+    <!-- Tabla de Datos -->
     <div class="table-responsive">
       <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
         <thead>
@@ -43,14 +45,14 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let nivel of pagedNiveles">
+          <tr *ngFor="let nivel of pagedNiveles?.content">
             <td>{{ nivel.descripcion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                'badge-light-success': nivel.estado === EstadoReference.ACTIVO,
-                'badge-light-danger': nivel.estado === EstadoReference.INACTIVO,
-                'badge-secondary': nivel.estado === EstadoReference.UNDEFINED
-              }">
+                  'badge-light-success': nivel.estado === EstadoReference.ACTIVO,
+                  'badge-light-danger': nivel.estado === EstadoReference.INACTIVO,
+                  'badge-secondary': nivel.estado === EstadoReference.UNDEFINED
+                }">
                 {{ nivel.estado.replace('_', ' ') }}
               </div>
             </td>
@@ -82,90 +84,98 @@
               </div>
             </td>
           </tr>
+          <tr *ngIf="!pagedNiveles || pagedNiveles.content.length === 0">
+            <td colspan="3" class="text-center text-muted py-5">
+                No se encontraron registros.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
-  </div>
 
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allNiveles.length > 0">
-    <div class="fs-6 fw-semibold text-gray-700">
-      Mostrando
-      <span class="fw-bold">{{ filteredNiveles.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
-      a
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedNiveles.length }}</span>
-      de
-      <span class="fw-bold">{{ filteredNiveles.length }}</span> registros
-    </div>
-    <ul class="pagination">
-      <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
-      </li>
-      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
-      </li>
-      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
-      </li>
-    </ul>
+    <!-- Paginación -->
+    <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedNiveles && pagedNiveles.totalElements > 0">
+        <div class="fs-6 fw-semibold text-gray-700">
+          Mostrando
+          <span class="fw-bold">{{ pagedNiveles.number * pagedNiveles.size + 1 }}</span>
+          a
+          <span class="fw-bold">{{ pagedNiveles.number * pagedNiveles.size + pagedNiveles.content.length }}</span>
+          de <span class="fw-bold">{{ pagedNiveles.totalElements }}</span> registros
+        </div>
+  
+        <ul class="pagination">
+          <li class="page-item previous" [class.disabled]="pagedNiveles.first">
+            <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
+                class="previous"></i></a>
+          </li>
+          <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+            <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+          </li>
+          <li class="page-item next" [class.disabled]="pagedNiveles.last">
+            <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+          </li>
+        </ul>
+      </div>
   </div>
 </div>
 
+<!-- Modales -->
 <ng-template #addNivelModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Nuevo Nivel Académico</h2>
-      <div class="btn btn-sm btn-icon" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nuevo Nivel Académico</h2>
+        <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
+          <app-keenicon name="cross" class="fs-1"></app-keenicon>
+        </div>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-5">
+            <label class="form-label required">Descripción del Nivel:</label>
+            <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
+              [(ngModel)]="newNivel.descripcion" name="newNivelDescripcion" />
+          </div>
+          <div class="mb-5">
+            <label class="form-label required">Estado:</label>
+            <select class="form-select form-select-solid" [(ngModel)]="newNivel.estado" name="newNivelEstado">
+              <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveNivel()">Guardar</button>
       </div>
     </div>
-    <div class="modal-body">
-      <form>
-        <div class="mb-5">
-          <label class="form-label required">Descripción del Nivel:</label>
-          <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
-            [(ngModel)]="newNivel.descripcion" name="newNivelDescripcion" />
+  </ng-template>
+  
+  <ng-template #editNivelModal>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Nivel Académico</h2>
+        <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
+          <app-keenicon name="cross" class="fs-1"></app-keenicon>
         </div>
-        <div class="mb-5">
-          <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="newNivel.estado" name="newNivelEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button class="btn btn-primary" (click)="saveNivel()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editNivelModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Nivel Académico</h2>
-      <div class="btn btn-sm btn-icon" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
+      </div>
+      <div class="modal-body" *ngIf="editingNivel">
+        <form>
+          <div class="mb-5">
+            <label class="form-label required">Descripción del Nivel:</label>
+            <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
+              [(ngModel)]="editingNivel.descripcion" name="editNivelDescripcion" />
+          </div>
+          <div class="mb-5">
+            <label class="form-label required">Estado:</label>
+            <select class="form-select form-select-solid" [(ngModel)]="editingNivel.estado" name="editNivelEstado">
+              <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="updateNivel()">Guardar Cambios</button>
       </div>
     </div>
-    <div class="modal-body" *ngIf="editingNivel">
-      <form>
-        <div class="mb-5">
-          <label class="form-label required">Descripción del Nivel:</label>
-          <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
-            [(ngModel)]="editingNivel.descripcion" name="editNivelDescripcion" />
-        </div>
-        <div class="mb-5">
-          <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingNivel.estado" name="editNivelEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button class="btn btn-primary" (click)="updateNivel()">Guardar Cambios</button>
-    </div>
-  </div>
-</ng-template>
+  </ng-template>

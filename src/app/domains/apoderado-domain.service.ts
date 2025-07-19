@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "src/environments/environment";
 import { ApoderadoDto } from "../models/apoderado.model";
-import { ApiResponse } from "../common/models/api-response.model";
 import { buildHeader } from "../common/utils/heade.util";
 import { PageResponse } from "../models/page-response.model";
 
@@ -17,10 +16,17 @@ export class ApoderadoDomainService {
 
     constructor(private http: HttpClient) { }
 
-    getList(page: number, size: number): Observable<PageResponse<ApoderadoDto>> {
+    getList(page: number, size: number, descripcion?: string, estado?: string): Observable<PageResponse<ApoderadoDto>> {
         let params = new HttpParams()
             .set("page", page.toString())
             .set("size", size.toString());
+
+        if (descripcion) {
+            params = params.set("descripcion", descripcion);
+        }
+        if (estado) {
+            params = params.set("estado", estado);
+        }
 
         return this.http.get<PageResponse<ApoderadoDto>>(`${this.endpoint}/search`, {
             headers: buildHeader(),
@@ -52,33 +58,8 @@ export class ApoderadoDomainService {
     }
 
     get(identifier: string): Observable<ApoderadoDto> {
-        return this.http.get<ApoderadoDto>(`${this.endpoint}/${identifier}`);
+        return this.http.get<ApoderadoDto>(`${this.endpoint}/${identifier}`,
+            { headers: buildHeader() }
+        );
     }
-
-    /*getList(page: number, size: number, description?: string, enabled?: boolean, filters?: Record<string, string>): Observable<ApiResponse<ApoderadoDto[]>> {
-
-        let params = new HttpParams()
-            .set("page", page.toString())
-            .set("size", size.toString());
-
-        if (description) {
-            params = params.set("description", description);
-        }
-        if (enabled !== undefined) {
-            params = params.set("enabled", enabled.toString());
-        }
-        if (filters) {
-            for (const key in filters) {
-                if (filters.hasOwnProperty(key)) {
-                    params = params.set(key, filters[key]);
-                }
-            }
-        }
-
-        return this.http.get<ApiResponse<ApoderadoDto[]>>(this.endpoint, {
-            headers: buildHeader(),
-            params: params
-        });
-
-    }*/
 }

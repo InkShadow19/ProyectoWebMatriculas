@@ -6,13 +6,15 @@ import { NivelDto } from 'src/app/models/nivel.model';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
+import { NivelService } from 'src/app/services/nivel.service';
+import { PageResponse } from 'src/app/models/page-response.model';
 
 @Component({
   selector: 'app-niveles',
   standalone: true,
   imports: [CommonModule, SharedModule, FormsModule, NgbDropdownModule],
   templateUrl: './niveles.component.html',
-  styleUrl: './niveles.component.scss',
+  styleUrls: ['./niveles.component.scss'],
 })
 export class NivelesComponent implements OnInit {
   @ViewChild('addNivelModal') addNivelModal: TemplateRef<any>;
@@ -21,129 +23,111 @@ export class NivelesComponent implements OnInit {
   EstadoReference = EstadoReference;
   estadoKeys: string[];
 
-  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
-  allNiveles: NivelDto[] = [
-    { identifier: '1', descripcion: 'Inicial', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-01T08:00:00Z', grados: [], matriculas: [] },
-    { identifier: '2', descripcion: 'Primaria', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-01T08:00:00Z', grados: [], matriculas: [] },
-    { identifier: '3', descripcion: 'Secundaria', estado: EstadoReference.INACTIVO, fechaCreacion: '2024-01-01T08:00:00Z', grados: [], matriculas: [] },
-  ];
-  filteredNiveles: NivelDto[] = [];
-  pagedNiveles: NivelDto[] = [];
-
+  pagedNiveles: PageResponse<NivelDto> | undefined;
   filtroBusqueda: string = '';
   filtroEstado: string = '';
-  currentPage = 1;
-  itemsPerPage = 5;
+  currentPage: number = 1;
+  itemsPerPage: number = 5;
 
-  newNivel: NivelDto = { identifier: '', descripcion: '', estado: EstadoReference.ACTIVO, fechaCreacion: '', grados: [], matriculas: [] };
+  newNivel: Partial<NivelDto> = {};
   editingNivel: NivelDto | null = null;
 
-  constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
+  constructor(
+    private modalService: NgbModal,
+    private cdr: ChangeDetectorRef,
+    private nivelService: NivelService
+  ) {
     this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
-    this.aplicarFiltroYPaginar();
+    this.loadNiveles();
   }
 
-  // --- Métodos de Filtro y Paginación ---
-  aplicarFiltroYPaginar(): void {
-    let nivelesTemp = [...this.allNiveles];
-    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+  loadNiveles(): void {
+    const page = this.currentPage - 1;
+    this.nivelService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroEstado)
+      .subscribe(response => {
+        this.pagedNiveles = response;
+        this.cdr.detectChanges();
+      });
+  }
 
-    if (this.filtroEstado) {
-      nivelesTemp = nivelesTemp.filter(nivel => nivel.estado === this.filtroEstado);
-    }
-
-    if (searchTerm) {
-      nivelesTemp = nivelesTemp.filter(nivel =>
-        nivel.descripcion.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    this.filteredNiveles = nivelesTemp;
-    this.setPage(1);
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadNiveles();
   }
 
   limpiarFiltros(): void {
     this.filtroBusqueda = '';
     this.filtroEstado = '';
-    this.aplicarFiltroYPaginar();
+    this.onFilterChange();
   }
 
-  setPage(page: number) {
-    const totalPages = this.getTotalPages();
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    this.currentPage = page;
-
-    if (this.filteredNiveles.length === 0) {
-      this.pagedNiveles = [];
+  setPage(page: number): void {
+    if (page < 1 || (this.pagedNiveles && page > this.pagedNiveles.totalPages)) {
       return;
     }
-
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredNiveles.length);
-    this.pagedNiveles = this.filteredNiveles.slice(startIndex, endIndex);
-    this.cdr.detectChanges();
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.filteredNiveles.length / this.itemsPerPage);
+    this.currentPage = page;
+    this.loadNiveles();
   }
 
   getPagesArray(): number[] {
-    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+    if (!this.pagedNiveles) return [];
+    return Array(this.pagedNiveles.totalPages).fill(0).map((x, i) => i + 1);
   }
 
   // --- Métodos del CRUD ---
-  openAddNivelModal() {
+  openAddNivelModal(): void {
     this.newNivel = {
-      identifier: '',
       descripcion: '',
       estado: EstadoReference.ACTIVO,
-      fechaCreacion: new Date().toISOString(),
-      grados: [],
-      matriculas: [],
     };
     this.modalService.open(this.addNivelModal, { centered: true, size: 'lg' });
   }
 
-  saveNivel() {
+  saveNivel(): void {
     if (!this.newNivel.descripcion || !this.newNivel.estado) {
       Swal.fire('Error', 'La descripción y el estado son obligatorios.', 'error');
       return;
     }
-    const maxId = Math.max(...this.allNiveles.map(n => parseInt(n.identifier || '0')), 0);
-    this.newNivel.identifier = (maxId + 1).toString();
-    this.allNiveles.push({ ...this.newNivel });
-    this.aplicarFiltroYPaginar();
-    Swal.fire('¡Éxito!', 'Nivel añadido correctamente.', 'success');
-    this.dismiss();
+
+    this.nivelService.add(this.newNivel).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Éxito!', 'Nivel añadido correctamente.', 'success');
+        this.loadNiveles();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'No se pudo agregar el nivel.', 'error');
+      }
+    });
   }
 
-  openEditNivelModal(nivel: NivelDto) {
+  openEditNivelModal(nivel: NivelDto): void {
     this.editingNivel = { ...nivel };
     this.modalService.open(this.editNivelModal, { centered: true, size: 'lg' });
   }
 
-  updateNivel() {
-    if (!this.editingNivel || !this.editingNivel.descripcion || !this.editingNivel.estado) {
+  updateNivel(): void {
+    if (!this.editingNivel || !this.editingNivel.identifier) return;
+
+    if (!this.editingNivel.descripcion || !this.editingNivel.estado) {
       Swal.fire('Error', 'La descripción y el estado son obligatorios.', 'error');
       return;
     }
-    const index = this.allNiveles.findIndex(n => n.identifier === this.editingNivel!.identifier);
-    if (index !== -1) {
-      this.allNiveles[index] = { ...this.editingNivel! };
-      this.aplicarFiltroYPaginar();
-      Swal.fire('¡Éxito!', 'Nivel actualizado correctamente.', 'success');
-    } else {
-      Swal.fire('Error', 'Nivel no encontrado.', 'error');
-    }
-    this.dismiss();
+
+    this.nivelService.update(this.editingNivel.identifier, this.editingNivel).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Éxito!', 'Nivel actualizado correctamente.', 'success');
+        this.loadNiveles();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'Nivel no encontrado.', 'error');
+      }
+    });
   }
 
-  confirmDeleteNivel(nivel: NivelDto) {
+  confirmDeleteNivel(nivel: NivelDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
       text: `¡No podrás revertir esto! Eliminarás el nivel: ${nivel.descripcion}`,
@@ -154,24 +138,27 @@ export class NivelesComponent implements OnInit {
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.deleteNivel(nivel.identifier || '');
+      if (result.isConfirmed && nivel.identifier) {
+        this.deleteNivel(nivel.identifier);
       }
     });
   }
 
-  deleteNivel(identifier: string) {
-    const initialLength = this.allNiveles.length;
-    this.allNiveles = this.allNiveles.filter(n => n.identifier !== identifier);
-    this.aplicarFiltroYPaginar();
-    if (this.allNiveles.length < initialLength) {
-      Swal.fire('¡Eliminado!', 'El nivel ha sido eliminado.', 'success');
-    } else {
-      Swal.fire('Error', 'No se pudo encontrar el nivel para eliminar.', 'error');
-    }
+  private deleteNivel(identifier: string): void {
+    this.nivelService.delete(identifier).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Eliminado!', 'El nivel ha sido eliminado.', 'success');
+        if (this.pagedNiveles?.content.length === 1 && this.currentPage > 1) {
+          this.currentPage--;
+        }
+        this.loadNiveles();
+      } else {
+        Swal.fire('Error', 'No se pudo encontrar el nivel para eliminar.', 'error');
+      }
+    });
   }
 
-  dismiss() {
+  dismiss(): void {
     this.modalService.dismissAll();
   }
 }

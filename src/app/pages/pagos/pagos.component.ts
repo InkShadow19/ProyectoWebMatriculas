@@ -6,12 +6,13 @@ import { PagoDto } from 'src/app/models/pago.model';
 import { CanalReference } from 'src/app/models/enums/canal-reference.enum';
 import { CronogramaPagoDto } from 'src/app/models/cronograma-pago.model';
 import { EstadoDeudaReference } from 'src/app/models/enums/estado-deuda-reference.enum';
+import { EstadoPagoReference } from 'src/app/models/enums/estado-pago-reference.enum';
 
 // Interfaces para la vista
 interface PagoMostrado extends PagoDto {
   estudiante: string;
   registradoPor: string; // Nombre del usuario
-  estado: 'Confirmado' | 'Anulado';
+  estado: EstadoPagoReference;
 }
 
 interface DeudaPendiente extends CronogramaPagoDto {
@@ -82,13 +83,13 @@ export class PagosComponent implements OnInit {
 
   cargarPagosDeEjemplo() {
     this.pagos = [
-      { identifier: 'p-1', numeroTicket: 'V-0015', fechaPago: '2025-07-04T10:30:00Z', estudiante: 'Sofía Torres Rojas', montoTotalPagado: 580.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-2', numeroTicket: '987654', fechaPago: '2025-07-03T15:15:00Z', estudiante: 'Lucas Campos Díaz', montoTotalPagado: 300.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'bcp', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-3', numeroTicket: 'V-0013', fechaPago: '2025-07-02T11:00:00Z', estudiante: 'Ana Quispe Flores', montoTotalPagado: 300.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Anulado', habilitado: false, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-4', numeroTicket: 'V-0016', fechaPago: '2025-07-05T09:00:00Z', estudiante: 'Mario Vargas Llosa', montoTotalPagado: 450.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-5', numeroTicket: 'V-0017', fechaPago: '2025-07-06T12:00:00Z', estudiante: 'Juana de Arco', montoTotalPagado: 150.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-6', numeroTicket: '987655', fechaPago: '2025-07-07T14:00:00Z', estudiante: 'Pedro Castillo', montoTotalPagado: 600.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'interbank', estado: 'Confirmado', habilitado: true, fechaCreacion: '', detalles: [] },
-      { identifier: 'p-7', numeroTicket: 'V-0018', fechaPago: '2025-07-08T16:00:00Z', estudiante: 'Alan García Pérez', montoTotalPagado: 250.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: 'Anulado', habilitado: false, fechaCreacion: '', detalles: [] }
+      { identifier: 'p-1', numeroTicket: 'V-0015', fechaPago: '2025-07-04T10:30:00Z', estudiante: 'Sofía Torres Rojas', montoTotalPagado: 580.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: EstadoPagoReference.CONFIRMADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-2', numeroTicket: '987654', fechaPago: '2025-07-03T15:15:00Z', estudiante: 'Lucas Campos Díaz', montoTotalPagado: 300.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'bcp', estado: EstadoPagoReference.CONFIRMADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-3', numeroTicket: 'V-0013', fechaPago: '2025-07-02T11:00:00Z', estudiante: 'Ana Quispe Flores', montoTotalPagado: 300.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: EstadoPagoReference.ANULADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-4', numeroTicket: 'V-0016', fechaPago: '2025-07-05T09:00:00Z', estudiante: 'Mario Vargas Llosa', montoTotalPagado: 450.00, canalPago: CanalReference.CAJA, usuario: 'usr-1', registradoPor: 'Ana Pérez', estado: EstadoPagoReference.CONFIRMADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-5', numeroTicket: 'V-0017', fechaPago: '2025-07-06T12:00:00Z', estudiante: 'Juana de Arco', montoTotalPagado: 150.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: EstadoPagoReference.ANULADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-6', numeroTicket: '987655', fechaPago: '2025-07-07T14:00:00Z', estudiante: 'Pedro Castillo', montoTotalPagado: 600.00, canalPago: CanalReference.BANCO, usuario: 'usr-1', registradoPor: 'Ana Pérez', banco: 'interbank', estado: EstadoPagoReference.CONFIRMADO, fechaCreacion: '', detalles: [] },
+      { identifier: 'p-7', numeroTicket: 'V-0018', fechaPago: '2025-07-08T16:00:00Z', estudiante: 'Alan García Pérez', montoTotalPagado: 250.00, canalPago: CanalReference.CAJA, usuario: 'usr-2', registradoPor: 'Luis Gómez', estado: EstadoPagoReference.ANULADO, fechaCreacion: '', detalles: [] }
     ];
   }
 
@@ -168,9 +169,9 @@ export class PagosComponent implements OnInit {
     this.estudianteEncontrado = {
       nombre: 'Sofía Torres Rojas',
       deudas: [
-        { identifier: 'c-1', descripcionPersonalizada: 'Matrícula 2025', fechaVencimiento: '2025-02-28', montoAPagar: 230.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 230, descuento: 0, mora: 0, habilitado: true, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
-        { identifier: 'c-2', descripcionPersonalizada: 'Pensión Marzo 2025', fechaVencimiento: '2025-03-31', montoAPagar: 300.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 0, habilitado: true, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
-        { identifier: 'c-3', descripcionPersonalizada: 'Pensión Abril 2025 (con mora)', fechaVencimiento: '2025-04-30', montoAPagar: 310.00, estadoDeuda: EstadoDeudaReference.VENCIDO, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 10, habilitado: true, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] }
+        { identifier: 'c-1', descripcionPersonalizada: 'Matrícula 2025', fechaVencimiento: '2025-02-28', montoAPagar: 230.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 230, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
+        { identifier: 'c-2', descripcionPersonalizada: 'Pensión Marzo 2025', fechaVencimiento: '2025-03-31', montoAPagar: 300.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
+        { identifier: 'c-3', descripcionPersonalizada: 'Pensión Abril 2025 (con mora)', fechaVencimiento: '2025-04-30', montoAPagar: 310.00, estadoDeuda: EstadoDeudaReference.VENCIDO, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 10, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] }
       ]
     };
     this.procesoPagoPaso = 'seleccion';

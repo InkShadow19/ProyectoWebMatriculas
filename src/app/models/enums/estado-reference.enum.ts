@@ -1,5 +1,5 @@
 export enum EstadoReference{
-    ACTIVO = 'ACTIVO',
-    INACTIVO = 'INACTIVO',
-    UNDEFINED = 'UNDEFINED'
+  ACTIVO = 'ACTIVO',
+  INACTIVO = 'INACTIVO',
+  UNDEFINED = 'UNDEFINED'
 }

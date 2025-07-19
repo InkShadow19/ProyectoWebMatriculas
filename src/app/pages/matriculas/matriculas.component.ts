@@ -7,6 +7,7 @@ import { MatriculaDto } from 'src/app/models/matricula.model';
 import { CronogramaPagoDto } from 'src/app/models/cronograma-pago.model';
 import { SituacionReference } from 'src/app/models/enums/situacion-reference.enum';
 import { EstadoDeudaReference } from 'src/app/models/enums/estado-deuda-reference.enum';
+import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-reference.enum';
 
 // Interfaz extendida para manejar todos los datos necesarios
 interface MatriculaCompleta extends MatriculaDto {
@@ -96,51 +97,51 @@ export class MatriculasComponent implements OnInit {
   ngOnInit(): void {
     this.allMatriculas = [
       {
-        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
-          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
-          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
+          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, habilitado: false, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, habilitado: true, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, estado: EstadoMatriculaReference.COMPLETADA, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
-          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
-          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
+          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, habilitado: false, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, habilitado: true, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, estado: EstadoMatriculaReference.ANULADA, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
-          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, habilitado: true, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-1', codigo: 2025001, estudiante: 'Carlos Vargas Llosa', dniEstudiante: '78945612', apoderado: 'Maria Vargas Llosa', telefonoApoderado: '987654321', grado: '5 Años', nivel: 'Inicial', situacion: SituacionReference.PROMOVIDO, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-10', fechaCreacion: '2025-01-15T09:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c1-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
+          { identifier: 'c1-2', descripcionPersonalizada: 'Pensión Abril', montoOriginal: 750.50, descuento: 0, mora: 0, montoAPagar: 750.50, fechaVencimiento: '2025-04-30', estadoDeuda: EstadoDeudaReference.PENDIENTE, fechaCreacion: '2025-02-10', matricula: 'mat-1', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, habilitado: true, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
-          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, habilitado: true, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-2', codigo: 2025002, estudiante: 'Ana Ruiz Torres', dniEstudiante: '71234567', apoderado: 'Juan Ruiz Torres', telefonoApoderado: '912345678', grado: '1er Grado', nivel: 'Primaria', situacion: SituacionReference.INGRESANTE, estado: EstadoMatriculaReference.VIGENTE, anioAcademico: '2025', fechaMatricula: '2025-02-11', fechaCreacion: '2025-01-16T11:20:00Z', institucion_procendencia: 'Colegio San Agustín', cronogramas: [
+          { identifier: 'c2-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 800.00, descuento: 50, mora: 0, montoAPagar: 750.00, fechaVencimiento: '2025-03-31', estadoDeuda: EstadoDeudaReference.PAGADO, fechaCreacion: '2025-02-11', matricula: 'mat-2', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       },
       {
-        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, habilitado: false, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
-          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, habilitado: true, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
+        identifier: 'mat-3', codigo: 2024001, estudiante: 'Lucia Mendoza', dniEstudiante: '76543210', apoderado: 'Elena Mendoza Rojas', telefonoApoderado: '955443322', grado: '2do Grado', nivel: 'Primaria', situacion: SituacionReference.REPITENTE, estado: EstadoMatriculaReference.COMPLETADA, anioAcademico: '2024', fechaMatricula: '2024-02-15', fechaCreacion: '2024-01-20T14:00:00Z', institucion_procendencia: '', cronogramas: [
+          { identifier: 'c3-1', descripcionPersonalizada: 'Pensión Marzo', montoOriginal: 780.00, descuento: 0, mora: 25.50, montoAPagar: 805.50, fechaVencimiento: '2024-03-31', estadoDeuda: EstadoDeudaReference.VENCIDO, fechaCreacion: '2024-02-15', matricula: 'mat-3', conceptoPago: 'PENS-REG', detalles: [] },
         ]
       }
     ];
@@ -262,7 +263,7 @@ export class MatriculasComponent implements OnInit {
     const searchTerm = this.filtroBusqueda.toLowerCase().trim();
     data = data.filter(m => {
       const anioMatch = !this.filtroAnio || m.anioAcademico === this.filtroAnio;
-      const estadoMatch = this.filtroEstado === '' || String(m.habilitado) === this.filtroEstado;
+      const estadoMatch = this.filtroEstado === '' || m.estado === this.filtroEstado;
       const nivelMatch = this.filtroNivel === '' || m.nivel === this.filtroNivel;
       const gradoMatch = this.filtroGrado === '' || m.grado === this.filtroGrado;
       const searchMatch = !searchTerm || m.estudiante.toLowerCase().includes(searchTerm) || m.dniEstudiante.includes(searchTerm) || String(m.codigo).includes(searchTerm);

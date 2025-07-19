@@ -4,7 +4,7 @@ import { MatriculaDto } from "./matricula.model";
 export interface AnioAcademicoDto {
   identifier: string;
   anio: number;
-  estado: EstadoAcademicoReference;
+  estadoAcademico: EstadoAcademicoReference;
   fechaCreacion: string;
   matriculas: MatriculaDto[];
 }

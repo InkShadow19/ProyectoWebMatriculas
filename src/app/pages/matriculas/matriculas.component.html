@@ -89,9 +89,9 @@
                         <td>{{ matricula.fechaMatricula | date:'dd/MM/yyyy' }}</td>
                         <td>
                             <span class="badge" [ngClass]="{
-                                'badge-light-success': matricula.habilitado, 
-                                'badge-light-danger': !matricula.habilitado
-                            }">{{ matricula.habilitado ? 'Vigente' : 'Anulada' }}</span>
+                                'badge-light-success': matricula.estado, 
+                                'badge-light-danger': !matricula.estado
+                            }">{{ matricula.estado ? 'Vigente' : 'Anulada' }}</span>
                         </td>
                         <td class="text-end">
                             <a href="#" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
@@ -113,10 +113,10 @@
                                 </div>
                                 <!-- ************************** -->
                                 <div class="menu-item px-3">
-                                    <a href="#" class="menu-link px-3" [ngClass]="{'text-danger': matricula.habilitado,'text-success': !matricula.habilitado}">
-                                        <app-keenicon [name]="matricula.habilitado ? 'trash' : 'check-circle'"
+                                    <a href="#" class="menu-link px-3" [ngClass]="{'text-danger': matricula.estado,'text-success': !matricula.estado}">
+                                        <app-keenicon [name]="matricula.estado ? 'trash' : 'check-circle'"
                                             class="fs-5 me-2"></app-keenicon>
-                                        {{ matricula.habilitado ? 'Anular' : 'Reactivar' }}
+                                        {{ matricula.estado ? 'Anular' : 'Reactivar' }}
                                     </a>
                                 </div>
                             </div>
@@ -224,9 +224,9 @@
                                             <div class="fw-bold">Estado:</div>
                                             <div class="text-gray-600">
                                                 <span class="badge" [ngClass]="{
-                                                    'badge-success': selectedMatricula.habilitado, 
-                                                    'badge-danger': !selectedMatricula.habilitado
-                                                }">{{ selectedMatricula.habilitado ? 'Vigente' : 'Anulada' }}</span>
+                                                    'badge-success': selectedMatricula.estado, 
+                                                    'badge-danger': !selectedMatricula.estado
+                                                }">{{ selectedMatricula.estado ? 'Vigente' : 'Anulada' }}</span>
                                             </div>
                                         </div>
                                     </div>

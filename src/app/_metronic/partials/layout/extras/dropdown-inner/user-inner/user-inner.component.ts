@@ -1,7 +1,7 @@
 import { Component, HostBinding, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { TranslationService } from '../../../../../../modules/i18n';
-import { AuthService, UserType } from '../../../../../../modules/auth';
+import { AuthService } from '../../../../../../modules/auth/services/auth.service';
 
 @Component({
   selector: 'app-user-inner',
@@ -12,8 +12,8 @@ export class UserInnerComponent implements OnInit, OnDestroy {
   class = `menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px`;
   @HostBinding('attr.data-kt-menu') dataKtMenu = 'true';
 
+  public user: any | null = null;
   language: LanguageFlag;
-  user$: Observable<UserType>;
   langs = languages;
   private unsubscribe: Subscription[] = [];
 
@@ -23,19 +23,29 @@ export class UserInnerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.user$ = this.auth.currentUserSubject.asObservable();
+    const userSub = this.auth.currentUser$.subscribe(userData => {
+      this.user = userData;
+    });
+    this.unsubscribe.push(userSub);
     this.setLanguage(this.translationService.getSelectedLanguage());
+  }
+
+  // --- NUEVO MÉTODO GETTER ---
+  // Esta función se encarga de la lógica de forma segura
+  get userInitial(): string {
+    if (this.user && typeof this.user.username === 'string') {
+      return this.user.username.charAt(0).toUpperCase();
+    }
+    return '';
   }
 
   logout() {
     this.auth.logout();
-    document.location.reload();
   }
 
   selectLanguage(lang: string) {
     this.translationService.setLanguage(lang);
     this.setLanguage(lang);
-    // document.location.reload();
   }
 
   setLanguage(lang: string) {

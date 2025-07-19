@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { UserModel } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, LoginRequest } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
@@ -11,19 +11,11 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent implements OnInit, OnDestroy {
-  // KeenThemes mock, change it to:
-  defaultAuth: any = {
-    email: 'admin@demo.com',
-    password: 'demo',
-  };
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   hasError: boolean;
   returnUrl: string;
   isLoading$: Observable<boolean>;
-
-  // private fields
-  private unsubscribe: Subscription[] = []; // Read more: => https://brianflove.com/2016/12/11/anguar-2-unsubscribe-observables/
 
   constructor(
     private fb: FormBuilder,
@@ -32,7 +24,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private router: Router
   ) {
     this.isLoading$ = this.authService.isLoading$;
-    // redirect to home if already logged in
+    // Redirigir si ya hay una sesión activa
     if (this.authService.currentUserValue) {
       this.router.navigate(['/']);
     }
@@ -40,54 +32,49 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
-    // get return url from route parameters or default to '/'
-    this.returnUrl =
-      this.route.snapshot.queryParams['returnUrl'.toString()] || '/';
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
   }
 
-  // convenience getter for easy access to form fields
   get f() {
     return this.loginForm.controls;
   }
 
   initForm() {
-    this.loginForm = this.fb.group({
-      email: [
-        this.defaultAuth.email,
-        Validators.compose([
-          Validators.required,
-          Validators.email,
-          Validators.minLength(3),
-          Validators.maxLength(320), // https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
-        ]),
-      ],
-      password: [
-        this.defaultAuth.password,
-        Validators.compose([
-          Validators.required,
-          Validators.minLength(3),
-          Validators.maxLength(100),
-        ]),
-      ],
-    });
-  }
+    this.loginForm = this.fb.group({
+      usuario: [
+        '', // Dejar el valor por defecto vacío es una buena práctica
+        Validators.compose([
+          Validators.required,
+        ]),
+      ],
+      contraseña: [
+        '',
+        Validators.compose([Validators.required]),
+      ],
+    });
+  }
 
   submit() {
     this.hasError = false;
-    const loginSubscr = this.authService
-      .login(this.f.email.value, this.f.password.value)
+    if (this.loginForm.invalid) {
+      return;
+    }
+
+    const credentials: LoginRequest = {
+      usuario: this.f.usuario.value,
+      contraseña: this.f.contraseña.value,
+    };
+
+    this.authService
+      .login(credentials)
       .pipe(first())
-      .subscribe((user: UserModel | undefined) => {
+      .subscribe((user) => {
         if (user) {
           this.router.navigate([this.returnUrl]);
         } else {
+          // El servicio ya maneja el error, aquí solo actualizamos la UI
           this.hasError = true;
         }
       });
-    this.unsubscribe.push(loginSubscr);
-  }
-
-  ngOnDestroy() {
-    this.unsubscribe.forEach((sb) => sb.unsubscribe());
   }
 }

@@ -7,6 +7,8 @@ import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
 import { NgbModal, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
+import { EstudianteService } from 'src/app/services/estudiante.service';
+import { PageResponse } from 'src/app/models/page-response.model';
 
 @Component({
   selector: 'app-estudiantes',
@@ -26,185 +28,111 @@ export class EstudiantesComponent implements OnInit {
 
   GeneroReference = GeneroReference;
   EstadoAcademicoReference = EstadoAcademicoReference;
-
-  generoKeys: string[];
-  estadoEstudianteKeys: string[];
-
-  newEstudiante: EstudianteDto = {
-    identifier: '',
-    dni: '',
-    nombre: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    fechaNacimiento: '',
-    genero: GeneroReference.MASCULINO,
-    email: '',
-    telefono: '',
-    direccion: '',
-    estado: EstadoAcademicoReference.ACTIVO,
-    fechaCreacion: new Date().toISOString(),
-    matriculas: [],
-  };
-
-  editingEstudiante: EstudianteDto | null = null;
-  filtroBusqueda: string = '';
-  filtroEstado: string = '';
-  allEstudiantes: EstudianteDto[] = [
-    { identifier: '1', dni: '78945612', nombre: 'Carlos', apellidoPaterno: 'Vargas', apellidoMaterno: 'Llosa', fechaNacimiento: '2010-05-15', genero: GeneroReference.MASCULINO, direccion: 'Av. Los Proceres 123, Surco', telefono: '987654321', email: 'carlos.vargas@email.com', estado: EstadoAcademicoReference.ACTIVO, fechaCreacion: '2024-01-20T10:00:00Z', matriculas: [] },
-    { identifier: '2', dni: '71234567', nombre: 'Ana', apellidoPaterno: 'Ruiz', apellidoMaterno: 'Torres', fechaNacimiento: '2011-08-22', genero: GeneroReference.FEMENINO, direccion: 'Jr. de la Union 456, Lima', telefono: '912345678', email: 'ana.ruiz@email.com', estado: EstadoAcademicoReference.ACTIVO, fechaCreacion: '2024-01-22T11:30:00Z', matriculas: [] },
-    { identifier: '3', dni: '75689123', nombre: 'Pedro', apellidoPaterno: 'Gomez', apellidoMaterno: 'Perez', fechaNacimiento: '2010-03-10', genero: GeneroReference.MASCULINO, direccion: 'Calle Las Begonias 789, San Isidro', telefono: '998877665', email: 'pedro.gomez@email.com', estado: EstadoAcademicoReference.RETIRADO, fechaCreacion: '2023-11-05T14:00:00Z', matriculas: [] },
-    { identifier: '4', dni: '71122334', nombre: 'Camila', apellidoPaterno: 'Castro', apellidoMaterno: 'Silva', fechaNacimiento: '2012-12-01', genero: GeneroReference.FEMENINO, direccion: 'Jr. Huiracocha 2050, Jesus Maria', telefono: '911223344', email: 'camila.castro@email.com', estado: EstadoAcademicoReference.EGRESADO, fechaCreacion: '2024-02-15T10:00:00Z', matriculas: [] },
+  generoKeys = Object.values(GeneroReference);
+  estadoAcademicoKeys: EstadoAcademicoReference[] = [
+    EstadoAcademicoReference.ACTIVO,
+    EstadoAcademicoReference.RETIRADO,
+    EstadoAcademicoReference.EGRESADO,
   ];
-  filteredEstudiantes: EstudianteDto[] = [];
+
+  newEstudiante: Partial<EstudianteDto> = {};
+  editingEstudiante: EstudianteDto | null = null;
+
+  pagedEstudiantes: PageResponse<EstudianteDto> | undefined;
+  filtroBusqueda: string = '';
+  filtroEstado: EstadoAcademicoReference | '' = '';
   currentPage: number = 1;
   itemsPerPage: number = 5;
-  pagedEstudiantes: EstudianteDto[] = [];
 
-  constructor(private cdr: ChangeDetectorRef, private modalService: NgbModal) {
-    this.generoKeys = Object.values(GeneroReference) as string[];
-
-    this.estadoEstudianteKeys = [
-      EstadoAcademicoReference.ACTIVO,
-      EstadoAcademicoReference.RETIRADO,
-      EstadoAcademicoReference.EGRESADO,
-      EstadoAcademicoReference.UNDEFINED
-    ];
-  }
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private modalService: NgbModal,
+    private estudianteService: EstudianteService
+  ) {}
 
   ngOnInit(): void {
-    this.aplicarFiltroYPaginar();
+    this.loadEstudiantes();
   }
 
-  aplicarFiltroYPaginar(): void {
-    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
-    let estudiantesTemp = [...this.allEstudiantes];
-
-    if (this.filtroEstado) {
-      estudiantesTemp = estudiantesTemp.filter(estudiante => estudiante.estado === this.filtroEstado);
-    }
-
-    if (searchTerm) {
-      estudiantesTemp = estudiantesTemp.filter(estudiante => {
-        const nombreCompleto = `${estudiante.nombre} ${estudiante.apellidoPaterno} ${estudiante.apellidoMaterno || ''}`.toLowerCase();
-        return nombreCompleto.includes(searchTerm) || estudiante.dni.includes(searchTerm);
+  loadEstudiantes(): void {
+    const page = this.currentPage - 1;
+    const estado = this.filtroEstado === '' ? undefined : this.filtroEstado;
+    this.estudianteService.getList(page, this.itemsPerPage, this.filtroBusqueda, estado)
+      .subscribe(response => {
+        this.pagedEstudiantes = response;
+        this.cdr.detectChanges();
       });
-    }
+  }
 
-    this.filteredEstudiantes = estudiantesTemp;
-    this.setPage(1);
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadEstudiantes();
   }
 
   limpiarFiltros(): void {
     this.filtroBusqueda = '';
     this.filtroEstado = '';
-    this.aplicarFiltroYPaginar();
+    this.onFilterChange();
   }
 
-  setPage(page: number) {
-    const totalPages = this.getTotalPages();
-    if (page < 1) {
-      page = 1;
-    }
-    if (page > totalPages) {
-      page = totalPages;
-    }
-    this.currentPage = page;
-
-    if (this.filteredEstudiantes.length === 0) {
-      this.pagedEstudiantes = [];
+  setPage(page: number): void {
+    if (page < 1 || (this.pagedEstudiantes && page > this.pagedEstudiantes.totalPages)) {
       return;
     }
-
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredEstudiantes.length);
-    this.pagedEstudiantes = this.filteredEstudiantes.slice(startIndex, endIndex);
-    this.cdr.detectChanges();
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.filteredEstudiantes.length / this.itemsPerPage);
+    this.currentPage = page;
+    this.loadEstudiantes();
   }
 
   getPagesArray(): number[] {
-    return Array(this.getTotalPages()).fill(0).map((x, i) => i + 1);
+    if (!this.pagedEstudiantes) return [];
+    return Array(this.pagedEstudiantes.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  openAddEstudianteModal() {
+  openAddEstudianteModal(): void {
     this.newEstudiante = {
-      identifier: '',
-      dni: '',
-      nombre: '',
-      apellidoPaterno: '',
-      apellidoMaterno: '',
-      fechaNacimiento: '',
       genero: GeneroReference.MASCULINO,
-      email: '',
-      telefono: '',
-      direccion: '',
-      estado: EstadoAcademicoReference.ACTIVO,
-      fechaCreacion: new Date().toISOString(),
-      matriculas: [],
+      estadoAcademico: EstadoAcademicoReference.ACTIVO,
     };
     this.modalService.open(this.addEstudianteModal, { centered: true, size: 'lg' });
   }
 
-  saveEstudiante() {
-    if (!this.newEstudiante.dni || !this.newEstudiante.nombre || !this.newEstudiante.apellidoPaterno || !this.newEstudiante.fechaNacimiento || !this.newEstudiante.genero || !this.newEstudiante.email || !this.newEstudiante.estado) {
-      Swal.fire('Error', 'Los campos requeridos deben ser completados.', 'error');
-      return;
-    }
-    if (!/^\d{8}$/.test(this.newEstudiante.dni)) {
-      Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.newEstudiante.email)) {
-      Swal.fire('Error', 'El formato del email no es válido.', 'error');
+  saveEstudiante(): void {
+    if (!this.newEstudiante.dni || !this.newEstudiante.nombre || !this.newEstudiante.apellidoPaterno) {
+      Swal.fire('Error', 'Los campos DNI, Nombre y Apellido Paterno son requeridos.', 'error');
       return;
     }
 
-    const maxId = Math.max(...this.allEstudiantes.map(e => parseInt(e.identifier || '0')), 0);
-    this.newEstudiante.identifier = (maxId + 1).toString();
-    this.allEstudiantes.push({ ...this.newEstudiante });
-    this.aplicarFiltroYPaginar();
-    Swal.fire('¡Éxito!', 'Estudiante añadido correctamente.', 'success');
-    this.dismiss();
+    this.estudianteService.add(this.newEstudiante).subscribe(estudianteAgregado => {
+      if (estudianteAgregado) {
+        Swal.fire('¡Éxito!', 'Estudiante añadido correctamente.', 'success');
+        this.loadEstudiantes();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'No se pudo agregar el estudiante.', 'error');
+      }
+    });
   }
 
-  openEditEstudianteModal(estudiante: EstudianteDto) {
+  openEditEstudianteModal(estudiante: EstudianteDto): void {
     this.editingEstudiante = { ...estudiante };
     this.modalService.open(this.editEstudianteModal, { centered: true, size: 'lg' });
   }
 
-  updateEstudiante() {
-    if (!this.editingEstudiante) {
-      Swal.fire('Error', 'No hay estudiante seleccionado para editar.', 'error');
-      return;
-    }
-    if (!this.editingEstudiante.dni || !this.editingEstudiante.nombre || !this.editingEstudiante.apellidoPaterno || !this.editingEstudiante.fechaNacimiento || !this.editingEstudiante.genero || !this.editingEstudiante.email || !this.editingEstudiante.estado) {
-      Swal.fire('Error', 'Los campos requeridos deben ser completados.', 'error');
-      return;
-    }
-    if (!/^\d{8}$/.test(this.editingEstudiante.dni)) {
-      Swal.fire('Error', 'El DNI debe contener exactamente 8 dígitos numéricos.', 'error');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.editingEstudiante.email)) {
-      Swal.fire('Error', 'El formato del email no es válido.', 'error');
-      return;
-    }
+  updateEstudiante(): void {
+    if (!this.editingEstudiante || !this.editingEstudiante.identifier) return;
 
-    const index = this.allEstudiantes.findIndex(e => e.identifier === this.editingEstudiante?.identifier);
-    if (index !== -1) {
-      this.allEstudiantes[index] = { ...this.editingEstudiante };
-      this.aplicarFiltroYPaginar();
-      Swal.fire('¡Éxito!', 'Estudiante actualizado correctamente.', 'success');
-    } else {
-      Swal.fire('Error', 'Estudiante no encontrado para actualizar.', 'error');
-    }
-    this.dismiss();
+    this.estudianteService.update(this.editingEstudiante.identifier, this.editingEstudiante).subscribe(estudianteActualizado => {
+      if (estudianteActualizado) {
+        Swal.fire('¡Éxito!', 'Estudiante actualizado correctamente.', 'success');
+        this.loadEstudiantes();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'Hubo un problema al actualizar el estudiante.', 'error');
+      }
+    });
   }
 
-  confirmDeleteEstudiante(estudiante: EstudianteDto) {
+  confirmDeleteEstudiante(estudiante: EstudianteDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
       text: `¡No podrás revertir esto! Eliminarás a ${estudiante.nombre} ${estudiante.apellidoPaterno}`,
@@ -215,24 +143,27 @@ export class EstudiantesComponent implements OnInit {
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.deleteEstudiante(estudiante.identifier || '');
+      if (result.isConfirmed && estudiante.identifier) {
+        this.deleteEstudiante(estudiante.identifier);
       }
     });
   }
 
-  deleteEstudiante(identifier: string) {
-    const initialLength = this.allEstudiantes.length;
-    this.allEstudiantes = this.allEstudiantes.filter(estudiante => estudiante.identifier !== identifier);
-    this.aplicarFiltroYPaginar();
-    if (this.allEstudiantes.length < initialLength) {
-      Swal.fire('¡Eliminado!', 'El estudiante ha sido eliminado.', 'success');
-    } else {
-      Swal.fire('Error', 'No se pudo encontrar el estudiante para eliminar.', 'error');
-    }
+  private deleteEstudiante(identifier: string): void {
+    this.estudianteService.delete(identifier).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Eliminado!', 'El estudiante ha sido eliminado.', 'success');
+        if (this.pagedEstudiantes?.content.length === 1 && this.currentPage > 1) {
+          this.currentPage--;
+        }
+        this.loadEstudiantes();
+      } else {
+        Swal.fire('Error', 'No se pudo eliminar el estudiante.', 'error');
+      }
+    });
   }
 
-  dismiss() {
+  dismiss(): void {
     this.modalService.dismissAll();
   }
 }

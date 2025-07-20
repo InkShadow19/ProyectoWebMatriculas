@@ -17,12 +17,12 @@
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar por código o descripción..."
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -44,73 +44,79 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let banco of pagedBancos">
+          <tr *ngFor="let banco of pagedBancos?.content">
             <td>{{ banco.codigo }}</td>
             <td>{{ banco.descripcion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                'badge-light-success': banco.estado === EstadoReference.ACTIVO,
-                'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
-                'badge-secondary': banco.estado === EstadoReference.UNDEFINED
-              }">
+                  'badge-light-success': banco.estado === EstadoReference.ACTIVO,
+                  'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
+                  'badge-secondary': banco.estado === EstadoReference.UNDEFINED
+                }">
                 {{ banco.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditBankModal(banco)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteBank(banco)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditBankModal(banco)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteBank(banco)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+                <div class="d-none d-md-flex justify-content-end">
+                    <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditBankModal(banco)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                      Editar
+                    </button>
+                    <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteBank(banco)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                      Eliminar
+                    </button>
+                  </div>
+    
+                  <div class="d-md-none text-end" ngbDropdown>
+                    <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                      <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                    </button>
+    
+                    <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                      <button class="dropdown-item text-info" (click)="openEditBankModal(banco)">
+                        <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                        Editar
+                      </button>
+                      <button class="dropdown-item text-danger" (click)="confirmDeleteBank(banco)">
+                        <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+            </td>
+          </tr>
+          <tr *ngIf="!pagedBancos || pagedBancos.content.length === 0">
+            <td colspan="4" class="text-center text-muted py-5">
+                No se encontraron registros.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
 
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allBancos.length > 0">
-    <div class="fs-6 fw-semibold text-gray-700">
-      Mostrando
-      <span class="fw-bold">{{ filteredBancos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
-      a
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedBancos.length }}</span>
-      de
-      <span class="fw-bold">{{ filteredBancos.length }}</span> registros
-    </div>
-    <ul class="pagination">
-      <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
-      </li>
-      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
-      </li>
-      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
-      </li>
-    </ul>
+    <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedBancos && pagedBancos.totalElements > 0">
+        <div class="fs-6 fw-semibold text-gray-700">
+          Mostrando
+          <span class="fw-bold">{{ pagedBancos.number * pagedBancos.size + 1 }}</span>
+          a
+          <span class="fw-bold">{{ pagedBancos.number * pagedBancos.size + pagedBancos.content.length }}</span>
+          de <span class="fw-bold">{{ pagedBancos.totalElements }}</span> registros
+        </div>
+  
+        <ul class="pagination">
+          <li class="page-item previous" [class.disabled]="pagedBancos.first">
+            <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
+                class="previous"></i></a>
+          </li>
+          <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+            <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+          </li>
+          <li class="page-item next" [class.disabled]="pagedBancos.last">
+            <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+          </li>
+        </ul>
+      </div>
   </div>
 </div>
 

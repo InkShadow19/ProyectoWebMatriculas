@@ -18,7 +18,7 @@
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, DNI..."
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, apellidos, DNI..."
             [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
@@ -238,7 +238,7 @@
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Fecha de Nacimiento:</label>
-            <input type="date" class="form-control form-control-solid" [ngModel]="editingApoderado.fechaNacimiento | date:'yyyy-MM-dd'"
+            <input type="date" class="form-control form-control-solid" [ngModel]="editingApoderado.fechaNacimiento | date:'dd/MM/yyyy':'UTC'"
               (ngModelChange)="editingApoderado.fechaNacimiento = $event" name="editApoderadoFechaNacimiento" />
           </div>
           <div class="mb-5 col-md-6">

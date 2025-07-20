@@ -13,7 +13,7 @@ export interface EstudianteDto {
   direccion?: string;
   telefono?: string;
   email?: string;
-  estado: EstadoAcademicoReference;
+  estadoAcademico: EstadoAcademicoReference;
   fechaCreacion: string;
   matriculas: MatriculaDto[];
 }

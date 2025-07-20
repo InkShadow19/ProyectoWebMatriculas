@@ -19,13 +19,13 @@
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
           <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, DNI..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
-          <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <label class="form-label fw-bold">Estado Académico:</label>
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
-            <option *ngFor="let estado of estadoEstudianteKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+            <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
         </div>
         <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
@@ -33,6 +33,7 @@
         </div>
       </div>
     </div>
+
     <div class="table-responsive">
       <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
         <thead>
@@ -44,27 +45,27 @@
             <th>Email</th>
             <th>Teléfono</th>
             <th>Dirección</th>
-            <th class="text-center">Estado</th>
+            <th class="text-center">Estado Académico</th>
             <th class="text-end">Acciones</th>
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let estudiante of pagedEstudiantes">
+          <tr *ngFor="let estudiante of pagedEstudiantes?.content">
             <td>{{ estudiante.dni }}</td>
             <td>{{ estudiante.nombre }} {{ estudiante.apellidoPaterno }} {{ estudiante.apellidoMaterno }}</td>
-            <td>{{ estudiante.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+            <td>{{ estudiante.fechaNacimiento | date:'dd/MM/yyyy':'UTC' }}</td>
             <td>{{ estudiante.genero }}</td>
             <td>{{ estudiante.email }}</td>
             <td>{{ estudiante.telefono }}</td>
             <td>{{ estudiante.direccion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': estudiante.estado === EstadoAcademicoReference.ACTIVO,
-                  'badge-light-danger': estudiante.estado === EstadoAcademicoReference.RETIRADO,
-                  'badge-light-primary': estudiante.estado === EstadoAcademicoReference.EGRESADO,
-                  'badge-secondary': estudiante.estado === EstadoAcademicoReference.UNDEFINED
+                  'badge-light-success': estudiante.estadoAcademico === EstadoAcademicoReference.ACTIVO,
+                  'badge-light-danger': estudiante.estadoAcademico === EstadoAcademicoReference.RETIRADO,
+                  'badge-light-primary': estudiante.estadoAcademico === EstadoAcademicoReference.EGRESADO,
+                  'badge-secondary': estudiante.estadoAcademico === EstadoAcademicoReference.UNDEFINED
                 }">
-                {{ estudiante.estado.replace('_', ' ') }}
+                {{ estudiante.estadoAcademico.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
@@ -72,7 +73,6 @@
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
-
                 <div ngbDropdownMenu class="dropdown-menu-end mt-2">
                   <button class="dropdown-item text-info" (click)="openEditEstudianteModal(estudiante)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
@@ -86,27 +86,33 @@
               </div>
             </td>
           </tr>
+          <tr *ngIf="!pagedEstudiantes || pagedEstudiantes.content.length === 0">
+            <td colspan="9" class="text-center text-muted py-5">
+                No se encontraron registros.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="d-flex flex-stack flex-wrap pt-10">
+    <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedEstudiantes && pagedEstudiantes.totalElements > 0">
       <div class="fs-6 fw-semibold text-gray-700">
         Mostrando
-        <span class="fw-bold">{{ filteredEstudiantes.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
+        <span class="fw-bold">{{ pagedEstudiantes.number * pagedEstudiantes.size + 1 }}</span>
         a
-        <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedEstudiantes.length }}</span>
-        de <span class="fw-bold">{{ filteredEstudiantes.length }}</span> registros
+        <span class="fw-bold">{{ pagedEstudiantes.number * pagedEstudiantes.size + pagedEstudiantes.content.length }}</span>
+        de <span class="fw-bold">{{ pagedEstudiantes.totalElements }}</span> registros
       </div>
+
       <ul class="pagination">
-        <li class="page-item previous" [class.disabled]="currentPage === 1">
+        <li class="page-item previous" [class.disabled]="pagedEstudiantes.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
               class="previous"></i></a>
         </li>
         <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
           <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
         </li>
-        <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+        <li class="page-item next" [class.disabled]="pagedEstudiantes.last">
           <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
         </li>
       </ul>
@@ -153,15 +159,13 @@
           <div class="mb-5 col-md-6">
             <label class="form-label required">Género:</label>
             <select class="form-select form-select-solid" [(ngModel)]="newEstudiante.genero" name="newEstudianteGenero">
-              <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}
-              </option>
+              <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
             </select>
           </div>
           <div class="mb-5 col-md-6">
-            <label class="form-label required">Estado:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="newEstudiante.estado" name="newEstudianteEstado">
-              <option *ngFor="let estado of estadoEstudianteKeys" [value]="estado">{{ estado.replace('_', ' ') }}
-              </option>
+            <label class="form-label required">Estado Académico:</label>
+            <select class="form-select form-select-solid" [(ngModel)]="newEstudiante.estadoAcademico" name="newEstudianteEstado">
+              <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
             </select>
           </div>
           <div class="mb-5 col-md-6">
@@ -200,62 +204,60 @@
     <div class="modal-body">
       <form *ngIf="editingEstudiante">
         <div class="row">
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">DNI:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.dni"
-              name="editEstudianteDNI" maxlength="8" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Nombres:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.nombre"
-              name="editEstudianteNombre" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Apellido Paterno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoPaterno"
-              name="editEstudianteApellidoPaterno" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label">Apellido Materno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoMaterno"
-              name="editEstudianteApellidoMaterno" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Fecha de Nacimiento:</label>
-            <input type="date" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.fechaNacimiento"
-              name="editEstudianteFechaNacimiento" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Género:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.genero"
-              name="editEstudianteGenero">
-              <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Estado:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.estado"
-              name="editEstudianteEstado">
-              <option *ngFor="let estado of estadoEstudianteKeys" [value]="estado">{{ estado.replace('_', ' ') }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Email:</label>
-            <input type="email" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.email"
-              name="editEstudianteEmail" />
-          </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label">Teléfono:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.telefono"
-              name="editEstudianteTelefono" maxlength="9" />
-          </div>
-          <div class="mb-5 col-12">
-            <label class="form-label">Dirección:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.direccion"
-              name="editEstudianteDireccion" />
-          </div>
+            <div class="mb-5 col-md-6">
+                <label class="form-label required">DNI:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.dni"
+                  name="editEstudianteDNI" maxlength="8" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Nombres:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.nombre"
+                  name="editEstudianteNombre" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Apellido Paterno:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoPaterno"
+                  name="editEstudianteApellidoPaterno" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label">Apellido Materno:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoMaterno"
+                  name="editEstudianteApellidoMaterno" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Fecha de Nacimiento:</label>
+                <input type="date" class="form-control form-control-solid" [ngModel]="editingEstudiante.fechaNacimiento | date:'yyyy-MM-dd':'UTC'"
+                  (ngModelChange)="editingEstudiante.fechaNacimiento = $event" name="editEstudianteFechaNacimiento" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Género:</label>
+                <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.genero"
+                  name="editEstudianteGenero">
+                  <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
+                </select>
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Estado Académico:</label>
+                <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.estadoAcademico"
+                  name="editEstudianteEstado">
+                  <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
+                </select>
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label required">Email:</label>
+                <input type="email" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.email"
+                  name="editEstudianteEmail" />
+              </div>
+              <div class="mb-5 col-md-6">
+                <label class="form-label">Teléfono:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.telefono"
+                  name="editEstudianteTelefono" maxlength="9" />
+              </div>
+              <div class="mb-5 col-12">
+                <label class="form-label">Dirección:</label>
+                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.direccion"
+                  name="editEstudianteDireccion" />
+              </div>
         </div>
       </form>
     </div>

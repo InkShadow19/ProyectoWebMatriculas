@@ -9,7 +9,7 @@
           <app-keenicon name="plus" class="me-2"></app-keenicon>
           Nuevo Apoderado
         </button>
-      </div>v
+      </div>
     </div>
   </div>
   <div class="card-body py-4">
@@ -19,11 +19,11 @@
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
           <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, DNI..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -51,21 +51,21 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let apoderado of pagedApoderados">
+          <tr *ngFor="let apoderado of pagedApoderados?.content">
             <td>{{ apoderado.dni }}</td>
             <td>{{ apoderado.nombre }} {{ apoderado.apellidoPaterno }} {{ apoderado.apellidoMaterno }}</td>
             <td>{{ apoderado.parentesco }}</td>
-            <td>{{ apoderado.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+            <td>{{ apoderado.fechaNacimiento | date:'dd/MM/yyyy':'UTC' }}</td>
             <td>{{ apoderado.genero }}</td>
             <td>{{ apoderado.email }}</td>
             <td>{{ apoderado.telefono }}</td>
             <td>{{ apoderado.direccion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                'badge-light-success': apoderado.estado === EstadoReference.ACTIVO,
-                'badge-light-danger': apoderado.estado === EstadoReference.INACTIVO,
-                'badge-secondary': apoderado.estado === EstadoReference.UNDEFINED
-              }">
+                  'badge-light-success': apoderado.estado === EstadoReference.ACTIVO,
+                  'badge-light-danger': apoderado.estado === EstadoReference.INACTIVO,
+                  'badge-secondary': apoderado.estado === EstadoReference.UNDEFINED
+                }">
                 {{ apoderado.estado.replace('_', ' ') }}
               </div>
             </td>
@@ -88,28 +88,33 @@
               </div>
             </td>
           </tr>
+          <tr *ngIf="!pagedApoderados || pagedApoderados.content.length === 0">
+            <td colspan="10" class="text-center text-muted py-5">
+                No se encontraron registros.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="d-flex flex-stack flex-wrap pt-10">
+    <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedApoderados && pagedApoderados.totalElements > 0">
       <div class="fs-6 fw-semibold text-gray-700">
         Mostrando
-        <span class="fw-bold">{{ filteredApoderados.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
+        <span class="fw-bold">{{ pagedApoderados.number * pagedApoderados.size + 1 }}</span>
         a
-        <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedApoderados.length }}</span>
-        de <span class="fw-bold">{{ filteredApoderados.length }}</span> registros
+        <span class="fw-bold">{{ pagedApoderados.number * pagedApoderados.size + pagedApoderados.content.length }}</span>
+        de <span class="fw-bold">{{ pagedApoderados.totalElements }}</span> registros
       </div>
 
       <ul class="pagination">
-        <li class="page-item previous" [class.disabled]="currentPage === 1">
+        <li class="page-item previous" [class.disabled]="pagedApoderados.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
               class="previous"></i></a>
         </li>
         <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
           <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
         </li>
-        <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+        <li class="page-item next" [class.disabled]="pagedApoderados.last">
           <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
         </li>
       </ul>
@@ -233,8 +238,8 @@
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Fecha de Nacimiento:</label>
-            <input type="date" class="form-control form-control-solid" [(ngModel)]="editingApoderado.fechaNacimiento"
-              name="editApoderadoFechaNacimiento" />
+            <input type="date" class="form-control form-control-solid" [ngModel]="editingApoderado.fechaNacimiento | date:'yyyy-MM-dd'"
+              (ngModelChange)="editingApoderado.fechaNacimiento = $event" name="editApoderadoFechaNacimiento" />
           </div>
           <div class="mb-5 col-md-6">
             <label class="form-label required">Género:</label>

@@ -10,7 +10,6 @@ export interface CronogramaPagoDto {
   montoAPagar: number;
   fechaVencimiento: string;
   estadoDeuda: EstadoDeudaReference;
-  habilitado: boolean;
   fechaCreacion: string;
   matricula: string; // Identifier
   conceptoPago: string; // Identifier

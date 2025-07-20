@@ -6,6 +6,8 @@ import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
+import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
+import { PageResponse } from 'src/app/models/page-response.model';
 
 @Component({
   selector: 'app-conceptos-pago',
@@ -24,123 +26,84 @@ export class ConceptosPagoComponent implements OnInit {
   @ViewChild('editConceptoModal') editConceptoModal: TemplateRef<any>;
 
   EstadoReference = EstadoReference;
-  estadoKeys: string[];
+  estadoKeys = Object.values(EstadoReference);
 
-  newConcepto: ConceptoPagoDto = {
-    identifier: '',
-    codigo: '',
-    descripcion: '',
-    montoSugerido: 0.00,
-    estado: EstadoReference.ACTIVO,
-    fechaCreacion: new Date().toISOString(),
-    cronogramas: [],
-  };
-
+  newConcepto: Partial<ConceptoPagoDto> = {};
   editingConcepto: ConceptoPagoDto | null = null;
-  
-  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
-  allConceptosDePago: ConceptoPagoDto[] = [
-    { identifier: '1', codigo: 'MATR', descripcion: 'Matrícula', montoSugerido: 280.00, estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-10T10:00:00Z', cronogramas: [] },
-    { identifier: '2', codigo: 'PENS', descripcion: 'Pensión Mensual', montoSugerido: 300.00, estado: EstadoReference.INACTIVO, fechaCreacion: '2024-01-11T11:00:00Z', cronogramas: [] },
-    { identifier: '3', codigo: 'CERT', descripcion: 'Certificado de Estudios', montoSugerido: 50.00, estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-12T12:00:00Z', cronogramas: [] },
-  ];
-  filteredConceptosDePago: ConceptoPagoDto[] = [];
-  pagedConceptos: ConceptoPagoDto[] = [];
 
+  pagedConceptos: PageResponse<ConceptoPagoDto> | undefined;
   filtroBusqueda: string = '';
-  filtroEstado: string = '';
+  filtroEstado: EstadoReference | '' = '';
   currentPage = 1;
   itemsPerPage = 5;
 
-  constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
-    this.estadoKeys = Object.values(EstadoReference) as string[];
-  }
+  constructor(
+    private modalService: NgbModal,
+    private cdr: ChangeDetectorRef,
+    private conceptoPagoService: ConceptoPagoService
+  ) { }
 
   ngOnInit(): void {
-    this.aplicarFiltroYPaginar();
+    this.loadConceptos();
   }
 
-  // --- Métodos de Filtro y Paginación ---
-  aplicarFiltroYPaginar(): void {
-    let conceptosTemp = [...this.allConceptosDePago];
-    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+  loadConceptos(): void {
+    const page = this.currentPage - 1;
+    const estado = this.filtroEstado === '' ? undefined : this.filtroEstado;
+    this.conceptoPagoService.getList(page, this.itemsPerPage, this.filtroBusqueda, estado)
+      .subscribe(response => {
+        this.pagedConceptos = response;
+        this.cdr.detectChanges();
+      });
+  }
 
-    if (this.filtroEstado) {
-      conceptosTemp = conceptosTemp.filter(concepto => concepto.estado === this.filtroEstado);
-    }
-
-    if (searchTerm) {
-      conceptosTemp = conceptosTemp.filter(concepto =>
-        concepto.descripcion.toLowerCase().includes(searchTerm) ||
-        concepto.codigo.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    this.filteredConceptosDePago = conceptosTemp;
-    this.setPage(1);
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadConceptos();
   }
 
   limpiarFiltros(): void {
     this.filtroBusqueda = '';
     this.filtroEstado = '';
-    this.aplicarFiltroYPaginar();
+    this.onFilterChange();
   }
 
-  setPage(page: number) {
-    const totalPages = this.getTotalPages();
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    this.currentPage = page;
-
-    if (this.filteredConceptosDePago.length === 0) {
-      this.pagedConceptos = [];
+  setPage(page: number): void {
+    if (page < 1 || (this.pagedConceptos && page > this.pagedConceptos.totalPages)) {
       return;
     }
-
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredConceptosDePago.length);
-    this.pagedConceptos = this.filteredConceptosDePago.slice(startIndex, endIndex);
-    this.cdr.detectChanges();
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.filteredConceptosDePago.length / this.itemsPerPage);
+    this.currentPage = page;
+    this.loadConceptos();
   }
 
   getPagesArray(): number[] {
-    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+    if (!this.pagedConceptos) return [];
+    return Array(this.pagedConceptos.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos CRUD ---
   openAddConceptoModal() {
     this.newConcepto = {
-      identifier: '',
-      codigo: '',
-      descripcion: '',
-      montoSugerido: 0.00,
       estado: EstadoReference.ACTIVO,
-      fechaCreacion: new Date().toISOString(),
-      cronogramas: [],
+      montoSugerido: 0.00,
     };
     this.modalService.open(this.addConceptoModal, { centered: true, size: 'lg' });
   }
 
   saveConcepto() {
-    if (!this.newConcepto.codigo || !this.newConcepto.descripcion || this.newConcepto.montoSugerido === null || !this.newConcepto.estado) {
-      Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
-      return;
-    }
-    if (this.newConcepto.montoSugerido < 0) {
-      Swal.fire('Error', 'El monto sugerido no puede ser negativo.', 'error');
+    if (!this.newConcepto.codigo || !this.newConcepto.descripcion || this.newConcepto.montoSugerido === null) {
+      Swal.fire('Error', 'Los campos Código, Descripción y Monto son obligatorios.', 'error');
       return;
     }
 
-    const maxId = Math.max(...this.allConceptosDePago.map(c => parseInt(c.identifier || '0')), 0);
-    this.newConcepto.identifier = (maxId + 1).toString();
-    this.allConceptosDePago.push({ ...this.newConcepto });
-    this.aplicarFiltroYPaginar();
-    Swal.fire('¡Éxito!', 'Concepto de pago añadido correctamente.', 'success');
-    this.dismiss();
+    this.conceptoPagoService.add(this.newConcepto).subscribe(conceptoAgregado => {
+      if (conceptoAgregado) {
+        Swal.fire('¡Éxito!', 'Concepto de pago añadido correctamente.', 'success');
+        this.loadConceptos();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'No se pudo agregar el concepto de pago.', 'error');
+      }
+    });
   }
 
   openEditConceptoModal(concepto: ConceptoPagoDto) {
@@ -149,25 +112,17 @@ export class ConceptosPagoComponent implements OnInit {
   }
 
   updateConcepto() {
-    if (!this.editingConcepto) { return; }
-    if (!this.editingConcepto.codigo || !this.editingConcepto.descripcion || this.editingConcepto.montoSugerido === null || !this.editingConcepto.estado) {
-      Swal.fire('Error', 'Todos los campos son obligatorios para editar.', 'error');
-      return;
-    }
-    if (this.editingConcepto.montoSugerido < 0) {
-      Swal.fire('Error', 'El monto sugerido no puede ser negativo.', 'error');
-      return;
-    }
+    if (!this.editingConcepto || !this.editingConcepto.identifier) return;
 
-    const index = this.allConceptosDePago.findIndex(c => c.identifier === this.editingConcepto?.identifier);
-    if (index !== -1) {
-      this.allConceptosDePago[index] = { ...this.editingConcepto };
-      this.aplicarFiltroYPaginar();
-      Swal.fire('¡Éxito!', 'Concepto de pago actualizado correctamente.', 'success');
-    } else {
-      Swal.fire('Error', 'Concepto de pago no encontrado para actualizar.', 'error');
-    }
-    this.dismiss();
+    this.conceptoPagoService.update(this.editingConcepto.identifier, this.editingConcepto).subscribe(conceptoActualizado => {
+      if (conceptoActualizado) {
+        Swal.fire('¡Éxito!', 'Concepto de pago actualizado correctamente.', 'success');
+        this.loadConceptos();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'Hubo un problema al actualizar el concepto.', 'error');
+      }
+    });
   }
 
   confirmDeleteConcepto(concepto: ConceptoPagoDto) {
@@ -181,21 +136,24 @@ export class ConceptosPagoComponent implements OnInit {
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.deleteConcepto(concepto.identifier || '');
+      if (result.isConfirmed && concepto.identifier) {
+        this.deleteConcepto(concepto.identifier);
       }
     });
   }
 
-  deleteConcepto(identifier: string) {
-    const initialLength = this.allConceptosDePago.length;
-    this.allConceptosDePago = this.allConceptosDePago.filter(c => c.identifier !== identifier);
-    this.aplicarFiltroYPaginar();
-    if (this.allConceptosDePago.length < initialLength) {
-      Swal.fire('¡Eliminado!', 'El concepto de pago ha sido eliminado.', 'success');
-    } else {
-      Swal.fire('Error', 'No se pudo encontrar el concepto de pago para eliminar.', 'error');
-    }
+  private deleteConcepto(identifier: string): void {
+    this.conceptoPagoService.delete(identifier).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Eliminado!', 'El concepto de pago ha sido eliminado.', 'success');
+        if (this.pagedConceptos?.content.length === 1 && this.currentPage > 1) {
+          this.currentPage--;
+        }
+        this.loadConceptos();
+      } else {
+        Swal.fire('Error', 'No se pudo eliminar el concepto de pago.', 'error');
+      }
+    });
   }
 
   dismiss() {

@@ -1,63 +1,58 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
-import { ApoderadoDomainService } from '../domains/apoderado-domain.service';
-import { ApoderadoDto } from '../models/apoderado.model';
-
+import { EstudianteDomainService } from '../domains/estudiante-domain.service';
+import { EstudianteDto } from '../models/estudiante.model';
 import { PageResponse } from '../models/page-response.model';
+import { EstadoAcademicoReference } from '../models/enums/estado-academico-reference.enum';
 
 @Injectable({
     providedIn: 'root',
 })
-export class ApoderadoService implements OnDestroy {
+export class EstudianteService implements OnDestroy {
 
     isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(
-        private apoderadoDomainService: ApoderadoDomainService
+        private estudianteDomainService: EstudianteDomainService
     ) { }
 
-    /* Obtiene la lista paginada de apoderados */
-    getList(page: number = 0, size: number = 10, descripcion?: string, estado?: string): Observable<PageResponse<ApoderadoDto> | undefined> {
+    getList(page: number = 0, size: number = 10, descripcion?: string, estadoA?: EstadoAcademicoReference): Observable<PageResponse<EstudianteDto> | undefined> {
         this.isLoadingSubject.next(true);
-        return this.apoderadoDomainService.getList(page, size, descripcion, estado).pipe(
+        return this.estudianteDomainService.getList(page, size, descripcion, estadoA).pipe(
             catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    /* Obtener apoderado por Id */
-    get(identifier: string): Observable<ApoderadoDto | undefined> {
+    get(identifier: string): Observable<EstudianteDto | undefined> {
         this.isLoadingSubject.next(true);
-        return this.apoderadoDomainService.get(identifier).pipe(
+        return this.estudianteDomainService.get(identifier).pipe(
             catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    /* Agrega un nuevo apoderado */
-    add(body: Partial<ApoderadoDto>): Observable<ApoderadoDto | undefined> {
+    add(body: Partial<EstudianteDto>): Observable<EstudianteDto | undefined> {
         this.isLoadingSubject.next(true);
-        return this.apoderadoDomainService.add(body).pipe(
+        return this.estudianteDomainService.add(body).pipe(
             catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    /* Actualiza un apoderado existente */
-    update(identifier: string, body: Partial<ApoderadoDto>): Observable<ApoderadoDto | undefined> {
+    update(identifier: string, body: Partial<EstudianteDto>): Observable<EstudianteDto | undefined> {
         this.isLoadingSubject.next(true);
-        return this.apoderadoDomainService.update(identifier, body).pipe(
+        return this.estudianteDomainService.update(identifier, body).pipe(
             catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    /* Elimina un apoderado de forma fisica */
     delete(identifier: string): Observable<boolean> {
         this.isLoadingSubject.next(true);
-        return this.apoderadoDomainService.delete(identifier).pipe(
+        return this.estudianteDomainService.delete(identifier).pipe(
             map(() => true),
             catchError(() => of(false)),
             finalize(() => this.isLoadingSubject.next(false))

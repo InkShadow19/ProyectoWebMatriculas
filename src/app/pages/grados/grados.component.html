@@ -18,18 +18,18 @@
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
           <input type="text" class="form-control form-control-solid" placeholder="Buscar por descripción..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-3">
           <label class="form-label fw-bold">Nivel:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroNivel" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroNivel" (change)="onFilterChange()">
             <option value="">Todos</option>
-            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
+            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel.identifier">{{ nivel.descripcion }}</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -51,71 +51,77 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let grado of pagedGrados">
+          <tr *ngFor="let grado of pagedGrados?.content">
             <td>{{ grado.descripcion }}</td>
-            <td>{{ grado.nivel }}</td>
+            <td>{{ getNivelDescripcion(grado.nivel) }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                'badge-light-success': grado.estado === EstadoReference.ACTIVO,
-                'badge-light-danger': grado.estado === EstadoReference.INACTIVO,
-                'badge-secondary': grado.estado === EstadoReference.UNDEFINED
-              }">
+                  'badge-light-success': grado.estado === EstadoReference.ACTIVO,
+                  'badge-light-danger': grado.estado === EstadoReference.INACTIVO,
+                  'badge-secondary': grado.estado === EstadoReference.UNDEFINED
+                }">
                 {{ grado.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button class="btn btn-light-info btn-sm me-3" (click)="openEditGradoModal(grado)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>Editar
-                </button>
-                <button class="btn btn-light-danger btn-sm" (click)="confirmDeleteGrado(grado)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditGradoModal(grado)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteGrado(grado)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+                <div class="d-none d-md-flex justify-content-end">
+                    <button class="btn btn-light-info btn-sm me-3" (click)="openEditGradoModal(grado)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>Editar
+                    </button>
+                    <button class="btn btn-light-danger btn-sm" (click)="confirmDeleteGrado(grado)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>Eliminar
+                    </button>
+                  </div>
+    
+                  <div class="d-md-none text-end" ngbDropdown>
+                    <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                      <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                    </button>
+    
+                    <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                      <button class="dropdown-item text-info" (click)="openEditGradoModal(grado)">
+                        <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                        Editar
+                      </button>
+                      <button class="dropdown-item text-danger" (click)="confirmDeleteGrado(grado)">
+                        <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+            </td>
+          </tr>
+          <tr *ngIf="!pagedGrados || pagedGrados.content.length === 0">
+            <td colspan="4" class="text-center text-muted py-5">
+                No se encontraron registros.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  </div>
 
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allGrados.length > 0">
-    <div class="fs-6 fw-semibold text-gray-700">
-      Mostrando
-      <span class="fw-bold">{{ filteredGrados.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
-      a
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedGrados.length }}</span>
-      de
-      <span class="fw-bold">{{ filteredGrados.length }}</span> registros
-    </div>
-    <ul class="pagination">
-      <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
-      </li>
-      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
-      </li>
-      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
-      </li>
-    </ul>
+    <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedGrados && pagedGrados.totalElements > 0">
+        <div class="fs-6 fw-semibold text-gray-700">
+          Mostrando
+          <span class="fw-bold">{{ pagedGrados.number * pagedGrados.size + 1 }}</span>
+          a
+          <span class="fw-bold">{{ pagedGrados.number * pagedGrados.size + pagedGrados.content.length }}</span>
+          de <span class="fw-bold">{{ pagedGrados.totalElements }}</span> registros
+        </div>
+  
+        <ul class="pagination">
+          <li class="page-item previous" [class.disabled]="pagedGrados.first">
+            <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
+                class="previous"></i></a>
+          </li>
+          <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+            <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+          </li>
+          <li class="page-item next" [class.disabled]="pagedGrados.last">
+            <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+          </li>
+        </ul>
+      </div>
   </div>
 </div>
 
@@ -123,7 +129,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2>Nuevo Grado Académico</h2>
-      <div class="btn btn-sm btn-icon" (click)="dismiss()">
+      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
@@ -137,7 +143,8 @@
         <div class="mb-5">
           <label class="form-label required">Nivel Académico:</label>
           <select class="form-select form-select-solid" [(ngModel)]="newGrado.nivel" name="newGradoNivel">
-            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
+            <option value="" disabled>Seleccione un nivel</option>
+            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel.identifier">{{ nivel.descripcion }}</option>
           </select>
         </div>
         <div class="mb-5">
@@ -149,8 +156,8 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button class="btn btn-primary" (click)="saveGrado()">Guardar</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
+      <button type="button" class="btn btn-primary" (click)="saveGrado()">Guardar</button>
     </div>
   </div>
 </ng-template>
@@ -159,7 +166,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2>Editar Grado Académico</h2>
-      <div class="btn btn-sm btn-icon" (click)="dismiss()">
+      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
@@ -170,13 +177,9 @@
           <input class="form-control form-control-solid" placeholder="Ej: 1er Grado"
             [(ngModel)]="editingGrado.descripcion" name="editGradoDescripcion" />
         </div>
-
         <div class="mb-5">
           <label class="form-label required">Nivel Académico:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingGrado.nivel" name="editGradoNivel"
-            [disabled]="true">
-            <option *ngFor="let nivel of nivelesDisponibles" [value]="nivel">{{ nivel }}</option>
-          </select>
+          <input class="form-control form-control-solid" [value]="getNivelDescripcion(editingGrado.nivel)" name="editGradoNivel" [disabled]="true" />
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>
@@ -187,8 +190,8 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button class="btn btn-primary" (click)="updateGrado()">Guardar Cambios</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
+      <button type="button" class="btn btn-primary" (click)="updateGrado()">Guardar Cambios</button>
     </div>
   </div>
 </ng-template>

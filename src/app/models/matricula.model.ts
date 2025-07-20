@@ -1,4 +1,5 @@
 import { CronogramaPagoDto } from "./cronograma-pago.model";
+import { EstadoMatriculaReference } from "./enums/estado-matricula-reference.enum";
 import { SituacionReference } from "./enums/situacion-reference.enum";
 
 export interface MatriculaDto {
@@ -7,7 +8,7 @@ export interface MatriculaDto {
   situacion: SituacionReference;
   institucion_procendencia: string;
   fechaMatricula: string;
-  habilitado: boolean;
+  estado: EstadoMatriculaReference;
   fechaCreacion: string;
   nivel: string; // Identifier
   grado: string; // Identifier

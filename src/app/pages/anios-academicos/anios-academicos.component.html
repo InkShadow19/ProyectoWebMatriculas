@@ -17,13 +17,13 @@
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
       <div class="row g-3">
         <div class="col-md-4">
-          <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar..."
-            [(ngModel)]="filtroBusqueda" (input)="aplicarFiltroYPaginar()" />
+          <label class="form-label fw-bold">Buscar por Año:</label>
+          <input type="number" class="form-control form-control-solid" placeholder="Ej: 2024"
+            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="aplicarFiltroYPaginar()">
+          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
             <option value="">Todos</option>
             <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -44,26 +44,24 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let anio of pagedAniosAcademicos">
+          <tr *ngFor="let anio of pagedAniosAcademicos?.content">
             <td>{{ anio.anio }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': anio.estado === EstadoAcademicoReference.ACTIVO,
-                  'badge-light-warning': anio.estado === EstadoAcademicoReference.FUTURO,
-                  'badge-secondary': anio.estado === EstadoAcademicoReference.CERRADO
-                }">
-                {{ anio.estado.replace('_', ' ') }}
+                    'badge-light-success': anio.estadoAcademico === EstadoAcademicoReference.ACTIVO,
+                    'badge-light-warning': anio.estadoAcademico === EstadoAcademicoReference.FUTURO,
+                    'badge-secondary': anio.estadoAcademico === EstadoAcademicoReference.CERRADO
+                  }">
+                {{ anio.estadoAcademico.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
               <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditAnioAcademicoModal(anio)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
+                <button class="btn btn-light-info btn-sm me-3" (click)="openEditAnioAcademicoModal(anio)">
+                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>Editar
                 </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteAnioAcademico(anio)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
+                <button class="btn btn-light-danger btn-sm" (click)="confirmDeleteAnioAcademico(anio)">
+                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>Eliminar
                 </button>
               </div>
 
@@ -85,30 +83,39 @@
               </div>
             </td>
           </tr>
+          <tr *ngIf="!pagedAniosAcademicos || pagedAniosAcademicos.content.length === 0">
+            <td colspan="3" class="text-center text-muted py-5">
+              No se encontraron registros.
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
-  </div>
-  <div class="d-flex flex-stack flex-wrap pt-10 px-9 pb-5" *ngIf="allAniosAcademicos.length > 0">
-    <div class="fs-6 fw-semibold text-gray-700">
-      Mostrando
-      <span class="fw-bold">{{ filteredAniosAcademicos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
-      a
-      <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedAniosAcademicos.length }}</span>
-      de
-      <span class="fw-bold">{{ filteredAniosAcademicos.length }}</span> registros
+
+    <div class="d-flex flex-stack flex-wrap pt-10"
+      *ngIf="pagedAniosAcademicos && pagedAniosAcademicos.totalElements > 0">
+      <div class="fs-6 fw-semibold text-gray-700">
+        Mostrando
+        <span class="fw-bold">{{ pagedAniosAcademicos.number * pagedAniosAcademicos.size + 1 }}</span>
+        a
+        <span class="fw-bold">{{ pagedAniosAcademicos.number * pagedAniosAcademicos.size +
+          pagedAniosAcademicos.content.length }}</span>
+        de <span class="fw-bold">{{ pagedAniosAcademicos.totalElements }}</span> registros
+      </div>
+
+      <ul class="pagination">
+        <li class="page-item previous" [class.disabled]="pagedAniosAcademicos.first">
+          <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
+              class="previous"></i></a>
+        </li>
+        <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
+          <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+        </li>
+        <li class="page-item next" [class.disabled]="pagedAniosAcademicos.last">
+          <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+        </li>
+      </ul>
     </div>
-    <ul class="pagination">
-      <li class="page-item previous" [class.disabled]="currentPage === 1">
-        <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i class="previous"></i></a>
-      </li>
-      <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-        <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
-      </li>
-      <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
-        <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
-      </li>
-    </ul>
   </div>
 </div>
 
@@ -129,7 +136,7 @@
         </div>
         <div class="mb-15">
           <label for="estado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="estado" [(ngModel)]="newAnioAcademico.estado"
+          <select class="form-select form-select-solid" id="estado" [(ngModel)]="newAnioAcademico.estadoAcademico"
             name="newAnioEstado">
             <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
@@ -160,8 +167,8 @@
         </div>
         <div class="mb-15">
           <label for="editEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="editEstado" [(ngModel)]="editingAnioAcademico.estado"
-            name="editAnioEstado">
+          <select class="form-select form-select-solid" id="editEstado"
+            [(ngModel)]="editingAnioAcademico.estadoAcademico" name="editAnioEstado">
             <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
         </div>

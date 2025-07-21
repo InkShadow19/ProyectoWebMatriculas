@@ -1,12 +1,25 @@
-<div class="app-navbar-item" [ngClass]="itemClass">
-  <app-theme-mode-switcher [toggleBtnClass]="btnClass"
-    toggleBtnClass="{`btn-active-light-primary btn-custom ${toolbarButtonHeightClass}`}"></app-theme-mode-switcher>
-</div>
-<div class="app-navbar-item" [ngClass]="itemClass">
-  <div class="cursor-pointer symbol" [ngClass]="userAvatarClass" data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-    data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-    <span class="text-gray-600 fw-bold fs-6 me-2 me-4">Administrador</span>
-    <img src="./assets/media/avatars/300-1.jpg" />
-  </div>
-  <app-user-inner data-kt-menu='true'></app-user-inner>
-</div>
+<ng-container *ngIf="user$ | async as user">
+
+    <div class="app-navbar-item" [ngClass]="itemClass">
+        <app-theme-mode-switcher [toggleBtnClass]="btnClass"></app-theme-mode-switcher>
+    </div>
+
+    <div class="app-navbar-item" [ngClass]="itemClass">
+        <div class="cursor-pointer symbol" [ngClass]="userAvatarClass" data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
+            data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+            
+            <span class="text-gray-600 fw-bold fs-6 me-2 me-4">{{ user.role }}</span>
+            
+            <div class="symbol symbol-30px symbol-md-40px">
+                <div class="symbol-label bg-light-success">
+                    <span class="fs-4 fw-bolder text-success">
+                        {{ getUserInitial(user.username) }}
+                    </span>
+                </div>
+            </div>
+
+        </div>
+        <app-user-inner data-kt-menu='true'></app-user-inner>
+    </div>
+
+</ng-container>

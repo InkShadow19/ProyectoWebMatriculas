@@ -6,6 +6,10 @@ import { RolDto } from 'src/app/models/rol.model';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
+import { RolService } from 'src/app/services/rol.service';
+import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-roles',
@@ -17,7 +21,7 @@ import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
     NgbDropdownModule,
   ],
   templateUrl: './roles.component.html',
-  styleUrl: './roles.component.scss'
+  styleUrls: ['./roles.component.scss']
 })
 export class RolesComponent implements OnInit {
   @ViewChild('addRolModal') addRolModal: TemplateRef<any>;
@@ -26,142 +30,115 @@ export class RolesComponent implements OnInit {
   EstadoReference = EstadoReference;
   estadoKeys: string[];
 
-  newRol: RolDto = {
-    identifier: '',
-    descripcion: '',
-    estado: EstadoReference.ACTIVO,
-    fechaCreacion: new Date().toISOString(),
-    usuarios: [],
-  };
-
+  newRol: Partial<RolDto> = {};
   editingRol: RolDto | null = null;
 
-  // --- PROPIEDADES PARA FILTROS Y PAGINACIÓN ---
-  allRoles: RolDto[] = [
-    { identifier: '1', descripcion: 'Administrador', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-10T09:00:00Z', usuarios: [] },
-    { identifier: '2', descripcion: 'Secretaria', estado: EstadoReference.ACTIVO, fechaCreacion: '2024-01-11T10:30:00Z', usuarios: [] },
-    { identifier: '3', descripcion: 'Profesor', estado: EstadoReference.INACTIVO, fechaCreacion: '2024-01-12T11:00:00Z', usuarios: [] },
-  ];
-  filteredRoles: RolDto[] = [];
-  pagedRoles: RolDto[] = [];
-
+  pagedRoles: PageResponse<RolDto> | undefined;
   filtroBusqueda: string = '';
   filtroEstado: string = '';
   currentPage = 1;
   itemsPerPage = 5;
 
-  constructor(private modalService: NgbModal, private cdr: ChangeDetectorRef) {
-    this.estadoKeys = Object.values(EstadoReference) as string[];
+  constructor(
+    private modalService: NgbModal,
+    private cdr: ChangeDetectorRef,
+    private rolService: RolService,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.estadoKeys = Object.values(EstadoReference);
   }
 
   ngOnInit(): void {
-    this.aplicarFiltroYPaginar();
+    this.loadRoles();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
-  // --- Métodos de Filtro y Paginación ---
-  aplicarFiltroYPaginar(): void {
-    let rolesTemp = [...this.allRoles];
-    const searchTerm = this.filtroBusqueda.toLowerCase().trim();
+  loadRoles(): void {
+    const page = this.currentPage - 1;
+    this.rolService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroEstado)
+      .subscribe(response => {
+        this.pagedRoles = response;
+        this.cdr.detectChanges();
+      });
+  }
 
-    // 1. Filtrar por estado
-    if (this.filtroEstado) {
-      rolesTemp = rolesTemp.filter(rol => rol.estado === this.filtroEstado);
-    }
-
-    // 2. Filtrar por búsqueda de texto
-    if (searchTerm) {
-      rolesTemp = rolesTemp.filter(rol =>
-        rol.descripcion.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    this.filteredRoles = rolesTemp;
-    this.setPage(1);
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadRoles();
   }
 
   limpiarFiltros(): void {
     this.filtroBusqueda = '';
     this.filtroEstado = '';
-    this.aplicarFiltroYPaginar();
+    this.onFilterChange();
   }
 
-  setPage(page: number) {
-    const totalPages = this.getTotalPages();
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
+  setPage(page: number): void {
+    if (page < 1 || (this.pagedRoles && page > this.pagedRoles.totalPages)) return;
     this.currentPage = page;
-
-    if (this.filteredRoles.length === 0) {
-      this.pagedRoles = [];
-      return;
-    }
-
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredRoles.length);
-    this.pagedRoles = this.filteredRoles.slice(startIndex, endIndex);
-    this.cdr.detectChanges();
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.filteredRoles.length / this.itemsPerPage);
+    this.loadRoles();
   }
 
   getPagesArray(): number[] {
-    return Array.from({ length: this.getTotalPages() }, (_, i) => i + 1);
+    if (!this.pagedRoles) return [];
+    return Array(this.pagedRoles.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos para Añadir Rol ---
-  openAddRolModal() {
+  // --- Métodos CRUD ---
+  openAddRolModal(): void {
     this.newRol = {
-      identifier: '',
       descripcion: '',
       estado: EstadoReference.ACTIVO,
-      fechaCreacion: new Date().toISOString(),
-      usuarios: [],
     };
     this.modalService.open(this.addRolModal, { centered: true, size: 'lg' });
   }
 
-  saveRol() {
+  saveRol(): void {
     if (!this.newRol.descripcion || !this.newRol.estado) {
       Swal.fire('Error', 'La descripción y el estado del rol son obligatorios.', 'error');
       return;
     }
 
-    const maxId = Math.max(...this.allRoles.map(r => parseInt(r.identifier || '0')), 0);
-    this.newRol.identifier = (maxId + 1).toString();
-    this.allRoles.push({ ...this.newRol });
-    this.aplicarFiltroYPaginar();
-    Swal.fire('¡Éxito!', 'Rol añadido correctamente.', 'success');
-    this.dismiss();
+    this.rolService.add(this.newRol).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Éxito!', 'Rol añadido correctamente.', 'success');
+        this.loadRoles();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'No se pudo agregar el rol.', 'error');
+      }
+    });
   }
 
-  // --- Métodos para Editar Rol ---
-  openEditRolModal(rol: RolDto) {
+  openEditRolModal(rol: RolDto): void {
     this.editingRol = { ...rol };
     this.modalService.open(this.editRolModal, { centered: true, size: 'lg' });
   }
 
-  updateRol() {
-    if (!this.editingRol) { return; }
+  updateRol(): void {
+    if (!this.editingRol || !this.editingRol.identifier) return;
+
     if (!this.editingRol.descripcion || !this.editingRol.estado) {
       Swal.fire('Error', 'La descripción y el estado del rol son obligatorios para editar.', 'error');
       return;
     }
 
-    const index = this.allRoles.findIndex(r => r.identifier === this.editingRol?.identifier);
-    if (index !== -1) {
-      this.allRoles[index] = { ...this.editingRol };
-      this.aplicarFiltroYPaginar();
-      Swal.fire('¡Éxito!', 'Rol actualizado correctamente.', 'success');
-    } else {
-      Swal.fire('Error', 'Rol no encontrado para actualizar.', 'error');
-    }
-    this.dismiss();
+    this.rolService.update(this.editingRol.identifier, this.editingRol).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Éxito!', 'Rol actualizado correctamente.', 'success');
+        this.loadRoles();
+        this.dismiss();
+      } else {
+        Swal.fire('Error', 'Rol no encontrado para actualizar.', 'error');
+      }
+    });
   }
 
-  // --- Métodos para Eliminar Rol ---
-  confirmDeleteRol(rol: RolDto) {
+  confirmDeleteRol(rol: RolDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
       text: `¡No podrás revertir esto! Eliminarás el rol: ${rol.descripcion}`,
@@ -172,25 +149,27 @@ export class RolesComponent implements OnInit {
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.deleteRol(rol.identifier || '');
+      if (result.isConfirmed && rol.identifier) {
+        this.deleteRol(rol.identifier);
       }
     });
   }
 
-  deleteRol(identifier: string) {
-    const initialLength = this.allRoles.length;
-    this.allRoles = this.allRoles.filter(rol => rol.identifier !== identifier);
-    this.aplicarFiltroYPaginar();
-    if (this.allRoles.length < initialLength) {
-      Swal.fire('¡Eliminado!', 'El rol ha sido eliminado.', 'success');
-    } else {
-      Swal.fire('Error', 'No se pudo encontrar el rol para eliminar.', 'error');
-    }
+  private deleteRol(identifier: string): void {
+    this.rolService.delete(identifier).subscribe(success => {
+      if (success) {
+        Swal.fire('¡Eliminado!', 'El rol ha sido eliminado.', 'success');
+        if (this.pagedRoles?.content.length === 1 && this.currentPage > 1) {
+          this.currentPage--;
+        }
+        this.loadRoles();
+      } else {
+        Swal.fire('Error', 'No se pudo encontrar el rol para eliminar.', 'error');
+      }
+    });
   }
 
-  // --- Método Genérico ---
-  dismiss() {
+  dismiss(): void {
     this.modalService.dismissAll();
   }
-}
+} 

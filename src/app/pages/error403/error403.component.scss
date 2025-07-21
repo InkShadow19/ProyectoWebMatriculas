@@ -1,0 +1,8 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centra verticalmente */
+  align-items: center;   /* Centra horizontalmente */
+  width: 100%;
+  flex-grow: 1;
+}

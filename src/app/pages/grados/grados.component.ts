@@ -10,6 +10,8 @@ import { GradoService } from 'src/app/services/grado.service';
 import { NivelService } from 'src/app/services/nivel.service';
 import { NivelDto } from 'src/app/models/nivel.model';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-grados',
@@ -40,13 +42,19 @@ export class GradosComponent implements OnInit {
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
     private gradoService: GradoService,
-    private nivelService: NivelService
+    private nivelService: NivelService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.estadoKeys = Object.values(EstadoReference);
   }
 
   ngOnInit(): void {
     this.loadNiveles();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
   loadNiveles(): void {

@@ -8,6 +8,8 @@ import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 import { NivelService } from 'src/app/services/nivel.service';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-niveles',
@@ -35,13 +37,19 @@ export class NivelesComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
-    private nivelService: NivelService
+    private nivelService: NivelService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.estadoKeys = Object.values(EstadoReference) as string[];
   }
 
   ngOnInit(): void {
     this.loadNiveles();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
   loadNiveles(): void {

@@ -11,6 +11,9 @@
 @import "./assets/plugins/keenicons/outline/style.css";
 @import "./assets/plugins/keenicons/solid/style.css";
 
+// Importa los estilos de SweetAlert2 para que estén disponibles en toda la aplicación
+@import 'sweetalert2/src/sweetalert2.scss';
+
 // Regla especial específica para los colores del Sidebar Light
 body[data-kt-app-layout="light-sidebar"] .app-sidebar {
 

@@ -1,10 +1,10 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { UserModel } from '../../models/user.model';
 import { AuthService, LoginRequest } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +13,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
-  hasError: boolean;
   returnUrl: string;
   isLoading$: Observable<boolean>;
 
@@ -24,7 +23,8 @@ export class LoginComponent implements OnInit {
     private router: Router
   ) {
     this.isLoading$ = this.authService.isLoading$;
-    // Redirigir si ya hay una sesión activa
+
+    // Redirigir al dashboard si el usuario ya ha iniciado sesión
     if (this.authService.currentUserValue) {
       this.router.navigate(['/']);
     }
@@ -32,49 +32,85 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    // Obtener la URL de retorno desde los parámetros de la ruta, o por defecto ir al dashboard
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
   }
 
+  // Getter para un acceso más fácil a los campos del formulario
   get f() {
     return this.loginForm.controls;
   }
 
   initForm() {
-    this.loginForm = this.fb.group({
-      usuario: [
-        '', // Dejar el valor por defecto vacío es una buena práctica
-        Validators.compose([
-          Validators.required,
-        ]),
-      ],
-      contraseña: [
-        '',
-        Validators.compose([Validators.required]),
-      ],
-    });
-  }
+    this.loginForm = this.fb.group({
+      usuario: [
+        '', // Valor inicial vacío
+        Validators.compose([
+          Validators.required,
+          Validators.minLength(3),
+        ]),
+      ],
+      contrasena: [
+        '',
+        Validators.compose([
+          Validators.required,
+          Validators.minLength(3),
+        ]),
+      ],
+    });
+  }
 
   submit() {
-    this.hasError = false;
     if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
 
     const credentials: LoginRequest = {
       usuario: this.f.usuario.value,
-      contraseña: this.f.contraseña.value,
+      contrasena: this.f.contrasena.value,
     };
 
     this.authService
       .login(credentials)
       .pipe(first())
-      .subscribe((user) => {
-        if (user) {
-          this.router.navigate([this.returnUrl]);
-        } else {
-          // El servicio ya maneja el error, aquí solo actualizamos la UI
-          this.hasError = true;
-        }
+      .subscribe({
+        next: (userInfo) => {
+          if (userInfo) {
+            // 1. PRIMERO NAVEGAMOS
+            this.router.navigate([this.returnUrl]).then(() => {
+              // 2. Y DESPUÉS DE NAVEGAR, MOSTRAMOS EL TOAST
+              // Usamos setTimeout para darle al navegador un instante para renderizar
+              setTimeout(() => {
+                const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 3000,
+                  timerProgressBar: true,
+                  didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                  },
+                });
+
+                Toast.fire({
+                  icon: 'success',
+                  title: `¡Bienvenido, ${userInfo.username}!`,
+                });
+              }, 100); // 100 milisegundos es un retraso imperceptible para el usuario
+            });
+          }
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de Autenticación',
+            text: err.error?.message || err.error || 'Usuario o contraseña incorrectos.',
+            confirmButtonColor: '#3085d6',
+            heightAuto: false, // Mantenemos esto para el error
+          });
+        },
       });
   }
 }

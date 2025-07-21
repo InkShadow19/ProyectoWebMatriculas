@@ -1,26 +1,33 @@
 import { HttpHeaders } from "@angular/common/http";
-import { retrieveObjectFromStorage, retrieveStringFromStorage } from "./storage.util";
 
-export function buildHeader(contentType?: string): HttpHeaders {
-  let headers: HttpHeaders = new HttpHeaders()
-    .set("Content-Type", contentType ? contentType : "application/json")
-    .set("Authorization", "Bearer " + retrieveStringFromStorage("TokenAuthorization"))
-    .set("Company", retrieveObjectFromStorage("TCompany")?.identifier || "");
+/**
+ * Construye los encabezados HTTP para las peticiones a la API.
+ * Busca el usuario actual en el localStorage y, si encuentra un token,
+ * lo añade a la cabecera 'Authorization'.
+ *
+ * @returns Un objeto HttpHeaders con 'Content-Type' y, opcionalmente, 'Authorization'.
+ */
+export function buildHeader(): HttpHeaders {
+  // Siempre empezamos con el Content-Type
+  let headers = new HttpHeaders({
+    'Content-Type': 'application/json'
+  });
 
-  return headers;
-}
+  // Intentamos obtener los datos del usuario desde el localStorage
+  const userString = localStorage.getItem('currentUser');
 
-export function buildHeaderWithOutCompany(contentType?: string): HttpHeaders {
-  let headers: HttpHeaders = new HttpHeaders()
-    .set("Content-Type", contentType ? contentType : "application/json")
-    .set("Authorization", "Bearer " + retrieveStringFromStorage("TokenAuthorization"));
-
-  return headers;
-}
-
-export function buildHeaderWithOutAuthorization(contentType?: string): HttpHeaders {
-  let headers: HttpHeaders = new HttpHeaders()
-    .set("Content-Type", contentType ? contentType : "application/json");
+  if (userString) {
+    try {
+      const user = JSON.parse(userString);
+      
+      // Si el objeto de usuario existe y tiene una propiedad 'token', la añadimos
+      if (user && user.token) {
+        headers = headers.set('Authorization', `Bearer ${user.token}`);
+      }
+    } catch (e) {
+      console.error('Error al parsear el usuario desde localStorage', e);
+    }
+  }
 
   return headers;
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AuthService } from 'src/app/modules/auth/services/auth.service';
 
 @Component({
   selector: 'app-sidebar-menu',
@@ -7,9 +8,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class SidebarMenuComponent implements OnInit {
 
-  constructor() { }
+  constructor(private authService: AuthService){ }
 
   ngOnInit(): void {
+  }
+
+  isAdmin(): boolean {
+    return this.authService.hasRole('Administrador');
   }
 
 }

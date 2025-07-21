@@ -1,83 +1,89 @@
 <div class="d-flex flex-column align-items-center">
-  <div class="text-center mb-5">
-    <img src="./assets/media/logos/login.png" alt="Logo" style="width: 600px; height: auto;" class="img-fluid" />
-  </div>
-  <form class="login-form" [formGroup]="loginForm" novalidate="novalidate" id="kt_login_signin_form"
-    (ngSubmit)="submit()">
-    <div class="text-center mb-11">
-      <h1 class="fw-bolder text-center main-title" style="margin-bottom: 50px; font-family: 'Poppins';">
-        ¡TU ESFUERZO DEJA HUELLA EN<br>CADA MATRÍCULA!
-      </h1>
+    <div class="text-center mb-5">
+        <img src="./assets/media/logos/login.png" alt="Logo" style="width: 600px; height: auto;" class="img-fluid" />
     </div>
 
-    <div class="fv-row mb-8">
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text"><i class="fas fa-user"></i></span>
-        </div>
-        <input class="form-control bg-white ms-3" type="email" name="usuario" formControlName="usuario"
-          autocomplete="off" placeholder="Ingresa tu cuenta" [ngClass]="{
-            'is-invalid': loginForm.controls['usuario'].invalid,
-            'is-valid': loginForm.controls['usuario'].valid
-          }" />
-      </div>
-      <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-          validation: 'required',
-          message: 'Cuenta requerida',
-          control: loginForm.controls['usuario']
-        }"></ng-container>
-      <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-          validation: 'email',
-          message: 'La cuenta es invalida',
-          control: loginForm.controls['usuario']
-        }"></ng-container>
-    </div>
-    <div class="fv-row mb-12">
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <span class="input-group-text"><i class="fas fa-lock"></i></span>
-        </div>
-        <input class="form-control bg-white ms-3" type="password" name="contraseña" autocomplete="off"
-          placeholder="Ingresa tu contraseña" formControlName="contraseña" [ngClass]="{
-            'is-invalid': loginForm.controls['contraseña'].invalid,
-            'is-valid': loginForm.controls['contraseña'].valid
-          }" />
-      </div>
-      <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
-          validation: 'required',
-          message: 'Contraseña requerida',
-          control: loginForm.controls['contraseña']
-        }"></ng-container>
-    </div>
-    <div class="text-center mb-7">
-      <button type="submit" id="kt_sign_in_submit" class="btn btn-warning text-dark px-9"
-        [disabled]="loginForm.invalid">
-        <ng-container *ngIf="isLoading$ | async">
-          <span class="indicator-progress" [style.display]="'block'">
-            Please wait...
-            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-          </span>
-        </ng-container>
-        <ng-container *ngIf="(isLoading$ | async) === false">
-          <span class="indicator-label fs-4" style="color: black !important;">Iniciar Sesión</span>
-        </ng-container>
-      </button>
-    </div>
+    <form class="login-form" [formGroup]="loginForm" novalidate="novalidate" id="kt_login_signin_form"
+        (ngSubmit)="submit()" *ngIf="loginForm">
 
-    <div class="d-flex justify-content-center mb-5 fs-base fw-semibold">
-      <a routerLink="/auth/forgot-password" class="fw-semibold fs-5"
-        style="color: #000000; text-decoration: underline;">
-        Olvide mi contraseña
-      </a>
-      </div>
+        <div class="text-center mb-11">
+            <h1 class="fw-bolder text-center main-title" style="margin-bottom: 50px; font-family: 'Poppins';">
+                ¡TU ESFUERZO DEJA HUELLA EN<br>CADA MATRÍCULA!
+            </h1>
+        </div>
+
+        <div class="fv-row mb-8">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                </div>
+                <input class="form-control bg-white ms-3" type="email" name="usuario" formControlName="usuario"
+                    autocomplete="off" placeholder="Ingresa tu nombre de usuario" [ngClass]="{
+                  'is-invalid': loginForm.controls['usuario'].invalid && loginForm.controls['usuario'].touched,
+                  'is-valid': loginForm.controls['usuario'].valid && loginForm.controls['usuario'].touched
+                }" />
+            </div>
+            <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
+                validation: 'required',
+                message: 'Cuenta requerida',
+                control: loginForm.controls['usuario']
+              }"></ng-container>
+            <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
+                validation: 'email',
+                message: 'La cuenta es invalida',
+                control: loginForm.controls['usuario']
+              }"></ng-container>
+        </div>
+
+        <div class="fv-row mb-12">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                </div>
+
+                <input class="form-control bg-white ms-3" type="password" name="contrasena" autocomplete="off"
+                    placeholder="Ingresa tu contraseña" formControlName="contrasena" [ngClass]="{
+                    'is-invalid': loginForm.controls['contrasena'].invalid && loginForm.controls['contrasena'].touched,
+                    'is-valid': loginForm.controls['contrasena'].valid && loginForm.controls['contrasena'].touched
+                  }" />
+            </div>
+            <ng-container [ngTemplateOutlet]="formError" [ngTemplateOutletContext]="{
+                validation: 'required',
+                message: 'Contraseña requerida',
+                control: loginForm.controls['contrasena']
+              }"></ng-container>
+        </div>
+
+        <div class="text-center mb-7">
+            <button type="submit" id="kt_sign_in_submit" class="btn btn-warning text-dark px-9"
+                [disabled]="loginForm.invalid">
+                <ng-container *ngIf="isLoading$ | async">
+                    <span class="indicator-progress" [style.display]="'block'">
+                        Please wait...
+                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                    </span>
+                </ng-container>
+                <ng-container *ngIf="(isLoading$ | async) === false">
+                    <span class="indicator-label fs-4" style="color: black !important;">Iniciar Sesión</span>
+                </ng-container>
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-center mb-5 fs-base fw-semibold">
+            <a routerLink="/auth/forgot-password" class="fw-semibold fs-5"
+                style="color: #000000; text-decoration: underline;">
+                Olvidé mi contraseña
+            </a>
+        </div>
     </form>
 </div>
+
 <ng-template #formError let-control="control" let-message="message" let-validation="validation">
-  <ng-container *ngIf="control.hasError(validation) && (control.dirty || control.touched)">
-    <div class="fv-plugins-message-container">
-      <span role="alert">
-        {{ message }}
-      </span>
-    </div>
-  </ng-container>
+    <ng-container *ngIf="control.hasError(validation) && (control.dirty || control.touched)">
+        <div class="fv-plugins-message-container">
+            <span role="alert">
+                {{ message }}
+            </span>
+        </div>
+    </ng-container>
 </ng-template>

@@ -78,115 +78,117 @@
       </div>
     </div>
 
-    <!-- Separador "Administración" -->
-    <div class="menu-item">
-      <div class="menu-content pt-8 pb-2">
-        <span class="menu-section text-muted text-uppercase fs-8 ls-1">Administración</span>
+    <div *ngIf="isAdmin()">
+      <!-- Separador "Administración" -->
+      <div class="menu-item">
+        <div class="menu-content pt-8 pb-2">
+          <span class="menu-section text-muted text-uppercase fs-8 ls-1">Administración</span>
+        </div>
       </div>
-    </div>
 
-    <!-- Ítem Desplegable: Configuración -->
-    <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
-      <span class="menu-link">
-        <span class="menu-icon">
-          <app-keenicon name="setting-2" class="fs-2"></app-keenicon>
+      <!-- Ítem Desplegable: Configuración -->
+      <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
+        <span class="menu-link">
+          <span class="menu-icon">
+            <app-keenicon name="setting-2" class="fs-2"></app-keenicon>
+          </span>
+          <span class="menu-title">Configuración</span> <!-- Título simplificado -->
+          <span class="menu-arrow"></span>
         </span>
-        <span class="menu-title">Configuración</span> <!-- Título simplificado -->
-        <span class="menu-arrow"></span>
-      </span>
-      <!-- Nivel 1 de Sub-menú -->
-      <div class="menu-sub menu-sub-accordion">
+        <!-- Nivel 1 de Sub-menú -->
+        <div class="menu-sub menu-sub-accordion">
 
-        <!-- Sub-Ítem Desplegable: Seguridad -->
-        <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
-          <span class="menu-link">
-            <span class="menu-icon">
-              <app-keenicon name="shield-tick" class="fs-4"></app-keenicon>
+          <!-- Sub-Ítem Desplegable: Seguridad -->
+          <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
+            <span class="menu-link">
+              <span class="menu-icon">
+                <app-keenicon name="shield-tick" class="fs-4"></app-keenicon>
+              </span>
+              <span class="menu-title">Seguridad</span>
+              <span class="menu-arrow"></span>
             </span>
-            <span class="menu-title">Seguridad</span>
-            <span class="menu-arrow"></span>
-          </span>
-          <!-- Nivel 2 de Sub-menú -->
-          <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item">
-              <a class="menu-link without-sub" routerLink="/admin" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Usuarios del Sistema</span>
-              </a>
-            </div>
-            <div class="menu-item">
-              <a class="menu-link without-sub" routerLink="/roles" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Roles y Permisos</span>
-              </a>
+            <!-- Nivel 2 de Sub-menú -->
+            <div class="menu-sub menu-sub-accordion">
+              <div class="menu-item">
+                <a class="menu-link without-sub" routerLink="/admin" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Usuarios del Sistema</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a class="menu-link without-sub" routerLink="/roles" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Roles</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Sub-Ítem Desplegable: Gestión Académica -->
-        <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
-          <span class="menu-link">
-            <span class="menu-icon">
-              <app-keenicon name="book-open" class="fs-4"></app-keenicon>
+          <!-- Sub-Ítem Desplegable: Gestión Académica -->
+          <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
+            <span class="menu-link">
+              <span class="menu-icon">
+                <app-keenicon name="book-open" class="fs-4"></app-keenicon>
+              </span>
+              <span class="menu-title">Gestión Académica</span>
+              <span class="menu-arrow"></span>
             </span>
-            <span class="menu-title">Gestión Académica</span>
-            <span class="menu-arrow"></span>
-          </span>
-          <!-- Nivel 2 de Sub-menú -->
-          <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item">
-              <a class="menu-link without-sub" routerLink="/anios-academicos" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Años Académicos</span>
-              </a>
-            </div>
-            <div class="menu-item">
-              <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "niveles" por defecto -->
-              <a class="menu-link without-sub" routerLink="/niveles" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Niveles</span>
-              </a>
-            </div>
-            <div class="menu-item">
-              <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "grados" por defecto -->
-              <a class="menu-link without-sub" routerLink="/grados" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Grados</span>
-              </a>
+            <!-- Nivel 2 de Sub-menú -->
+            <div class="menu-sub menu-sub-accordion">
+              <div class="menu-item">
+                <a class="menu-link without-sub" routerLink="/anios-academicos" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Años Académicos</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "niveles" por defecto -->
+                <a class="menu-link without-sub" routerLink="/niveles" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Niveles</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <!-- El link ahora apunta a la ruta padre. Angular seleccionará la pestaña "grados" por defecto -->
+                <a class="menu-link without-sub" routerLink="/grados" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Grados</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Sub-Ítem Desplegable: Gestión Financiera -->
-        <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
-          <span class="menu-link">
-            <span class="menu-icon">
-              <app-keenicon name="bank" class="fs-4"></app-keenicon>
+          <!-- Sub-Ítem Desplegable: Gestión Financiera -->
+          <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
+            <span class="menu-link">
+              <span class="menu-icon">
+                <app-keenicon name="bank" class="fs-4"></app-keenicon>
+              </span>
+              <span class="menu-title">Gestión Financiera</span>
+              <span class="menu-arrow"></span>
             </span>
-            <span class="menu-title">Gestión Financiera</span>
-            <span class="menu-arrow"></span>
-          </span>
-          <!-- Nivel 2 de Sub-menú -->
-          <div class="menu-sub menu-sub-accordion">
-            <div class="menu-item">
-              <a class="menu-link without-sub" routerLink="/conceptos-pago" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Conceptos de Pago</span>
-              </a>
-            </div>
-            <div class="menu-item">
-              <a class="menu-link without-sub" routerLink="/bancos" routerLinkActive="active">
-                <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
-                <span class="menu-title">Bancos</span>
-              </a>
+            <!-- Nivel 2 de Sub-menú -->
+            <div class="menu-sub menu-sub-accordion">
+              <div class="menu-item">
+                <a class="menu-link without-sub" routerLink="/conceptos-pago" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Conceptos de Pago</span>
+                </a>
+              </div>
+              <div class="menu-item">
+                <a class="menu-link without-sub" routerLink="/bancos" routerLinkActive="active">
+                  <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                  <span class="menu-title">Bancos</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
-    </div>
 
+    </div>
+    <!--end::Menu-->
   </div>
-  <!--end::Menu-->
+  <!--end::Menu wrapper-->
 </div>
-<!--end::Menu wrapper-->

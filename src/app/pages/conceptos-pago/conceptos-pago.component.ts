@@ -8,6 +8,8 @@ import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-conceptos-pago',
@@ -40,11 +42,17 @@ export class ConceptosPagoComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
-    private conceptoPagoService: ConceptoPagoService
+    private conceptoPagoService: ConceptoPagoService,
+    private authService: AuthService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
     this.loadConceptos();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
   loadConceptos(): void {

@@ -18,7 +18,7 @@
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, DNI..."
+          <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, apellidos, DNI..."
             [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
@@ -178,7 +178,7 @@
             <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.telefono"
               name="newEstudianteTelefono" maxlength="9" />
           </div>
-          <div class="mb-5 col-12">
+          <div class="mb-5 col-md-6">
             <label class="form-label">Dirección:</label>
             <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.direccion"
               name="newEstudianteDireccion" />

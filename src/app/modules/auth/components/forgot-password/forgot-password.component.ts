@@ -4,10 +4,10 @@ import { Observable, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { first } from 'rxjs/operators';
 
-enum ErrorStates {
+enum States { // Renombrado para más claridad
   NotSubmitted,
   HasError,
-  NoError,
+  Success,
 }
 
 @Component({
@@ -17,12 +17,16 @@ enum ErrorStates {
 })
 export class ForgotPasswordComponent implements OnInit {
   forgotPasswordForm: FormGroup;
-  errorState: ErrorStates = ErrorStates.NotSubmitted;
-  errorStates = ErrorStates;
+  state: States = States.NotSubmitted;
+  states = States;
   isLoading$: Observable<boolean>;
+  
+  // Propiedades para los mensajes dinámicos
+  successMessage: string = '';
+  errorMessage: string = '';
 
-  // private fields
-  private unsubscribe: Subscription[] = []; // Read more: => https://brianflove.com/2016/12/11/anguar-2-unsubscribe-observables/
+  private unsubscribe: Subscription[] = [];
+  
   constructor(private fb: FormBuilder, private authService: AuthService) {
     this.isLoading$ = this.authService.isLoading$;
   }
@@ -31,32 +35,39 @@ export class ForgotPasswordComponent implements OnInit {
     this.initForm();
   }
 
-  // convenience getter for easy access to form fields
   get f() {
     return this.forgotPasswordForm.controls;
   }
 
   initForm() {
     this.forgotPasswordForm = this.fb.group({
-      email: [
-        'admin@demo.com',
-        Validators.compose([
-          Validators.required,
-          Validators.email,
-          Validators.minLength(3),
-          Validators.maxLength(320), // https://stackoverflow.com/questions/386294/what-is-the-maximum-length-of-a-valid-email-address
-        ]),
+      username: [
+        '',
+        Validators.compose([Validators.required, Validators.minLength(3)]),
       ],
     });
   }
 
   submit() {
-    this.errorState = ErrorStates.NotSubmitted;
+    this.state = States.NotSubmitted;
+    if (this.forgotPasswordForm.invalid) {
+      return;
+    }
+
     const forgotPasswordSubscr = this.authService
-      .forgotPassword(this.f.email.value)
+      .forgotPassword(this.f.username.value)
       .pipe(first())
-      .subscribe((result: boolean) => {
-        this.errorState = result ? ErrorStates.NoError : ErrorStates.HasError;
+      .subscribe({
+        // Se ejecuta si el backend devuelve una respuesta 2xx (ÉXITO)
+        next: (response: any) => {
+          this.successMessage = response.message || 'Solicitud procesada. Se ha enviado una notificación al administrador.';
+          this.state = States.Success;
+        },
+        // Se ejecuta si el backend devuelve un error (4xx - Usuario no encontrado)
+        error: (err) => {
+          this.errorMessage = err.error?.error || 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+          this.state = States.HasError;
+        }
       });
     this.unsubscribe.push(forgotPasswordSubscr);
   }

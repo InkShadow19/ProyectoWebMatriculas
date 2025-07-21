@@ -12,6 +12,7 @@ import { UserComponent } from './admin/user/user.component';
 import { RolesComponent } from './roles/roles.component';
 import { NivelesComponent } from './niveles/niveles.component';
 import { ReportesComponent } from './reportes/reportes.component';
+import { Error403Component } from './error403/error403.component';
 
 const Routing: Routes = [
   {
@@ -120,6 +121,10 @@ const Routing: Routes = [
     path: 'reportes',
     component: ReportesComponent,
   },
+  {
+    path: 'access-denied',
+    component: Error403Component,
+  }
 ];
 
 export { Routing };

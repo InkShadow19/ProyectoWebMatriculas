@@ -8,6 +8,8 @@ import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 import { BancoService } from 'src/app/services/banco.service';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-bancos',
@@ -40,13 +42,19 @@ export class BancosComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
-    private bancoService: BancoService
+    private bancoService: BancoService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.estadoKeys = Object.values(EstadoReference);
   }
 
   ngOnInit(): void {
     this.loadBancos();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
   loadBancos(): void {

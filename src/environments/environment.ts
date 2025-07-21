@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  appVersion: '1.2.2',
+  appVersion: '1.2.8',
   USERDATA_KEY: 'authf649fc9a5f55',
   isMockEnabled: true,
   //apiUrl: 'api',

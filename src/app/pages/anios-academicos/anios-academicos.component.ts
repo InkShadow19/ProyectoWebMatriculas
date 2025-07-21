@@ -8,6 +8,8 @@ import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { AnioAcademicoService } from 'src/app/services/anio-academico.service';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/modules/auth';
 
 @Component({
   selector: 'app-anios-academicos',
@@ -41,7 +43,9 @@ export class AniosAcademicosComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
-    private anioAcademicoService: AnioAcademicoService
+    private anioAcademicoService: AnioAcademicoService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.estadoAcademicoKeys = [
       EstadoAcademicoReference.ACTIVO,
@@ -52,6 +56,10 @@ export class AniosAcademicosComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAniosAcademicos();
+    if (!this.authService.hasRole('Administrador')) {
+      this.router.navigate(['/access-denied']);
+      return;
+    }
   }
 
   loadAniosAcademicos(): void {

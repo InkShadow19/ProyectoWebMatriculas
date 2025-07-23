@@ -23,7 +23,7 @@
               placeholder="Buscar por nombre, apellidos, DNI..." formControlName="filtroBusqueda" />
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-bold">Estado Académico:</label>
+            <label class="form-label fw-bold">Estado:</label>
             <select class="form-select form-select-solid" formControlName="filtroEstado">
               <option value="">Todos</option>
               <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}
@@ -44,12 +44,12 @@
           <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
             <th>DNI</th>
             <th>Nombre Completo</th>
-            <th>Fecha de Nacimiento</th>
+            <th>Nacimiento</th>
             <th>Género</th>
             <th>Email</th>
             <th>Teléfono</th>
             <th>Dirección</th>
-            <th class="text-center">Estado Académico</th>
+            <th class="text-center">Estado</th>
             <th class="text-end">Acciones</th>
           </tr>
         </thead>
@@ -73,7 +73,19 @@
               </div>
             </td>
             <td class="text-end">
-              <div ngbDropdown>
+              <div class="d-none d-md-flex justify-content-end">
+                <button type="button" class="btn btn-light-info btn-sm me-3"
+                  (click)="openEstudianteModal(estudiante)">
+                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                  Editar
+                </button>
+                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteEstudiante(estudiante)">
+                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                  Eliminar
+                </button>
+              </div>
+
+              <div class="d-md-none text-end" ngbDropdown>
                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
@@ -232,9 +244,9 @@
             </div>
           </div>
 
-          <!-- Estado Académico -->
+          <!-- Estado -->
           <div class="mb-5 col-md-6">
-            <label class="form-label required">Estado Académico:</label>
+            <label class="form-label required">Estado:</label>
             <select class="form-select" formControlName="estadoAcademico"
               [ngClass]="{ 'is-invalid': f['estadoAcademico'].touched && f['estadoAcademico'].errors }">
               <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}

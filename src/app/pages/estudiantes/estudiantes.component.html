@@ -5,7 +5,7 @@
     </div>
     <div class="card-toolbar">
       <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-success btn-sm" (click)="openAddEstudianteModal()">
+        <button type="button" class="btn btn-success btn-sm" (click)="openEstudianteModal()">
           <app-keenicon name="plus" class="me-2"></app-keenicon>
           Nuevo Estudiante
         </button>
@@ -15,23 +15,27 @@
   <div class="card-body py-4">
     <div class="mb-10">
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Búsqueda Rápida:</label>
-          <input type="text" class="form-control form-control-solid" placeholder="Buscar por nombre, apellidos, DNI..."
-            [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
+      <form [formGroup]="filterForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Búsqueda Rápida:</label>
+            <input type="text" class="form-control form-control-solid"
+              placeholder="Buscar por nombre, apellidos, DNI..." formControlName="filtroBusqueda" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Estado Académico:</label>
+            <select class="form-select form-select-solid" formControlName="filtroEstado">
+              <option value="">Todos</option>
+              <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
+            <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar
+              Filtros</button>
+          </div>
         </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Estado Académico:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (change)="onFilterChange()">
-            <option value="">Todos</option>
-            <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-        <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
-          <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar Filtros</button>
-        </div>
-      </div>
+      </form>
     </div>
 
     <div class="table-responsive">
@@ -60,11 +64,11 @@
             <td>{{ estudiante.direccion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': estudiante.estadoAcademico === EstadoAcademicoReference.ACTIVO,
-                  'badge-light-danger': estudiante.estadoAcademico === EstadoAcademicoReference.RETIRADO,
-                  'badge-light-primary': estudiante.estadoAcademico === EstadoAcademicoReference.EGRESADO,
-                  'badge-secondary': estudiante.estadoAcademico === EstadoAcademicoReference.UNDEFINED
-                }">
+                    'badge-light-success': estudiante.estadoAcademico === EstadoAcademicoReference.ACTIVO,
+                    'badge-light-danger': estudiante.estadoAcademico === EstadoAcademicoReference.RETIRADO,
+                    'badge-light-primary': estudiante.estadoAcademico === EstadoAcademicoReference.EGRESADO,
+                    'badge-secondary': estudiante.estadoAcademico === EstadoAcademicoReference.UNDEFINED
+                  }">
                 {{ estudiante.estadoAcademico.replace('_', ' ') }}
               </div>
             </td>
@@ -74,7 +78,7 @@
                   <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
                 </button>
                 <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditEstudianteModal(estudiante)">
+                  <button class="dropdown-item text-info" (click)="openEstudianteModal(estudiante)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
@@ -88,7 +92,7 @@
           </tr>
           <tr *ngIf="!pagedEstudiantes || pagedEstudiantes.content.length === 0">
             <td colspan="9" class="text-center text-muted py-5">
-                No se encontraron registros.
+              No se encontraron registros.
             </td>
           </tr>
         </tbody>
@@ -100,7 +104,8 @@
         Mostrando
         <span class="fw-bold">{{ pagedEstudiantes.number * pagedEstudiantes.size + 1 }}</span>
         a
-        <span class="fw-bold">{{ pagedEstudiantes.number * pagedEstudiantes.size + pagedEstudiantes.content.length }}</span>
+        <span class="fw-bold">{{ pagedEstudiantes.number * pagedEstudiantes.size + pagedEstudiantes.content.length
+          }}</span>
         de <span class="fw-bold">{{ pagedEstudiantes.totalElements }}</span> registros
       </div>
 
@@ -120,150 +125,139 @@
   </div>
 </div>
 
-<ng-template #addEstudianteModal>
+<!-- Un solo modal para Añadir y Editar -->
+<ng-template #estudianteModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Estudiante</h2>
+      <h2>{{ isEditMode ? 'Editar Estudiante' : 'Añadir Nuevo Estudiante' }}</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="estudianteForm" (ngSubmit)="onSubmit()">
         <div class="row">
+          <!-- DNI -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">DNI:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.dni"
-              name="newEstudianteDNI" maxlength="8" />
+            <!-- CORRECCIÓN: Añadido oninput para filtrar letras -->
+            <input type="text" class="form-control" formControlName="dni" maxlength="8"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+              [ngClass]="{ 'is-invalid': f['dni'].touched && f['dni'].errors }" />
+            <div *ngIf="f['dni'].touched && f['dni'].errors" class="invalid-feedback">
+              <div *ngIf="f['dni'].errors?.['required']">El DNI es requerido.</div>
+              <div *ngIf="f['dni'].errors?.['pattern']">El DNI debe contener 8 dígitos numéricos.</div>
+            </div>
           </div>
+
+          <!-- Nombre -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">Nombres:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.nombre"
-              name="newEstudianteNombre" />
+            <input type="text" class="form-control" formControlName="nombre"
+              [ngClass]="{ 'is-invalid': f['nombre'].touched && f['nombre'].errors }" />
+            <div *ngIf="f['nombre'].touched && f['nombre'].errors" class="invalid-feedback">
+              <div *ngIf="f['nombre'].errors?.['required']">El nombre es requerido.</div>
+              <div *ngIf="f['nombre'].errors?.['minlength']">Debe tener al menos 2 caracteres.</div>
+              <div *ngIf="f['nombre'].errors?.['maxlength']">No debe exceder los 50 caracteres.</div>
+            </div>
           </div>
+
+          <!-- Apellido Paterno -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">Apellido Paterno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.apellidoPaterno"
-              name="newEstudianteApellidoPaterno" />
+            <input type="text" class="form-control" formControlName="apellidoPaterno"
+              [ngClass]="{ 'is-invalid': f['apellidoPaterno'].touched && f['apellidoPaterno'].errors }" />
+            <div *ngIf="f['apellidoPaterno'].touched && f['apellidoPaterno'].errors" class="invalid-feedback">
+              <div *ngIf="f['apellidoPaterno'].errors?.['required']">El apellido paterno es requerido.</div>
+              <div *ngIf="f['apellidoPaterno'].errors?.['minlength']">Debe tener al menos 2 caracteres.</div>
+              <div *ngIf="f['apellidoPaterno'].errors?.['maxlength']">No debe exceder los 50 caracteres.</div>
+            </div>
           </div>
+
+          <!-- Apellido Materno -->
           <div class="mb-5 col-md-6">
             <label class="form-label">Apellido Materno:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.apellidoMaterno"
-              name="newEstudianteApellidoMaterno" />
+            <input type="text" class="form-control" formControlName="apellidoMaterno"
+              [ngClass]="{ 'is-invalid': f['apellidoMaterno'].touched && f['apellidoMaterno'].errors }" />
+            <div *ngIf="f['apellidoMaterno'].touched && f['apellidoMaterno'].errors" class="invalid-feedback">
+              <div *ngIf="f['apellidoMaterno'].errors?.['maxlength']">No debe exceder los 50 caracteres.</div>
+            </div>
           </div>
+
+          <!-- Fecha de Nacimiento -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">Fecha de Nacimiento:</label>
-            <input type="date" class="form-control form-control-solid" [(ngModel)]="newEstudiante.fechaNacimiento"
-              name="newEstudianteFechaNacimiento" />
+            <input type="date" class="form-control" formControlName="fechaNacimiento"
+              [ngClass]="{ 'is-invalid': f['fechaNacimiento'].touched && f['fechaNacimiento'].errors }" />
+            <div *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].errors" class="invalid-feedback">
+              <div *ngIf="f['fechaNacimiento'].errors?.['required']">La fecha es requerida.</div>
+              <!-- MENSAJE DE ERROR ACTUALIZADO -->
+              <div *ngIf="f['fechaNacimiento'].errors?.['ageRange']">La edad del estudiante debe ser entre 3 y 20 años.
+              </div>
+            </div>
           </div>
+
+          <!-- Género -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">Género:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="newEstudiante.genero" name="newEstudianteGenero">
+            <select class="form-select" formControlName="genero"
+              [ngClass]="{ 'is-invalid': f['genero'].touched && f['genero'].errors }">
               <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
             </select>
+            <div *ngIf="f['genero'].touched && f['genero'].errors" class="invalid-feedback">
+              <div>El género es requerido.</div>
+            </div>
           </div>
-          <div class="mb-5 col-md-6">
-            <label class="form-label required">Estado Académico:</label>
-            <select class="form-select form-select-solid" [(ngModel)]="newEstudiante.estadoAcademico" name="newEstudianteEstado">
-              <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-            </select>
-          </div>
+
+          <!-- Email -->
           <div class="mb-5 col-md-6">
             <label class="form-label required">Email:</label>
-            <input type="email" class="form-control form-control-solid" [(ngModel)]="newEstudiante.email"
-              name="newEstudianteEmail" />
+            <input type="email" class="form-control" formControlName="email"
+              [ngClass]="{ 'is-invalid': f['email'].touched && f['email'].errors }" />
+            <div *ngIf="f['email'].touched && f['email'].errors" class="invalid-feedback">
+              <div *ngIf="f['email'].errors?.['required']">El email es requerido.</div>
+              <div *ngIf="f['email'].errors?.['email']">Formato de email inválido.</div>
+            </div>
           </div>
+
+          <!-- Teléfono -->
           <div class="mb-5 col-md-6">
             <label class="form-label">Teléfono:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.telefono"
-              name="newEstudianteTelefono" maxlength="9" />
+            <!-- CORRECCIÓN: Añadido oninput para filtrar letras -->
+            <input type="text" class="form-control" formControlName="telefono" maxlength="9"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+              [ngClass]="{ 'is-invalid': f['telefono'].touched && f['telefono'].errors }" />
+            <div *ngIf="f['telefono'].touched && f['telefono'].errors" class="invalid-feedback">
+              <div *ngIf="f['telefono'].errors?.['pattern']">El teléfono debe tener 9 dígitos.</div>
+            </div>
           </div>
+
+          <!-- Estado Académico -->
+          <div class="mb-5 col-md-6">
+            <label class="form-label required">Estado Académico:</label>
+            <select class="form-select" formControlName="estadoAcademico"
+              [ngClass]="{ 'is-invalid': f['estadoAcademico'].touched && f['estadoAcademico'].errors }">
+              <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}
+              </option>
+            </select>
+            <div *ngIf="f['estadoAcademico'].touched && f['estadoAcademico'].errors" class="invalid-feedback">
+              <div>El estado es requerido.</div>
+            </div>
+          </div>
+
+          <!-- Dirección -->
           <div class="mb-5 col-md-6">
             <label class="form-label">Dirección:</label>
-            <input type="text" class="form-control form-control-solid" [(ngModel)]="newEstudiante.direccion"
-              name="newEstudianteDireccion" />
+            <input type="text" class="form-control" formControlName="direccion" />
           </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveEstudiante()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editEstudianteModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Estudiante</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingEstudiante">
-        <div class="row">
-            <div class="mb-5 col-md-6">
-                <label class="form-label required">DNI:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.dni"
-                  name="editEstudianteDNI" maxlength="8" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Nombres:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.nombre"
-                  name="editEstudianteNombre" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Apellido Paterno:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoPaterno"
-                  name="editEstudianteApellidoPaterno" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label">Apellido Materno:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.apellidoMaterno"
-                  name="editEstudianteApellidoMaterno" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Fecha de Nacimiento:</label>
-                <input type="date" class="form-control form-control-solid" [ngModel]="editingEstudiante.fechaNacimiento | date:'yyyy-MM-dd':'UTC'"
-                  (ngModelChange)="editingEstudiante.fechaNacimiento = $event" name="editEstudianteFechaNacimiento" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Género:</label>
-                <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.genero"
-                  name="editEstudianteGenero">
-                  <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
-                </select>
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Estado Académico:</label>
-                <select class="form-select form-select-solid" [(ngModel)]="editingEstudiante.estadoAcademico"
-                  name="editEstudianteEstado">
-                  <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-                </select>
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label required">Email:</label>
-                <input type="email" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.email"
-                  name="editEstudianteEmail" />
-              </div>
-              <div class="mb-5 col-md-6">
-                <label class="form-label">Teléfono:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.telefono"
-                  name="editEstudianteTelefono" maxlength="9" />
-              </div>
-              <div class="mb-5 col-12">
-                <label class="form-label">Dirección:</label>
-                <input type="text" class="form-control form-control-solid" [(ngModel)]="editingEstudiante.direccion"
-                  name="editEstudianteDireccion" />
-              </div>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateEstudiante()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="estudianteForm.invalid">
+        {{ isEditMode ? 'Guardar Cambios' : 'Guardar' }}
+      </button>
     </div>
   </div>
 </ng-template>

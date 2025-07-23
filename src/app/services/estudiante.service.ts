@@ -1,10 +1,11 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription, throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { EstudianteDomainService } from '../domains/estudiante-domain.service';
 import { EstudianteDto } from '../models/estudiante.model';
 import { PageResponse } from '../models/page-response.model';
 import { EstadoAcademicoReference } from '../models/enums/estado-academico-reference.enum';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root',
@@ -34,18 +35,26 @@ export class EstudianteService implements OnDestroy {
         );
     }
 
-    add(body: Partial<EstudianteDto>): Observable<EstudianteDto | undefined> {
+    // --- MÉTODO ADD CORREGIDO ---
+    add(body: Partial<EstudianteDto>): Observable<EstudianteDto> {
         this.isLoadingSubject.next(true);
         return this.estudianteDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError((error: HttpErrorResponse) => {
+                // Dejamos que el error fluya hacia el componente
+                return throwError(() => error); 
+            }),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<EstudianteDto>): Observable<EstudianteDto | undefined> {
+    // --- MÉTODO UPDATE CORREGIDO ---
+    update(identifier: string, body: Partial<EstudianteDto>): Observable<EstudianteDto> {
         this.isLoadingSubject.next(true);
         return this.estudianteDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError((error: HttpErrorResponse) => {
+                // Dejamos que el error fluya hacia el componente
+                return throwError(() => error);
+            }),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }

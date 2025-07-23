@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { ApoderadoDto } from 'src/app/models/apoderado.model';
 import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
@@ -9,6 +9,19 @@ import Swal from 'sweetalert2';
 import { EstadoReference } from 'src/app/models/enums/estado-reference.enum';
 import { ApoderadoService } from 'src/app/services/apoderado.service';
 import { PageResponse } from 'src/app/models/page-response.model';
+import { debounceTime } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+
+export function pastDateValidator(control: AbstractControl): { [key: string]: boolean } | null {
+  if (!control.value) { return null; }
+  const selectedDate = new Date(control.value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selectedDate >= today) {
+    return { 'futureDate': true };
+  }
+  return null;
+}
 
 @Component({
   selector: 'app-apoderados',
@@ -16,136 +29,140 @@ import { PageResponse } from 'src/app/models/page-response.model';
   imports: [
     CommonModule,
     SharedModule,
-    FormsModule,
+    ReactiveFormsModule,
     NgbDropdownModule
   ],
   templateUrl: './apoderados.component.html',
   styleUrls: ['./apoderados.component.scss']
 })
 export class ApoderadosComponent implements OnInit {
-  @ViewChild('addApoderadoModal') addApoderadoModal: TemplateRef<any>;
-  @ViewChild('editApoderadoModal') editApoderadoModal: TemplateRef<any>;
+  @ViewChild('apoderadoModal') apoderadoModal: TemplateRef<any>;
 
-  // --- Enums para la Vista ---
   GeneroReference = GeneroReference;
   EstadoReference = EstadoReference;
-  generoKeys = Object.values(GeneroReference) as string[];
-  estadoKeys = Object.values(EstadoReference) as string[];
+  generoKeys = Object.values(GeneroReference);
+  estadoKeys = Object.values(EstadoReference);
 
-  // --- Modelos para los Modales ---
-  newApoderado: Partial<ApoderadoDto> = {};
-  editingApoderado: ApoderadoDto | null = null;
+  apoderadoForm: FormGroup;
+  filterForm: FormGroup;
+  isEditMode = false;
+  currentApoderadoId: string | null = null;
 
-  // --- Propiedades para Paginación y Filtros ---
   pagedApoderados: PageResponse<ApoderadoDto> | undefined;
-  filtroBusqueda: string = '';
-  filtroEstado: string = '';
   currentPage: number = 1;
   itemsPerPage: number = 5;
 
   constructor(
     private cdr: ChangeDetectorRef,
     private modalService: NgbModal,
-    private apoderadoService: ApoderadoService // ÚNICA dependencia de servicio necesaria
-  ) { }
+    private apoderadoService: ApoderadoService,
+    private fb: FormBuilder
+  ) {
+    this.apoderadoForm = this.fb.group({
+      dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidoPaterno: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidoMaterno: ['', [Validators.maxLength(50)]],
+      parentesco: ['', [Validators.required]],
+      fechaNacimiento: ['', [Validators.required, pastDateValidator]],
+      genero: [GeneroReference.MASCULINO, Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      telefono: ['', [Validators.pattern(/^\d{9}$/)]],
+      direccion: [''],
+      estado: [EstadoReference.ACTIVO, Validators.required],
+    });
+
+    this.filterForm = this.fb.group({
+      filtroBusqueda: [''],
+      filtroEstado: ['']
+    });
+  }
 
   ngOnInit(): void {
     this.loadApoderados();
+    this.filterForm.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+      this.currentPage = 1;
+      this.loadApoderados();
+    });
   }
 
-  /**
-   * Carga los apoderados desde la API aplicando los filtros y la paginación actual.
-   */
   loadApoderados(): void {
-    // La API pagina desde 0, la UI desde 1.
     const page = this.currentPage - 1;
-    this.apoderadoService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroEstado)
+    const { filtroBusqueda, filtroEstado } = this.filterForm.value;
+    const estado = filtroEstado === '' ? undefined : filtroEstado;
+
+    this.apoderadoService.getList(page, this.itemsPerPage, filtroBusqueda, estado)
       .subscribe(response => {
         this.pagedApoderados = response;
-        this.cdr.detectChanges(); // Forzar detección de cambios si es necesario
+        this.cdr.detectChanges();
       });
   }
 
-  /**
-   * Se llama cuando el usuario cambia el estado del filtro o busca algo.
-   */
-  onFilterChange(): void {
-    this.currentPage = 1; // Volver a la primera página al filtrar
-    this.loadApoderados();
-  }
-
-  /**
-   * Limpia los filtros y recarga los datos.
-   */
   limpiarFiltros(): void {
-    this.filtroBusqueda = '';
-    this.filtroEstado = '';
-    this.onFilterChange();
+    this.filterForm.reset({ filtroBusqueda: '', filtroEstado: '' });
   }
 
-  /**
-   * Cambia la página actual y recarga los datos.
-   * @param page El número de página al que se quiere ir.
-   */
   setPage(page: number): void {
-    if (page < 1 || (this.pagedApoderados && page > this.pagedApoderados.totalPages)) {
-      return;
-    }
+    if (page < 1 || (this.pagedApoderados && page > this.pagedApoderados.totalPages)) { return; }
     this.currentPage = page;
     this.loadApoderados();
   }
 
-  /**
-   * Genera un array de números para los botones de paginación.
-   */
   getPagesArray(): number[] {
     if (!this.pagedApoderados) return [];
     return Array(this.pagedApoderados.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos CRUD ---
+  openApoderadoModal(apoderado?: ApoderadoDto): void {
+    this.isEditMode = !!apoderado;
+    this.apoderadoForm.reset();
 
-  openAddApoderadoModal(): void {
-    this.newApoderado = {
-      genero: GeneroReference.MASCULINO,
-      estado: EstadoReference.ACTIVO,
-    };
-    this.modalService.open(this.addApoderadoModal, { centered: true, size: 'lg' });
+    if (this.isEditMode && apoderado) {
+      this.currentApoderadoId = apoderado.identifier;
+      const fechaNac = apoderado.fechaNacimiento ? new Date(apoderado.fechaNacimiento).toISOString().split('T')[0] : '';
+      this.apoderadoForm.patchValue({ ...apoderado, fechaNacimiento: fechaNac });
+    } else {
+      this.currentApoderadoId = null;
+      this.apoderadoForm.patchValue({
+        genero: GeneroReference.MASCULINO,
+        estado: EstadoReference.ACTIVO,
+      });
+    }
+    this.modalService.open(this.apoderadoModal, { centered: true, size: 'lg' });
   }
 
-  saveApoderado(): void {
-    // Realiza aquí las validaciones que necesites
-    if (!this.newApoderado.dni || !this.newApoderado.nombre || !this.newApoderado.apellidoPaterno) {
-      Swal.fire('Error', 'Los campos DNI, Nombre y Apellido Paterno son requeridos.', 'error');
+  onSubmit(): void {
+    if (this.apoderadoForm.invalid) {
+      this.apoderadoForm.markAllAsTouched();
+      Swal.fire('Formulario Inválido', 'Por favor, corrija los errores marcados.', 'error');
       return;
     }
 
-    this.apoderadoService.add(this.newApoderado).subscribe(apoderadoAgregado => {
-      if (apoderadoAgregado) {
-        Swal.fire('¡Éxito!', 'Apoderado añadido correctamente.', 'success');
-        this.loadApoderados(); // Recargar datos
-        this.dismiss(); // Cierra el modal
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el apoderado.', 'error');
-      }
-    });
-  }
+    const apoderadoData = this.apoderadoForm.value;
+    const apiCall = this.isEditMode && this.currentApoderadoId
+      ? this.apoderadoService.update(this.currentApoderadoId, apoderadoData)
+      : this.apoderadoService.add(apoderadoData);
 
-  openEditApoderadoModal(apoderado: ApoderadoDto): void {
-    this.editingApoderado = { ...apoderado }; // Clonar el objeto para no modificar el original
-    this.modalService.open(this.editApoderadoModal, { centered: true, size: 'lg' });
-  }
-
-  updateApoderado(): void {
-    if (!this.editingApoderado || !this.editingApoderado.identifier) return;
-
-    this.apoderadoService.update(this.editingApoderado.identifier, this.editingApoderado).subscribe(apoderadoActualizado => {
-      if (apoderadoActualizado) {
-        Swal.fire('¡Éxito!', 'Apoderado actualizado correctamente.', 'success');
-        this.loadApoderados(); // Recargar datos
-        this.dismiss(); // Cierra el modal
-      } else {
-        Swal.fire('Error', 'Hubo un problema al actualizar el apoderado.', 'error');
+    apiCall.subscribe({
+      next: () => {
+        const message = this.isEditMode ? 'Apoderado actualizado.' : 'Apoderado añadido.';
+        Swal.fire('¡Éxito!', message, 'success');
+        this.loadApoderados();
+        this.dismiss();
+      },
+      error: (err: HttpErrorResponse) => {
+        let errorMessage = 'Ocurrió un error inesperado.';
+        const errorBody = err.error;
+        if (errorBody) {
+          if (typeof errorBody === 'object' && errorBody.error) {
+            errorMessage = errorBody.error;
+          } else if (typeof errorBody === 'object' && Object.keys(errorBody).length > 0) {
+            errorMessage = Object.values(errorBody).join('<br>');
+          } else if (typeof errorBody === 'string') {
+            errorMessage = errorBody;
+          }
+        }
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -153,13 +170,10 @@ export class ApoderadosComponent implements OnInit {
   confirmDeleteApoderado(apoderado: ApoderadoDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `¡No podrás revertir esto! Eliminarás al apoderado: ${apoderado.nombre} ${apoderado.apellidoPaterno}`,
+      text: `Eliminarás al apoderado: ${apoderado.nombre} ${apoderado.apellidoPaterno}`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, ¡eliminar!',
-      cancelButtonText: 'Cancelar'
+      confirmButtonText: 'Sí, ¡eliminar!'
     }).then((result) => {
       if (result.isConfirmed && apoderado.identifier) {
         this.deleteApoderado(apoderado.identifier);
@@ -168,21 +182,23 @@ export class ApoderadosComponent implements OnInit {
   }
 
   private deleteApoderado(identifier: string): void {
-    this.apoderadoService.delete(identifier).subscribe(success => {
-      if (success) {
+    this.apoderadoService.delete(identifier).subscribe({
+      next: () => {
         Swal.fire('¡Eliminado!', 'El apoderado ha sido eliminado.', 'success');
-        // Lógica para ajustar la página si se elimina el último registro de ella
         if (this.pagedApoderados?.content.length === 1 && this.currentPage > 1) {
           this.currentPage--;
         }
-        this.loadApoderados(); // Recargar datos
-      } else {
-        Swal.fire('Error', 'No se pudo eliminar el apoderado.', 'error');
-      }
+        this.loadApoderados();
+      },
+      error: (err) => Swal.fire('Error', err.error?.error || 'No se pudo eliminar.', 'error')
     });
   }
 
   dismiss(): void {
     this.modalService.dismissAll();
+  }
+
+  get f() {
+    return this.apoderadoForm.controls;
   }
 }

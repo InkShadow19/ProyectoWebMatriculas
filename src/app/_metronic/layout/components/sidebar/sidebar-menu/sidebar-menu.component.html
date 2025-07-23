@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <div *ngIf="isAdmin()">
+    <ng-container *ngIf="isAdmin()">
       <!-- Separador "Administración" -->
       <div class="menu-item">
         <div class="menu-content pt-8 pb-2">
@@ -187,7 +187,7 @@
         </div>
       </div>
 
-    </div>
+    </ng-container>
     <!--end::Menu-->
   </div>
   <!--end::Menu wrapper-->

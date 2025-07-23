@@ -4,9 +4,9 @@ import { SituacionReference } from "./enums/situacion-reference.enum";
 
 export interface MatriculaDto {
   identifier: string;
-  codigo: number; // En la BD es codigo_matricula, el DTO lo llama codigo
+  codigo: string;
   situacion: SituacionReference;
-  institucion_procendencia: string;
+  procedencia: string; 
   fechaMatricula: string;
   estado: EstadoMatriculaReference;
   fechaCreacion: string;

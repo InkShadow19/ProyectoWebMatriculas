@@ -191,7 +191,7 @@
                                                     [(ngModel)]="deuda.seleccionado" (change)="calcularTotal()">
                                             </div>
                                         </td>
-                                        <td>{{ deuda.descripcionPersonalizada }}</td>
+                                        <td>{{ deuda.descripcion }}</td>
                                         <td>{{ deuda.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
                                         <td class="text-end pe-4 fw-bolder"
                                             [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">{{ deuda.montoAPagar |

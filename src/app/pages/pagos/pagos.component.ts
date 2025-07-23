@@ -169,9 +169,9 @@ export class PagosComponent implements OnInit {
     this.estudianteEncontrado = {
       nombre: 'Sofía Torres Rojas',
       deudas: [
-        { identifier: 'c-1', descripcionPersonalizada: 'Matrícula 2025', fechaVencimiento: '2025-02-28', montoAPagar: 230.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 230, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
-        { identifier: 'c-2', descripcionPersonalizada: 'Pensión Marzo 2025', fechaVencimiento: '2025-03-31', montoAPagar: 300.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
-        { identifier: 'c-3', descripcionPersonalizada: 'Pensión Abril 2025 (con mora)', fechaVencimiento: '2025-04-30', montoAPagar: 310.00, estadoDeuda: EstadoDeudaReference.VENCIDO, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 10, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] }
+        { identifier: 'c-1', descripcion: 'Matrícula 2025', fechaVencimiento: '2025-02-28', montoAPagar: 230.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 230, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
+        { identifier: 'c-2', descripcion: 'Pensión Marzo 2025', fechaVencimiento: '2025-03-31', montoAPagar: 300.00, estadoDeuda: EstadoDeudaReference.PENDIENTE, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 0, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] },
+        { identifier: 'c-3', descripcion: 'Pensión Abril 2025 (con mora)', fechaVencimiento: '2025-04-30', montoAPagar: 310.00, estadoDeuda: EstadoDeudaReference.VENCIDO, seleccionado: false, montoOriginal: 300, descuento: 0, mora: 10, fechaCreacion: '', matricula: '', conceptoPago: '', detalles: [] }
       ]
     };
     this.procesoPagoPaso = 'seleccion';

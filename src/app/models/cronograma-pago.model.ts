@@ -3,7 +3,7 @@ import { PagoDetalleDto } from "./pago-detalle.model";
 
 export interface CronogramaPagoDto {
   identifier: string;
-  descripcionPersonalizada?: string;
+  descripcion?: string;
   montoOriginal: number;
   descuento: number;
   mora: number;

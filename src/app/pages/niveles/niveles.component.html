@@ -5,14 +5,12 @@
     </div>
     <div class="card-toolbar">
       <button type="button" class="btn btn-success btn-sm" (click)="openAddNivelModal()">
-        <app-keenicon name="plus" class="ms-2"></app-keenicon>
-        Nuevo Nivel
+        <app-keenicon name="plus" class="ms-2"></app-keenicon>Nuevo Nivel
       </button>
     </div>
   </div>
 
   <div class="card-body py-4">
-    <!-- Filtros -->
     <div class="mb-10">
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
       <div class="row g-3">
@@ -34,7 +32,6 @@
       </div>
     </div>
 
-    <!-- Tabla de Datos -->
     <div class="table-responsive">
       <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
         <thead>
@@ -49,61 +46,30 @@
             <td>{{ nivel.descripcion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': nivel.estado === EstadoReference.ACTIVO,
-                  'badge-light-danger': nivel.estado === EstadoReference.INACTIVO,
-                  'badge-secondary': nivel.estado === EstadoReference.UNDEFINED
-                }">
+                    'badge-light-success': nivel.estado === EstadoReference.ACTIVO,
+                    'badge-light-danger': nivel.estado === EstadoReference.INACTIVO,
+                    'badge-secondary': nivel.estado === EstadoReference.UNDEFINED
+                  }">
                 {{ nivel.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditNivelModal(nivel)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteNivel(nivel)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditNivelModal(nivel)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteNivel(nivel)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+              <button class="btn btn-light-info btn-sm me-3" (click)="openEditNivelModal(nivel)">Editar</button>
+              <button class="btn btn-light-danger btn-sm" (click)="confirmDeleteNivel(nivel)">Eliminar</button>
             </td>
           </tr>
           <tr *ngIf="!pagedNiveles || pagedNiveles.content.length === 0">
-            <td colspan="3" class="text-center text-muted py-5">
-              No se encontraron registros.
-            </td>
+            <td colspan="3" class="text-center text-muted py-5">No se encontraron registros.</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Paginación -->
     <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedNiveles && pagedNiveles.totalElements > 0">
       <div class="fs-6 fw-semibold text-gray-700">
-        Mostrando
-        <span class="fw-bold">{{ pagedNiveles.number * pagedNiveles.size + 1 }}</span>
-        a
-        <span class="fw-bold">{{ pagedNiveles.number * pagedNiveles.size + pagedNiveles.content.length }}</span>
-        de <span class="fw-bold">{{ pagedNiveles.totalElements }}</span> registros
+        Mostrando {{ pagedNiveles.number * pagedNiveles.size + 1 }} a {{ pagedNiveles.number * pagedNiveles.size +
+        pagedNiveles.content.length }} de {{ pagedNiveles.totalElements }} registros
       </div>
-
       <ul class="pagination">
         <li class="page-item previous" [class.disabled]="pagedNiveles.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
@@ -120,63 +86,50 @@
   </div>
 </div>
 
-<!-- Modales -->
-<ng-template #addNivelModal>
+<ng-template #nivelModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Nuevo Nivel Académico</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Nuevo' }} Nivel Académico</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="nivelForm">
         <div class="mb-5">
           <label class="form-label required">Descripción del Nivel:</label>
-          <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
-            [(ngModel)]="newNivel.descripcion" name="newNivelDescripcion" />
+          <input class="form-control"
+            [ngClass]="{ 'is-invalid': nivelForm.controls['descripcion'].invalid && nivelForm.controls['descripcion'].touched }"
+            placeholder="Ingrese la descripción" formControlName="descripcion" />
+          <div *ngIf="nivelForm.controls['descripcion'].invalid && nivelForm.controls['descripcion'].touched"
+            class="invalid-feedback">
+            <div *ngIf="nivelForm.controls['descripcion'].errors?.['required']">La descripción es requerida.</div>
+            <div *ngIf="nivelForm.controls['descripcion'].errors?.['minlength']">La descripción debe tener al menos 3
+              caracteres.</div>
+            <div *ngIf="nivelForm.controls['descripcion'].errors?.['maxlength']">La descripción no debe exceder los 100
+              caracteres.</div>
+            <div *ngIf="nivelForm.controls['descripcion'].errors?.['pattern']">La descripción solo puede contener letras
+              y espacios.</div>
+          </div>
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="newNivel.estado" name="newNivelEstado">
+          <select class="form-select"
+            [ngClass]="{ 'is-invalid': nivelForm.controls['estado'].invalid && nivelForm.controls['estado'].touched }"
+            formControlName="estado">
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
+          <div *ngIf="nivelForm.controls['estado'].invalid && nivelForm.controls['estado'].touched"
+            class="invalid-feedback">
+            <div *ngIf="nivelForm.controls['estado'].errors?.['required']">El estado es requerido.</div>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveNivel()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editNivelModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Nivel Académico</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body" *ngIf="editingNivel">
-      <form>
-        <div class="mb-5">
-          <label class="form-label required">Descripción del Nivel:</label>
-          <input class="form-control form-control-solid" placeholder="Ingrese la descripción"
-            [(ngModel)]="editingNivel.descripcion" name="editNivelDescripcion" />
-        </div>
-        <div class="mb-5">
-          <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingNivel.estado" name="editNivelEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateNivel()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveNivel()"
+        [disabled]="nivelForm.invalid">Guardar</button>
     </div>
   </div>
 </ng-template>

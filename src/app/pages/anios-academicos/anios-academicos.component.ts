@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { AnioAcademicoDto } from 'src/app/models/anio-academico.model';
 import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
@@ -11,29 +11,34 @@ import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
 
+// Validador personalizado para el rango del año
+export function anioRangoValido(control: AbstractControl): ValidationErrors | null {
+  const anio = control.value;
+  const anioActual = new Date().getFullYear();
+  if (anio && anio > anioActual + 4) {
+    return { anioFueraDeRango: true };
+  }
+  return null;
+}
+
 @Component({
   selector: 'app-anios-academicos',
   standalone: true,
   imports: [
-    CommonModule,
-    SharedModule,
-    FormsModule,
-    NgbDropdownModule,
+    CommonModule, SharedModule, FormsModule, ReactiveFormsModule, NgbDropdownModule,
   ],
   templateUrl: './anios-academicos.component.html',
   styleUrls: ['./anios-academicos.component.scss']
 })
 export class AniosAcademicosComponent implements OnInit {
-  @ViewChild('addAnioAcademicoModal') addAnioAcademicoModal: TemplateRef<any>;
-  @ViewChild('editAnioAcademicoModal') editAnioAcademicoModal: TemplateRef<any>;
+  @ViewChild('anioAcademicoModal') anioAcademicoModal: TemplateRef<any>;
 
   EstadoAcademicoReference = EstadoAcademicoReference;
   estadoAcademicoKeys: string[];
-
-  newAnioAcademico: Partial<AnioAcademicoDto> = {};
-  editingAnioAcademico: AnioAcademicoDto | null = null;
-
-  // --- Propiedades para Paginación y Filtros ---
+  
+  anioForm: FormGroup;
+  isEditing = false;
+  
   pagedAniosAcademicos: PageResponse<AnioAcademicoDto> | undefined;
   filtroBusqueda: number | null = null;
   filtroEstado: string = '';
@@ -43,23 +48,29 @@ export class AniosAcademicosComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
     private anioAcademicoService: AnioAcademicoService,
     private authService: AuthService,
     private router: Router
   ) {
-    this.estadoAcademicoKeys = [
-      EstadoAcademicoReference.ACTIVO,
-      EstadoAcademicoReference.CERRADO,
-      EstadoAcademicoReference.FUTURO,
-    ];
+    this.estadoAcademicoKeys = Object.values(EstadoAcademicoReference).filter(e => e !== EstadoAcademicoReference.UNDEFINED && e !== EstadoAcademicoReference.EGRESADO && e !== EstadoAcademicoReference.RETIRADO);
+    this.anioForm = this.initForm();
   }
 
   ngOnInit(): void {
     this.loadAniosAcademicos();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
-      return;
     }
+  }
+
+  initForm(): FormGroup {
+    const anioActual = new Date().getFullYear();
+    return this.fb.group({
+      identifier: [null],
+      anio: [anioActual, [Validators.required, Validators.pattern(/^[0-9]{4}$/), anioRangoValido]],
+      estadoAcademico: [EstadoAcademicoReference.FUTURO, Validators.required]
+    });
   }
 
   loadAniosAcademicos(): void {
@@ -83,9 +94,7 @@ export class AniosAcademicosComponent implements OnInit {
   }
 
   setPage(page: number): void {
-    if (page < 1 || (this.pagedAniosAcademicos && page > this.pagedAniosAcademicos.totalPages)) {
-      return;
-    }
+    if (page < 1 || (this.pagedAniosAcademicos && page > this.pagedAniosAcademicos.totalPages)) return;
     this.currentPage = page;
     this.loadAniosAcademicos();
   }
@@ -95,60 +104,42 @@ export class AniosAcademicosComponent implements OnInit {
     return Array(this.pagedAniosAcademicos.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos CRUD ---
   openAddAnioAcademicoModal(): void {
-    this.newAnioAcademico = {
+    this.isEditing = false;
+    this.anioForm.reset({
       anio: new Date().getFullYear(),
-      estadoAcademico: EstadoAcademicoReference.FUTURO,
-    };
-    this.modalService.open(this.addAnioAcademicoModal, { centered: true, size: 'lg' });
-  }
-
-  saveAnioAcademico(): void {
-    if (!this.newAnioAcademico.anio || !this.newAnioAcademico.estadoAcademico) {
-      Swal.fire('Error', 'Año y estado son campos obligatorios.', 'error');
-      return;
-    }
-    if (this.newAnioAcademico.anio < 1900 || this.newAnioAcademico.anio > 3000) {
-      Swal.fire('Error', 'El año académico no es válido. Debe ser entre 1900 y 3000.', 'error');
-      return;
-    }
-
-    this.anioAcademicoService.add(this.newAnioAcademico).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Año académico añadido correctamente.', 'success');
-        this.loadAniosAcademicos();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el año académico.', 'error');
-      }
+      estadoAcademico: EstadoAcademicoReference.FUTURO
     });
+    this.modalService.open(this.anioAcademicoModal, { centered: true, size: 'lg' });
   }
 
   openEditAnioAcademicoModal(anio: AnioAcademicoDto): void {
-    this.editingAnioAcademico = { ...anio };
-    this.modalService.open(this.editAnioAcademicoModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.anioForm.patchValue(anio);
+    this.modalService.open(this.anioAcademicoModal, { centered: true, size: 'lg' });
   }
 
-  updateAnioAcademico(): void {
-    if (!this.editingAnioAcademico || !this.editingAnioAcademico.identifier) return;
-
-    if (!this.editingAnioAcademico.anio || !this.editingAnioAcademico.estadoAcademico) {
-      Swal.fire('Error', 'Año y estado son campos obligatorios para editar.', 'error');
-      return;
-    }
-    if (this.editingAnioAcademico.anio < 1900 || this.editingAnioAcademico.anio > 3000) {
-      Swal.fire('Error', 'El año académico no es válido. Debe ser entre 1900 y 3000.', 'error');
+  saveAnioAcademico(): void {
+    if (this.anioForm.invalid) {
+      this.anioForm.markAllAsTouched();
       return;
     }
 
-    this.anioAcademicoService.update(this.editingAnioAcademico.identifier, this.editingAnioAcademico).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Año académico actualizado correctamente.', 'success');
+    const formValue = this.anioForm.value;
+    const request = this.isEditing 
+      ? this.anioAcademicoService.update(formValue.identifier, formValue)
+      : this.anioAcademicoService.add(formValue);
+
+    request.subscribe({
+      next: () => {
+        const message = this.isEditing ? 'Año académico actualizado' : 'Año académico añadido';
+        Swal.fire('¡Éxito!', `${message} correctamente.`, 'success');
         this.loadAniosAcademicos();
         this.dismiss();
-      } else {
-        Swal.fire('Error', 'Hubo un problema al actualizar el año académico.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'Ocurrió un error inesperado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -156,11 +147,11 @@ export class AniosAcademicosComponent implements OnInit {
   confirmDeleteAnioAcademico(anio: AnioAcademicoDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `¡No podrás revertir esto! Eliminarás el año académico: ${anio.anio}`,
+      text: `Vas a eliminar el año académico: ${anio.anio}. ¡No podrás revertir esto!`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -171,16 +162,15 @@ export class AniosAcademicosComponent implements OnInit {
   }
 
   private deleteAnioAcademico(identifier: string): void {
-    this.anioAcademicoService.delete(identifier).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Eliminado!', 'El año académico ha sido eliminado.', 'success');
-        if (this.pagedAniosAcademicos?.content.length === 1 && this.currentPage > 1) {
-          this.currentPage--;
+    this.anioAcademicoService.delete(identifier).subscribe({
+        next: () => {
+            Swal.fire('¡Eliminado!', 'El año académico ha sido eliminado.', 'success');
+            this.loadAniosAcademicos();
+        },
+        error: (err) => {
+            const errorMessage = err.error?.error || 'No se pudo eliminar el año académico.';
+            Swal.fire('Error', errorMessage, 'error');
         }
-        this.loadAniosAcademicos();
-      } else {
-        Swal.fire('Error', 'No se pudo eliminar el año académico.', 'error');
-      }
     });
   }
 

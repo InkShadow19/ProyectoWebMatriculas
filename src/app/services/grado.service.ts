@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription,throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { GradoDomainService } from '../domains/grado-domain.service';
 import { GradoDto } from '../models/grado.model';
@@ -25,18 +25,18 @@ export class GradoService implements OnDestroy {
         );
     }
 
-    add(body: Partial<GradoDto>): Observable<GradoDto | undefined> {
+    add(body: Partial<GradoDto>): Observable<GradoDto> {
         this.isLoadingSubject.next(true);
         return this.gradoDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<GradoDto>): Observable<GradoDto | undefined> {
+    update(identifier: string, body: Partial<GradoDto>): Observable<GradoDto> {
         this.isLoadingSubject.next(true);
         return this.gradoDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -45,8 +45,7 @@ export class GradoService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.gradoDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
-            finalize(() => this.isLoadingSubject.next(false))
+            catchError(err => throwError(() => err))
         );
     }
 

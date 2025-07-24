@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { RolDto } from 'src/app/models/rol.model';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -15,23 +15,19 @@ import { AuthService } from 'src/app/modules/auth';
   selector: 'app-roles',
   standalone: true,
   imports: [
-    CommonModule,
-    SharedModule,
-    FormsModule,
-    NgbDropdownModule,
+    CommonModule, SharedModule, FormsModule, ReactiveFormsModule, NgbDropdownModule,
   ],
   templateUrl: './roles.component.html',
   styleUrls: ['./roles.component.scss']
 })
 export class RolesComponent implements OnInit {
-  @ViewChild('addRolModal') addRolModal: TemplateRef<any>;
-  @ViewChild('editRolModal') editRolModal: TemplateRef<any>;
+  @ViewChild('rolModal') rolModal: TemplateRef<any>;
 
   EstadoReference = EstadoReference;
   estadoKeys: string[];
-
-  newRol: Partial<RolDto> = {};
-  editingRol: RolDto | null = null;
+  
+  rolForm: FormGroup;
+  isEditing = false;
 
   pagedRoles: PageResponse<RolDto> | undefined;
   filtroBusqueda: string = '';
@@ -42,19 +38,33 @@ export class RolesComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
     private rolService: RolService,
     private authService: AuthService,
     private router: Router
   ) {
-    this.estadoKeys = Object.values(EstadoReference);
+    this.estadoKeys = Object.values(EstadoReference).filter(e => e !== EstadoReference.UNDEFINED);
+    this.rolForm = this.initForm();
   }
 
   ngOnInit(): void {
     this.loadRoles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
-      return;
     }
+  }
+
+  initForm(): FormGroup {
+    return this.fb.group({
+      identifier: [null],
+      descripcion: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(50),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      estado: [EstadoReference.ACTIVO, Validators.required],
+    });
   }
 
   loadRoles(): void {
@@ -88,52 +98,39 @@ export class RolesComponent implements OnInit {
     return Array(this.pagedRoles.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos CRUD ---
   openAddRolModal(): void {
-    this.newRol = {
-      descripcion: '',
-      estado: EstadoReference.ACTIVO,
-    };
-    this.modalService.open(this.addRolModal, { centered: true, size: 'lg' });
-  }
-
-  saveRol(): void {
-    if (!this.newRol.descripcion || !this.newRol.estado) {
-      Swal.fire('Error', 'La descripción y el estado del rol son obligatorios.', 'error');
-      return;
-    }
-
-    this.rolService.add(this.newRol).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Rol añadido correctamente.', 'success');
-        this.loadRoles();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el rol.', 'error');
-      }
-    });
+    this.isEditing = false;
+    this.rolForm.reset({ estado: EstadoReference.ACTIVO });
+    this.modalService.open(this.rolModal, { centered: true, size: 'lg' });
   }
 
   openEditRolModal(rol: RolDto): void {
-    this.editingRol = { ...rol };
-    this.modalService.open(this.editRolModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.rolForm.patchValue(rol);
+    this.modalService.open(this.rolModal, { centered: true, size: 'lg' });
   }
 
-  updateRol(): void {
-    if (!this.editingRol || !this.editingRol.identifier) return;
-
-    if (!this.editingRol.descripcion || !this.editingRol.estado) {
-      Swal.fire('Error', 'La descripción y el estado del rol son obligatorios para editar.', 'error');
+  saveRol(): void {
+    if (this.rolForm.invalid) {
+      this.rolForm.markAllAsTouched();
       return;
     }
 
-    this.rolService.update(this.editingRol.identifier, this.editingRol).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Rol actualizado correctamente.', 'success');
+    const formValue = this.rolForm.value;
+    const request = this.isEditing 
+      ? this.rolService.update(formValue.identifier, formValue)
+      : this.rolService.add(formValue);
+
+    request.subscribe({
+      next: () => {
+        const message = this.isEditing ? 'Rol actualizado' : 'Rol añadido';
+        Swal.fire('¡Éxito!', `${message} correctamente.`, 'success');
         this.loadRoles();
         this.dismiss();
-      } else {
-        Swal.fire('Error', 'Rol no encontrado para actualizar.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'Ocurrió un error inesperado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -141,11 +138,11 @@ export class RolesComponent implements OnInit {
   confirmDeleteRol(rol: RolDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `¡No podrás revertir esto! Eliminarás el rol: ${rol.descripcion}`,
+      text: `Vas a eliminar el rol: ${rol.descripcion}. ¡Esta acción no se puede deshacer!`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -156,15 +153,14 @@ export class RolesComponent implements OnInit {
   }
 
   private deleteRol(identifier: string): void {
-    this.rolService.delete(identifier).subscribe(success => {
-      if (success) {
+    this.rolService.delete(identifier).subscribe({
+      next: () => {
         Swal.fire('¡Eliminado!', 'El rol ha sido eliminado.', 'success');
-        if (this.pagedRoles?.content.length === 1 && this.currentPage > 1) {
-          this.currentPage--;
-        }
         this.loadRoles();
-      } else {
-        Swal.fire('Error', 'No se pudo encontrar el rol para eliminar.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'No se pudo eliminar el rol.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -172,4 +168,4 @@ export class RolesComponent implements OnInit {
   dismiss(): void {
     this.modalService.dismissAll();
   }
-} 
+}

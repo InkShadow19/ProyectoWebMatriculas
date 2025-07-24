@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription,throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { RolDomainService } from '../domains/rol-domain.service';
 import { RolDto } from '../models/rol.model';
@@ -25,18 +25,18 @@ export class RolService implements OnDestroy {
         );
     }
 
-    add(body: Partial<RolDto>): Observable<RolDto | undefined> {
+    add(body: Partial<RolDto>): Observable<RolDto> {
         this.isLoadingSubject.next(true);
         return this.rolDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<RolDto>): Observable<RolDto | undefined> {
+    update(identifier: string, body: Partial<RolDto>): Observable<RolDto> {
         this.isLoadingSubject.next(true);
         return this.rolDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -45,8 +45,7 @@ export class RolService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.rolDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
-            finalize(() => this.isLoadingSubject.next(false))
+            catchError(err => throwError(() => err))
         );
     }
 

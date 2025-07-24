@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription, throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { ConceptoPagoDomainService } from '../domains/concepto-pago-domain.service';
 import { ConceptoPagoDto } from '../models/concepto-pago.model';
@@ -34,18 +34,18 @@ export class ConceptoPagoService implements OnDestroy {
         );
     }
 
-    add(body: Partial<ConceptoPagoDto>): Observable<ConceptoPagoDto | undefined> {
+    add(body: Partial<ConceptoPagoDto>): Observable<ConceptoPagoDto> {
         this.isLoadingSubject.next(true);
         return this.conceptoPagoDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<ConceptoPagoDto>): Observable<ConceptoPagoDto | undefined> {
+    update(identifier: string, body: Partial<ConceptoPagoDto>): Observable<ConceptoPagoDto> {
         this.isLoadingSubject.next(true);
         return this.conceptoPagoDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }

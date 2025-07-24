@@ -52,10 +52,10 @@
             <td class="text-end">{{ concepto.montoSugerido | currency:'S/ ' }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': concepto.estado === EstadoReference.ACTIVO,
-                  'badge-light-danger': concepto.estado === EstadoReference.INACTIVO,
-                  'badge-secondary': concepto.estado === EstadoReference.UNDEFINED
-                }">
+                'badge-light-success': concepto.estado === EstadoReference.ACTIVO,
+                'badge-light-danger': concepto.estado === EstadoReference.INACTIVO,
+                'badge-secondary': concepto.estado === EstadoReference.UNDEFINED
+              }">
                 {{ concepto.estado.replace('_', ' ') }}
               </div>
             </td>
@@ -123,87 +123,73 @@
   </div>
 </div>
 
-<ng-template #addConceptoModal>
+<ng-template #conceptoModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Concepto de Pago</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Añadir Nuevo' }} Concepto de Pago</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="conceptoForm">
         <div class="mb-5">
           <label for="conceptoCodigo" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="conceptoCodigo"
-            placeholder="Ingrese el código del concepto" [(ngModel)]="newConcepto.codigo" name="newConceptoCodigo" />
+          <input type="text" class="form-control"
+            [ngClass]="{ 'is-invalid': conceptoForm.controls['codigo'].invalid && conceptoForm.controls['codigo'].touched }"
+            id="conceptoCodigo" placeholder="Ingrese el código del concepto" formControlName="codigo" />
+          <div *ngIf="conceptoForm.controls['codigo'].invalid && conceptoForm.controls['codigo'].touched"
+            class="invalid-feedback">
+            <div *ngIf="conceptoForm.controls['codigo'].errors?.['required']">El código es requerido.</div>
+            <div *ngIf="conceptoForm.controls['codigo'].errors?.['minlength']">El código debe tener al menos 3
+              caracteres.</div>
+            <div *ngIf="conceptoForm.controls['codigo'].errors?.['maxlength']">El código no debe exceder los 30
+              caracteres.</div>
+          </div>
         </div>
         <div class="mb-5">
           <label for="conceptoDescripcion" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="conceptoDescripcion"
-            placeholder="Ingrese la descripción del concepto" [(ngModel)]="newConcepto.descripcion"
-            name="newConceptoDescripcion" />
+          <input type="text" class="form-control"
+            [ngClass]="{ 'is-invalid': conceptoForm.controls['descripcion'].invalid && conceptoForm.controls['descripcion'].touched }"
+            id="conceptoDescripcion" placeholder="Ingrese la descripción del concepto" formControlName="descripcion" />
+          <div *ngIf="conceptoForm.controls['descripcion'].invalid && conceptoForm.controls['descripcion'].touched"
+            class="invalid-feedback">
+            <div *ngIf="conceptoForm.controls['descripcion'].errors?.['required']">La descripción es requerida.</div>
+            <div *ngIf="conceptoForm.controls['descripcion'].errors?.['minlength']">La descripción debe tener al menos 5
+              caracteres.</div>
+            <div *ngIf="conceptoForm.controls['descripcion'].errors?.['maxlength']">La descripción no debe exceder los
+              150 caracteres.</div>
+          </div>
         </div>
         <div class="mb-5">
           <label for="conceptoSugerido" class="form-label required">Monto Sugerido:</label>
-          <input type="number" class="form-control form-control-solid" id="conceptoSugerido"
-            placeholder="Ingrese el monto sugerido" [(ngModel)]="newConcepto.montoSugerido" name="newConceptoSugerido"
-            step="0.01" />
+          <input type="number" class="form-control"
+            [ngClass]="{ 'is-invalid': conceptoForm.controls['montoSugerido'].invalid && conceptoForm.controls['montoSugerido'].touched }"
+            id="conceptoSugerido" placeholder="Ingrese el monto sugerido" formControlName="montoSugerido" step="0.01" />
+          <div *ngIf="conceptoForm.controls['montoSugerido'].invalid && conceptoForm.controls['montoSugerido'].touched"
+            class="invalid-feedback">
+            <div *ngIf="conceptoForm.controls['montoSugerido'].errors?.['required']">El monto es requerido.</div>
+            <div *ngIf="conceptoForm.controls['montoSugerido'].errors?.['min']">El monto no puede ser negativo.</div>
+          </div>
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="newConcepto.estado" name="newConceptoEstado">
+          <select class="form-select"
+            [ngClass]="{ 'is-invalid': conceptoForm.controls['estado'].invalid && conceptoForm.controls['estado'].touched }"
+            formControlName="estado">
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
+          <div *ngIf="conceptoForm.controls['estado'].invalid && conceptoForm.controls['estado'].touched"
+            class="invalid-feedback">
+            <div *ngIf="conceptoForm.controls['estado'].errors?.['required']">El estado es requerido.</div>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveConcepto()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editConceptoModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Concepto de Pago</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingConcepto">
-        <div class="mb-5">
-          <label for="editConceptoCodigo" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="editConceptoCodigo"
-            placeholder="Ingrese el código del concepto" [(ngModel)]="editingConcepto.codigo"
-            name="editConceptoCodigo" />
-        </div>
-        <div class="mb-5">
-          <label for="editConceptoDescripcion" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="editConceptoDescripcion"
-            placeholder="Ingrese la descripción del concepto" [(ngModel)]="editingConcepto.descripcion"
-            name="editConceptoDescripcion" />
-        </div>
-        <div class="mb-5">
-          <label for="editConceptoSugerido" class="form-label required">Monto Sugerido:</label>
-          <input type="number" class="form-control form-control-solid" id="editConceptoSugerido"
-            placeholder="Ingrese el monto sugerido" [(ngModel)]="editingConcepto.montoSugerido"
-            name="editConceptoSugerido" step="0.01" />
-        </div>
-        <div class="mb-5">
-          <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingConcepto.estado" name="editConceptoEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateConcepto()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveConcepto()"
+        [disabled]="conceptoForm.invalid">Guardar</button>
     </div>
   </div>
 </ng-template>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConceptoPagoDto } from 'src/app/models/concepto-pago.model';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -18,21 +18,21 @@ import { AuthService } from 'src/app/modules/auth';
     CommonModule,
     SharedModule,
     FormsModule,
+    ReactiveFormsModule,
     NgbDropdownModule
   ],
   templateUrl: './conceptos-pago.component.html',
   styleUrl: './conceptos-pago.component.scss'
 })
 export class ConceptosPagoComponent implements OnInit {
-  @ViewChild('addConceptoModal') addConceptoModal: TemplateRef<any>;
-  @ViewChild('editConceptoModal') editConceptoModal: TemplateRef<any>;
+  @ViewChild('conceptoModal') conceptoModal: TemplateRef<any>;
 
   EstadoReference = EstadoReference;
   estadoKeys = Object.values(EstadoReference);
-
-  newConcepto: Partial<ConceptoPagoDto> = {};
-  editingConcepto: ConceptoPagoDto | null = null;
-
+  
+  conceptoForm: FormGroup;
+  isEditing = false;
+  
   pagedConceptos: PageResponse<ConceptoPagoDto> | undefined;
   filtroBusqueda: string = '';
   filtroEstado: EstadoReference | '' = '';
@@ -42,10 +42,13 @@ export class ConceptosPagoComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
     private conceptoPagoService: ConceptoPagoService,
     private authService: AuthService,
     private router: Router
-  ) { }
+  ) {
+    this.conceptoForm = this.initForm();
+  }
 
   ngOnInit(): void {
     this.loadConceptos();
@@ -53,6 +56,16 @@ export class ConceptosPagoComponent implements OnInit {
       this.router.navigate(['/access-denied']);
       return;
     }
+  }
+
+  initForm(): FormGroup {
+    return this.fb.group({
+      identifier: [null],
+      codigo: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30)]],
+      descripcion: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(150)]],
+      montoSugerido: [null, [Validators.required, Validators.min(0)]],
+      estado: [EstadoReference.ACTIVO, Validators.required]
+    });
   }
 
   loadConceptos(): void {
@@ -90,45 +103,38 @@ export class ConceptosPagoComponent implements OnInit {
   }
 
   openAddConceptoModal() {
-    this.newConcepto = {
-      estado: EstadoReference.ACTIVO,
-      montoSugerido: 0.00,
-    };
-    this.modalService.open(this.addConceptoModal, { centered: true, size: 'lg' });
-  }
-
-  saveConcepto() {
-    if (!this.newConcepto.codigo || !this.newConcepto.descripcion || this.newConcepto.montoSugerido === null) {
-      Swal.fire('Error', 'Los campos Código, Descripción y Monto son obligatorios.', 'error');
-      return;
-    }
-
-    this.conceptoPagoService.add(this.newConcepto).subscribe(conceptoAgregado => {
-      if (conceptoAgregado) {
-        Swal.fire('¡Éxito!', 'Concepto de pago añadido correctamente.', 'success');
-        this.loadConceptos();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el concepto de pago.', 'error');
-      }
-    });
+    this.isEditing = false;
+    this.conceptoForm.reset({ estado: EstadoReference.ACTIVO, montoSugerido: 0.00 });
+    this.modalService.open(this.conceptoModal, { centered: true, size: 'lg' });
   }
 
   openEditConceptoModal(concepto: ConceptoPagoDto) {
-    this.editingConcepto = { ...concepto };
-    this.modalService.open(this.editConceptoModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.conceptoForm.patchValue(concepto);
+    this.modalService.open(this.conceptoModal, { centered: true, size: 'lg' });
   }
 
-  updateConcepto() {
-    if (!this.editingConcepto || !this.editingConcepto.identifier) return;
+  saveConcepto() {
+    if (this.conceptoForm.invalid) {
+      this.conceptoForm.markAllAsTouched();
+      return;
+    }
 
-    this.conceptoPagoService.update(this.editingConcepto.identifier, this.editingConcepto).subscribe(conceptoActualizado => {
-      if (conceptoActualizado) {
-        Swal.fire('¡Éxito!', 'Concepto de pago actualizado correctamente.', 'success');
+    const formValue = this.conceptoForm.value;
+    const request = this.isEditing
+      ? this.conceptoPagoService.update(formValue.identifier, formValue)
+      : this.conceptoPagoService.add(formValue);
+
+    request.subscribe({
+      next: () => {
+        const message = this.isEditing ? 'Concepto de pago actualizado' : 'Concepto de pago añadido';
+        Swal.fire('¡Éxito!', `${message} correctamente.`, 'success');
         this.loadConceptos();
         this.dismiss();
-      } else {
-        Swal.fire('Error', 'Hubo un problema al actualizar el concepto.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'Ocurrió un error inesperado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }

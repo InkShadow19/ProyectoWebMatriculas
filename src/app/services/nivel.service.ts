@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription,throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { NivelDomainService } from '../domains/nivel-domain.service';
 import { NivelDto } from '../models/nivel.model';
@@ -25,18 +25,18 @@ export class NivelService implements OnDestroy {
         );
     }
 
-    add(body: Partial<NivelDto>): Observable<NivelDto | undefined> {
+    add(body: Partial<NivelDto>): Observable<NivelDto> {
         this.isLoadingSubject.next(true);
         return this.nivelDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<NivelDto>): Observable<NivelDto | undefined> {
+    update(identifier: string, body: Partial<NivelDto>): Observable<NivelDto> {
         this.isLoadingSubject.next(true);
         return this.nivelDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -45,8 +45,7 @@ export class NivelService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.nivelDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
-            finalize(() => this.isLoadingSubject.next(false))
+            catchError(err => throwError(() => err))
         );
     }
 

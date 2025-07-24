@@ -4,16 +4,13 @@
       <h3>Gestión de Roles</h3>
     </div>
     <div class="card-toolbar">
-      <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-success btn-sm" (click)="openAddRolModal()">
-          <app-keenicon name="plus" class="me-2"></app-keenicon>
-          Nuevo Rol
-        </button>
-      </div>
+      <button type="button" class="btn btn-success btn-sm" (click)="openAddRolModal()">
+        <app-keenicon name="plus" class="me-2"></app-keenicon> Nuevo Rol
+      </button>
     </div>
   </div>
+
   <div class="card-body py-4">
-    <!-- Filtros -->
     <div class="mb-10">
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
       <div class="row g-3">
@@ -30,12 +27,11 @@
           </select>
         </div>
         <div class="col-md-4 text-end d-flex align-items-end justify-content-end">
-          <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar Filtros</button>
+          <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar</button>
         </div>
       </div>
     </div>
 
-    <!-- Tabla de Datos -->
     <div class="table-responsive">
       <table class="table table-hover table-row-dashed align-middle fs-6 gy-5">
         <thead>
@@ -51,61 +47,28 @@
             <td class="text-center">
               <div class="badge" [ngClass]="{
                   'badge-light-success': rol.estado === EstadoReference.ACTIVO,
-                  'badge-light-danger': rol.estado === EstadoReference.INACTIVO,
-                  'badge-secondary': rol.estado === EstadoReference.UNDEFINED
+                  'badge-light-danger': rol.estado === EstadoReference.INACTIVO
                 }">
                 {{ rol.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditRolModal(rol)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteRol(rol)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div ngbDropdown class="d-md-none dropdown">
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm dropdown-toggle"
-                  ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditRolModal(rol)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteRol(rol)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+              <button class="btn btn-light-info btn-sm me-3" (click)="openEditRolModal(rol)">Editar</button>
+              <button class="btn btn-light-danger btn-sm" (click)="confirmDeleteRol(rol)">Eliminar</button>
             </td>
           </tr>
           <tr *ngIf="!pagedRoles || pagedRoles.content.length === 0">
-            <td colspan="3" class="text-center text-muted py-5">
-              No se encontraron registros.
-            </td>
+            <td colspan="3" class="text-center text-muted py-5">No se encontraron registros.</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Paginación -->
     <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedRoles && pagedRoles.totalElements > 0">
       <div class="fs-6 fw-semibold text-gray-700">
-        Mostrando
-        <span class="fw-bold">{{ pagedRoles.number * pagedRoles.size + 1 }}</span>
-        a
-        <span class="fw-bold">{{ pagedRoles.number * pagedRoles.size + pagedRoles.content.length }}</span>
-        de <span class="fw-bold">{{ pagedRoles.totalElements }}</span> registros
+        Mostrando {{ pagedRoles.number * pagedRoles.size + 1 }} a {{ pagedRoles.number * pagedRoles.size +
+        pagedRoles.content.length }} de {{ pagedRoles.totalElements }} registros
       </div>
-
       <ul class="pagination">
         <li class="page-item previous" [class.disabled]="pagedRoles.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
@@ -122,66 +85,46 @@
   </div>
 </div>
 
-<!-- Modales -->
-<ng-template #addRolModal>
+<ng-template #rolModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Rol</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Añadir Nuevo' }} Rol</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="rolForm">
         <div class="mb-5">
-          <label for="rolDescripcion" class="form-label required">Descripción del Rol:</label>
-          <input type="text" class="form-control form-control-solid" id="rolDescripcion"
-            placeholder="Ingrese la descripción del rol" [(ngModel)]="newRol.descripcion" name="newRolDescripcion" />
+          <label class="form-label required">Descripción del Rol:</label>
+          <input type="text" class="form-control"
+            [ngClass]="{ 'is-invalid': rolForm.controls['descripcion'].invalid && rolForm.controls['descripcion'].touched }"
+            placeholder="Ingrese la descripción" formControlName="descripcion" />
+          <div *ngIf="rolForm.controls['descripcion'].invalid && rolForm.controls['descripcion'].touched"
+            class="invalid-feedback">
+            <div *ngIf="rolForm.controls['descripcion'].errors?.['required']">La descripción es requerida.</div>
+            <div *ngIf="rolForm.controls['descripcion'].errors?.['minlength']">Debe tener al menos 3 caracteres.</div>
+            <div *ngIf="rolForm.controls['descripcion'].errors?.['maxlength']">No debe exceder los 50 caracteres.</div>
+            <div *ngIf="rolForm.controls['descripcion'].errors?.['pattern']">Solo se permiten letras y espacios.</div>
+          </div>
         </div>
         <div class="mb-5">
-          <label for="newRolEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="newRolEstado" [(ngModel)]="newRol.estado"
-            name="newRolEstado">
+          <label class="form-label required">Estado:</label>
+          <select class="form-select"
+            [ngClass]="{ 'is-invalid': rolForm.controls['estado'].invalid && rolForm.controls['estado'].touched }"
+            formControlName="estado">
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
+          <div *ngIf="rolForm.controls['estado'].invalid && rolForm.controls['estado'].touched"
+            class="invalid-feedback">
+            <div *ngIf="rolForm.controls['estado'].errors?.['required']">El estado es requerido.</div>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveRol()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editRolModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Rol</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingRol">
-        <div class="mb-5">
-          <label for="editRolDescripcion" class="form-label required">Descripción del Rol:</label>
-          <input type="text" class="form-control form-control-solid" id="editRolDescripcion"
-            placeholder="Ingrese la descripción del rol" [(ngModel)]="editingRol.descripcion"
-            name="editRolDescripcion" />
-        </div>
-        <div class="mb-5">
-          <label for="editRolEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="editRolEstado" [(ngModel)]="editingRol.estado"
-            name="editRolEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateRol()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveRol()" [disabled]="rolForm.invalid">Guardar</button>
     </div>
   </div>
 </ng-template>

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { GradoDto } from 'src/app/models/grado.model';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -16,17 +16,19 @@ import { AuthService } from 'src/app/modules/auth';
 @Component({
   selector: 'app-grados',
   standalone: true,
-  imports: [CommonModule, SharedModule, FormsModule, NgbDropdownModule],
+  imports: [CommonModule, SharedModule, FormsModule, ReactiveFormsModule, NgbDropdownModule],
   templateUrl: './grados.component.html',
   styleUrls: ['./grados.component.scss'],
 })
 export class GradosComponent implements OnInit {
-  @ViewChild('addGradoModal') addGradoModal: TemplateRef<any>;
-  @ViewChild('editGradoModal') editGradoModal: TemplateRef<any>;
+  @ViewChild('gradoModal') gradoModal: TemplateRef<any>;
 
   EstadoReference = EstadoReference;
   estadoKeys: string[];
   nivelesDisponibles: NivelDto[] = [];
+  
+  gradoForm: FormGroup;
+  isEditing = false;
 
   pagedGrados: PageResponse<GradoDto> | undefined;
   filtroBusqueda: string = '';
@@ -35,30 +37,37 @@ export class GradosComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 5;
 
-  newGrado: Partial<GradoDto> = {};
-  editingGrado: GradoDto | null = null;
-
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
     private gradoService: GradoService,
     private nivelService: NivelService,
     private authService: AuthService,
     private router: Router
   ) {
-    this.estadoKeys = Object.values(EstadoReference);
+    this.estadoKeys = Object.values(EstadoReference).filter(e => e !== EstadoReference.UNDEFINED);
+    this.gradoForm = this.initForm();
   }
 
   ngOnInit(): void {
     this.loadNiveles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
-      return;
     }
   }
 
+  initForm(): FormGroup {
+    return this.fb.group({
+      identifier: [null],
+      descripcion: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      nivel: ['', Validators.required],
+      estado: [EstadoReference.ACTIVO, Validators.required],
+    });
+  }
+
   loadNiveles(): void {
-    this.nivelService.getList(0, 100).subscribe(response => {
+    this.nivelService.getList(0, 100, undefined, EstadoReference.ACTIVO).subscribe(response => {
       this.nivelesDisponibles = response?.content || [];
       this.loadGrados();
     });
@@ -101,51 +110,40 @@ export class GradosComponent implements OnInit {
     return nivel ? nivel.descripcion : 'N/A';
   }
 
-  // --- Métodos CRUD ---
   openAddGradoModal(): void {
-    this.newGrado = {
-      descripcion: '',
-      nivel: '',
-      estado: EstadoReference.ACTIVO,
-    };
-    this.modalService.open(this.addGradoModal, { centered: true, size: 'lg' });
-  }
-
-  saveGrado(): void {
-    if (!this.newGrado.descripcion || !this.newGrado.nivel || !this.newGrado.estado) {
-      Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
-      return;
-    }
-    this.gradoService.add(this.newGrado).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Grado añadido correctamente.', 'success');
-        this.loadGrados();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el grado.', 'error');
-      }
-    });
+    this.isEditing = false;
+    this.gradoForm.reset({ nivel: '', estado: EstadoReference.ACTIVO });
+    this.modalService.open(this.gradoModal, { centered: true, size: 'lg' });
   }
 
   openEditGradoModal(grado: GradoDto): void {
-    this.editingGrado = { ...grado };
-    this.modalService.open(this.editGradoModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.gradoForm.patchValue(grado);
+    this.gradoForm.controls['nivel'].disable(); // No se puede cambiar el nivel de un grado
+    this.modalService.open(this.gradoModal, { centered: true, size: 'lg' });
   }
 
-  updateGrado(): void {
-    if (!this.editingGrado || !this.editingGrado.identifier) return;
-
-    if (!this.editingGrado.descripcion || !this.editingGrado.nivel || !this.editingGrado.estado) {
-      Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
+  saveGrado(): void {
+    if (this.gradoForm.invalid) {
+      this.gradoForm.markAllAsTouched();
       return;
     }
-    this.gradoService.update(this.editingGrado.identifier, this.editingGrado).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Grado actualizado correctamente.', 'success');
+
+    const formValue = this.gradoForm.getRawValue(); // Usar getRawValue para incluir campos deshabilitados
+    const request = this.isEditing 
+      ? this.gradoService.update(formValue.identifier, formValue)
+      : this.gradoService.add(formValue);
+
+    request.subscribe({
+      next: () => {
+        const message = this.isEditing ? 'Grado actualizado' : 'Grado añadido';
+        Swal.fire('¡Éxito!', `${message} correctamente.`, 'success');
         this.loadGrados();
         this.dismiss();
-      } else {
-        Swal.fire('Error', 'Grado no encontrado.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'Ocurrió un error inesperado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
@@ -153,11 +151,11 @@ export class GradosComponent implements OnInit {
   confirmDeleteGrado(grado: GradoDto): void {
     Swal.fire({
       title: '¿Estás seguro?',
-      text: `¡No podrás revertir esto! Eliminarás el grado: ${grado.descripcion}`,
+      text: `Vas a eliminar el grado: ${grado.descripcion}. ¡No podrás revertir esto!`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Sí, ¡eliminar!',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -168,20 +166,20 @@ export class GradosComponent implements OnInit {
   }
 
   private deleteGrado(identifier: string): void {
-    this.gradoService.delete(identifier).subscribe(success => {
-      if (success) {
+    this.gradoService.delete(identifier).subscribe({
+      next: () => {
         Swal.fire('¡Eliminado!', 'El grado ha sido eliminado.', 'success');
-        if (this.pagedGrados?.content.length === 1 && this.currentPage > 1) {
-          this.currentPage--;
-        }
         this.loadGrados();
-      } else {
-        Swal.fire('Error', 'No se pudo encontrar el grado para eliminar.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'No se pudo eliminar el grado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
 
   dismiss(): void {
     this.modalService.dismissAll();
+    this.gradoForm.controls['nivel'].enable(); // Habilitar de nuevo por si se vuelve a abrir
   }
 }

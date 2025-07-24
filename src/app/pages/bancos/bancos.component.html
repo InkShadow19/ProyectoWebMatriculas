@@ -49,10 +49,10 @@
             <td>{{ banco.descripcion }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': banco.estado === EstadoReference.ACTIVO,
-                  'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
-                  'badge-secondary': banco.estado === EstadoReference.UNDEFINED
-                }">
+                    'badge-light-success': banco.estado === EstadoReference.ACTIVO,
+                    'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
+                    'badge-secondary': banco.estado === EstadoReference.UNDEFINED
+                  }">
                 {{ banco.estado.replace('_', ' ') }}
               </div>
             </td>
@@ -120,74 +120,61 @@
   </div>
 </div>
 
-<ng-template #addBankModal>
+<ng-template #bankModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Banco</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Añadir Nuevo' }} Banco</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="bancoForm">
         <div class="mb-5">
           <label for="bankCode" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="bankCode"
-            placeholder="Ingrese el código del banco" [(ngModel)]="newBank.codigo" name="newBankCodigo" />
+          <input type="text" class="form-control"
+            [ngClass]="{ 'is-invalid': bancoForm.controls['codigo'].invalid && bancoForm.controls['codigo'].touched }"
+            id="bankCode" placeholder="Ingrese el código del banco" formControlName="codigo" />
+          <div *ngIf="bancoForm.controls['codigo'].invalid && bancoForm.controls['codigo'].touched"
+            class="invalid-feedback">
+            <div *ngIf="bancoForm.controls['codigo'].errors?.['required']">El código es requerido.</div>
+            <div *ngIf="bancoForm.controls['codigo'].errors?.['minlength']">El código debe tener al menos 2 caracteres.
+            </div>
+            <div *ngIf="bancoForm.controls['codigo'].errors?.['maxlength']">El código no debe exceder los 15 caracteres.
+            </div>
+          </div>
         </div>
         <div class="mb-5">
           <label for="bankDescription" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="bankDescription"
-            placeholder="Ingrese la descripción del banco" [(ngModel)]="newBank.descripcion"
-            name="newBankDescripcion" />
+          <input type="text" class="form-control"
+            [ngClass]="{ 'is-invalid': bancoForm.controls['descripcion'].invalid && bancoForm.controls['descripcion'].touched }"
+            id="bankDescription" placeholder="Ingrese la descripción del banco" formControlName="descripcion" />
+          <div *ngIf="bancoForm.controls['descripcion'].invalid && bancoForm.controls['descripcion'].touched"
+            class="invalid-feedback">
+            <div *ngIf="bancoForm.controls['descripcion'].errors?.['required']">La descripción es requerida.</div>
+            <div *ngIf="bancoForm.controls['descripcion'].errors?.['minlength']">La descripción debe tener al menos 3
+              caracteres.</div>
+            <div *ngIf="bancoForm.controls['descripcion'].errors?.['maxlength']">La descripción no debe exceder los 150
+              caracteres.</div>
+          </div>
         </div>
         <div class="mb-5">
           <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="newBank.estado" name="newBankEstado">
+          <select class="form-select"
+            [ngClass]="{ 'is-invalid': bancoForm.controls['estado'].invalid && bancoForm.controls['estado'].touched }"
+            formControlName="estado">
             <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
+          <div *ngIf="bancoForm.controls['estado'].invalid && bancoForm.controls['estado'].touched"
+            class="invalid-feedback">
+            <div *ngIf="bancoForm.controls['estado'].errors?.['required']">El estado es requerido.</div>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveBank()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editBankModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Banco</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingBank">
-        <div class="mb-5">
-          <label for="editBankCode" class="form-label required">Código:</label>
-          <input type="text" class="form-control form-control-solid" id="editBankCode"
-            placeholder="Ingrese el código del banco" [(ngModel)]="editingBank.codigo" name="editBankCodigo" />
-        </div>
-        <div class="mb-5">
-          <label for="editBankDescription" class="form-label required">Descripción:</label>
-          <input type="text" class="form-control form-control-solid" id="editBankDescription"
-            placeholder="Ingrese la descripción del banco" [(ngModel)]="editingBank.descripcion"
-            name="editBankDescripcion" />
-        </div>
-        <div class="mb-5">
-          <label class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" [(ngModel)]="editingBank.estado" name="editBankEstado">
-            <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateBank()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveBank()" [disabled]="bancoForm.invalid">Guardar</button>
     </div>
   </div>
 </ng-template>

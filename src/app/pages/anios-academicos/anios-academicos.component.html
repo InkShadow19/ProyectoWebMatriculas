@@ -4,21 +4,20 @@
       <h3>Gestión de Años Académicos</h3>
     </div>
     <div class="card-toolbar">
-      <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-success btn-sm" (click)="openAddAnioAcademicoModal()">
-          <app-keenicon name="plus" class="me-2"></app-keenicon>
-          Nuevo Año Académico
-        </button>
-      </div>
+      <button type="button" class="btn btn-success btn-sm" (click)="openAddAnioAcademicoModal()">
+        <app-keenicon name="plus" class="me-2"></app-keenicon>
+        Nuevo Año Académico
+      </button>
     </div>
   </div>
+
   <div class="card-body py-4">
     <div class="mb-10">
       <h4 class="text-muted fw-bold mb-8">Filtros</h4>
       <div class="row g-3">
         <div class="col-md-4">
           <label class="form-label fw-bold">Buscar por Año:</label>
-          <input type="number" class="form-control form-control-solid" placeholder="Ej: 2024"
+          <input type="number" class="form-control form-control-solid" placeholder="Ej: 2025"
             [(ngModel)]="filtroBusqueda" (input)="onFilterChange()" />
         </div>
         <div class="col-md-4">
@@ -48,40 +47,22 @@
             <td>{{ anio.anio }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                    'badge-light-success': anio.estadoAcademico === EstadoAcademicoReference.ACTIVO,
-                    'badge-light-warning': anio.estadoAcademico === EstadoAcademicoReference.FUTURO,
-                    'badge-secondary': anio.estadoAcademico === EstadoAcademicoReference.CERRADO
-                  }">
+                  'badge-light-success': anio.estadoAcademico === EstadoAcademicoReference.ACTIVO,
+                  'badge-light-warning': anio.estadoAcademico === EstadoAcademicoReference.FUTURO,
+                  'badge-secondary': anio.estadoAcademico === EstadoAcademicoReference.CERRADO
+                }">
                 {{ anio.estadoAcademico.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditAnioAcademicoModal(anio)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteAnioAcademico(anio)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditAnioAcademicoModal(anio)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteAnioAcademico(anio)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
+              <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditAnioAcademicoModal(anio)">
+                <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                Editar
+              </button>
+              <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteAnioAcademico(anio)">
+                <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                Eliminar
+              </button>
             </td>
           </tr>
           <tr *ngIf="!pagedAniosAcademicos || pagedAniosAcademicos.content.length === 0">
@@ -96,14 +77,10 @@
     <div class="d-flex flex-stack flex-wrap pt-10"
       *ngIf="pagedAniosAcademicos && pagedAniosAcademicos.totalElements > 0">
       <div class="fs-6 fw-semibold text-gray-700">
-        Mostrando
-        <span class="fw-bold">{{ pagedAniosAcademicos.number * pagedAniosAcademicos.size + 1 }}</span>
-        a
-        <span class="fw-bold">{{ pagedAniosAcademicos.number * pagedAniosAcademicos.size +
-          pagedAniosAcademicos.content.length }}</span>
-        de <span class="fw-bold">{{ pagedAniosAcademicos.totalElements }}</span> registros
+        Mostrando {{ pagedAniosAcademicos.number * pagedAniosAcademicos.size + 1 }} a {{ pagedAniosAcademicos.number *
+        pagedAniosAcademicos.size + pagedAniosAcademicos.content.length }} de {{ pagedAniosAcademicos.totalElements }}
+        registros
       </div>
-
       <ul class="pagination">
         <li class="page-item previous" [class.disabled]="pagedAniosAcademicos.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
@@ -120,64 +97,46 @@
   </div>
 </div>
 
-<ng-template #addAnioAcademicoModal>
+<ng-template #anioAcademicoModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Año Académico</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Añadir Nuevo' }} Año Académico</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="anioForm">
         <div class="mb-5">
           <label for="anio" class="form-label required">Año:</label>
-          <input type="number" class="form-control form-control-solid" id="anio" placeholder="Ingrese el año académico"
-            [(ngModel)]="newAnioAcademico.anio" name="newAnio" />
+          <input type="number" class="form-control"
+            [ngClass]="{ 'is-invalid': anioForm.controls['anio'].invalid && anioForm.controls['anio'].touched }"
+            id="anio" placeholder="Ingrese el año" formControlName="anio" />
+          <div *ngIf="anioForm.controls['anio'].invalid && anioForm.controls['anio'].touched" class="invalid-feedback">
+            <div *ngIf="anioForm.controls['anio'].errors?.['required']">El año es requerido.</div>
+            <div *ngIf="anioForm.controls['anio'].errors?.['pattern']">El año debe ser un número de 4 dígitos.</div>
+            <div *ngIf="anioForm.controls['anio'].errors?.['anioFueraDeRango']">El año no puede ser superior a 4 años
+              desde el actual.</div>
+          </div>
         </div>
         <div class="mb-15">
           <label for="estado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="estado" [(ngModel)]="newAnioAcademico.estadoAcademico"
-            name="newAnioEstado">
+          <select class="form-select"
+            [ngClass]="{ 'is-invalid': anioForm.controls['estadoAcademico'].invalid && anioForm.controls['estadoAcademico'].touched }"
+            id="estado" formControlName="estadoAcademico">
             <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
           </select>
+          <div *ngIf="anioForm.controls['estadoAcademico'].invalid && anioForm.controls['estadoAcademico'].touched"
+            class="invalid-feedback">
+            <div *ngIf="anioForm.controls['estadoAcademico'].errors?.['required']">El estado es requerido.</div>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveAnioAcademico()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editAnioAcademicoModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Año Académico</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingAnioAcademico">
-        <div class="mb-5">
-          <label for="editAnio" class="form-label required">Año:</label>
-          <input type="number" class="form-control form-control-solid" id="editAnio"
-            placeholder="Ingrese el año académico" [(ngModel)]="editingAnioAcademico.anio" name="editAnio" />
-        </div>
-        <div class="mb-15">
-          <label for="editEstado" class="form-label required">Estado:</label>
-          <select class="form-select form-select-solid" id="editEstado"
-            [(ngModel)]="editingAnioAcademico.estadoAcademico" name="editAnioEstado">
-            <option *ngFor="let estado of estadoAcademicoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-          </select>
-        </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="updateAnioAcademico()">Guardar Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveAnioAcademico()"
+        [disabled]="anioForm.invalid">Guardar</button>
     </div>
   </div>
 </ng-template>

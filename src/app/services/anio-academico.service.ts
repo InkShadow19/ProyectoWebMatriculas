@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription,throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { AnioAcademicoDomainService } from '../domains/anio-academico-domain.service';
 import { AnioAcademicoDto } from "../models/anio-academico.model";
@@ -25,26 +25,18 @@ export class AnioAcademicoService implements OnDestroy {
         );
     }
 
-    get(identifier: string): Observable<AnioAcademicoDto | undefined> {
-        this.isLoadingSubject.next(true);
-        return this.anioAcademicoDomainService.get(identifier).pipe(
-            catchError(() => of(undefined)),
-            finalize(() => this.isLoadingSubject.next(false))
-        );
-    }
-
-    add(body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto | undefined> {
+    add(body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto> {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.add(body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)), // <-- Cambio crucial aquí
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
 
-    update(identifier: string, body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto | undefined> {
+    update(identifier: string, body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto> {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
+            catchError(err => throwError(() => err)), // <-- Cambio crucial aquí
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -53,8 +45,7 @@ export class AnioAcademicoService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
-            finalize(() => this.isLoadingSubject.next(false))
+            catchError(err => throwError(() => err)) // <-- También es buena práctica aquí
         );
     }
 

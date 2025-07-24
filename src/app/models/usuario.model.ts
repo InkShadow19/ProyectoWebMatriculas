@@ -5,7 +5,7 @@ import { PagoDto } from "./pago.model";
 export interface UsuarioDto {
   identifier: string;
   usuario: string;
-  contrasena?: string; // La contraseña no debería viajar del back al front
+  contrasena?: string;
   nombres: string;
   apellidos: string;
   fechaNacimiento?: string;

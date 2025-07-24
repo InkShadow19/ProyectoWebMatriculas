@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BancoDto } from 'src/app/models/banco.model';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -18,21 +18,21 @@ import { AuthService } from 'src/app/modules/auth';
     CommonModule,
     SharedModule,
     FormsModule,
+    ReactiveFormsModule,
     NgbDropdownModule,
   ],
   templateUrl: './bancos.component.html',
   styleUrls: ['./bancos.component.scss']
 })
 export class BancosComponent implements OnInit {
-  @ViewChild('addBankModal') addBankModal: TemplateRef<any>;
-  @ViewChild('editBankModal') editBankModal: TemplateRef<any>;
+  @ViewChild('bankModal') bankModal: TemplateRef<any>;
 
   EstadoReference = EstadoReference;
   estadoKeys: string[];
-
-  newBank: Partial<BancoDto> = {};
-  editingBank: BancoDto | null = null;
-
+  
+  bancoForm: FormGroup;
+  isEditing = false;
+  
   pagedBancos: PageResponse<BancoDto> | undefined;
   filtroBusqueda: string = '';
   filtroEstado: string = '';
@@ -42,11 +42,13 @@ export class BancosComponent implements OnInit {
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
+    private fb: FormBuilder,
     private bancoService: BancoService,
     private authService: AuthService,
     private router: Router
   ) {
     this.estadoKeys = Object.values(EstadoReference);
+    this.bancoForm = this.initForm();
   }
 
   ngOnInit(): void {
@@ -56,10 +58,18 @@ export class BancosComponent implements OnInit {
       return;
     }
   }
+  
+  initForm(): FormGroup {
+    return this.fb.group({
+      identifier: [null],
+      codigo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(15)]],
+      descripcion: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+      estado: [EstadoReference.ACTIVO, Validators.required]
+    });
+  }
 
   loadBancos(): void {
     const page = this.currentPage - 1;
-    // La búsqueda se puede hacer por código o descripción, pasamos el mismo término a ambos
     this.bancoService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroBusqueda, this.filtroEstado)
       .subscribe(response => {
         this.pagedBancos = response;
@@ -89,51 +99,39 @@ export class BancosComponent implements OnInit {
     return Array(this.pagedBancos.totalPages).fill(0).map((x, i) => i + 1);
   }
 
-  // --- Métodos CRUD ---
   openAddBankModal(): void {
-    this.newBank = {
-      codigo: '',
-      descripcion: '',
-      estado: EstadoReference.ACTIVO,
-    };
-    this.modalService.open(this.addBankModal, { centered: true, size: 'lg' });
-  }
-
-  saveBank(): void {
-    if (!this.newBank.codigo || !this.newBank.descripcion || !this.newBank.estado) {
-      Swal.fire('Error', 'Código, descripción y estado son campos obligatorios.', 'error');
-      return;
-    }
-    this.bancoService.add(this.newBank).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Banco añadido correctamente.', 'success');
-        this.loadBancos();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el banco.', 'error');
-      }
-    });
+    this.isEditing = false;
+    this.bancoForm.reset({ estado: EstadoReference.ACTIVO });
+    this.modalService.open(this.bankModal, { centered: true, size: 'lg' });
   }
 
   openEditBankModal(banco: BancoDto): void {
-    this.editingBank = { ...banco };
-    this.modalService.open(this.editBankModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.bancoForm.patchValue(banco);
+    this.modalService.open(this.bankModal, { centered: true, size: 'lg' });
   }
 
-  updateBank(): void {
-    if (!this.editingBank || !this.editingBank.identifier) return;
-
-    if (!this.editingBank.codigo || !this.editingBank.descripcion || !this.editingBank.estado) {
-      Swal.fire('Error', 'Código, descripción y estado son campos obligatorios.', 'error');
+  saveBank(): void {
+    if (this.bancoForm.invalid) {
+      this.bancoForm.markAllAsTouched();
       return;
     }
-    this.bancoService.update(this.editingBank.identifier, this.editingBank).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Banco actualizado correctamente.', 'success');
+
+    const formValue = this.bancoForm.value;
+    const request = this.isEditing 
+      ? this.bancoService.update(formValue.identifier, formValue)
+      : this.bancoService.add(formValue);
+
+    request.subscribe({
+      next: () => {
+        const message = this.isEditing ? 'Banco actualizado' : 'Banco añadido';
+        Swal.fire('¡Éxito!', `${message} correctamente.`, 'success');
         this.loadBancos();
         this.dismiss();
-      } else {
-        Swal.fire('Error', 'Banco no encontrado para actualizar.', 'error');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.error || 'Ocurrió un error inesperado.';
+        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }

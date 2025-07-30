@@ -41,3 +41,18 @@
         transform: translateY(0);
     }
 }
+
+@media (min-width: 992px) {
+  .col-lg-4-3 { // He renombrado la clase para que sea más descriptiva
+    flex: 0 0 auto;
+    width: 11.111111%; // Esto es el equivalente a 4/3 columnas ( (4/3) / 12 )
+  }
+}
+
+// Estilo personalizado para campos de solo lectura
+.form-control-readonly {
+  background-color: #f5f8fa !important; // Un gris un poco más notorio
+  border-color: #e4e6ef !important;     // Un borde más claro
+  color: #7e8299;                       // Texto ligeramente atenuado
+  cursor: not-allowed;                  // Muestra el cursor de "no permitido" al pasar el mouse
+}

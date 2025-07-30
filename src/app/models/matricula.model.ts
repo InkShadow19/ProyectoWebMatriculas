@@ -16,4 +16,8 @@ export interface MatriculaDto {
   apoderado: string; // Identifier
   anioAcademico: string; // Identifier
   cronogramas: CronogramaPagoDto[];
+
+    // --- CAMPOS AÑADIDOS ---
+  descuentoMatricula?: number;
+  descuentoPension?: number;
 }

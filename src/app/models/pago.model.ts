@@ -13,4 +13,9 @@ export interface PagoDto {
   usuario: string; // Identifier
   banco?: string; // Identifier, opcional porque banco_id puede ser NULL
   detalles: PagoDetalleDto[];
+
+  // --- CAMPOS AÑADIDOS PARA SINCRONIZAR CON EL BACKEND ---
+  nombreEstudiante?: string;
+  nombreUsuario?: string;
+
 }

@@ -16,49 +16,40 @@
 
     <!--begin::Card body-->
     <div class="card-body py-4">
+        <!--begin::Filtros-->
         <div class="mb-10">
             <h4 class="text-muted fw-bold mb-8">Filtros</h4>
             <div class="row g-3">
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-bold">Desde:</label>
-                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaDesde"
-                        (change)="filtrarPagos()" />
-                </div>
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-bold">Hasta:</label>
-                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaHasta"
-                        (change)="filtrarPagos()" />
-                </div>
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-bold">Canal:</label>
+                <div class="col-lg-2 col-md-4"><label class="form-label fw-bold">Desde:</label><input type="date"
+                        class="form-control form-control-solid" [(ngModel)]="filtros.fechaDesde"
+                        (change)="filtrarPagos()" /></div>
+                <div class="col-lg-2 col-md-4"><label class="form-label fw-bold">Hasta:</label><input type="date"
+                        class="form-control form-control-solid" [(ngModel)]="filtros.fechaHasta"
+                        (change)="filtrarPagos()" /></div>
+                <div class="col-lg-2 col-md-4"><label class="form-label fw-bold">Canal:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtros.canal"
                         (ngModelChange)="filtrarPagos()">
                         <option value="">Todos</option>
-                        <option value="CAJA">Caja</option>
-                        <option value="BANCO">Banco</option>
+                        <option [ngValue]="CanalReference.CAJA">Caja</option>
+                        <option [ngValue]="CanalReference.BANCO">Banco</option>
                     </select>
                 </div>
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-bold">Estado:</label>
+                <div class="col-lg-2 col-md-4"><label class="form-label fw-bold">Estado:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtros.estado"
                         (ngModelChange)="filtrarPagos()">
                         <option value="">Todos</option>
-                        <option value="Confirmado">Confirmado</option>
-                        <option value="Anulado">Anulado</option>
+                        <option [ngValue]="EstadoPagoReference.CONFIRMADO">Confirmado</option>
+                        <option [ngValue]="EstadoPagoReference.ANULADO">Anulado</option>
                     </select>
                 </div>
-                <div class="col-lg-4 col-md-8">
-                    <label class="form-label fw-bold">Búsqueda Rápida:</label>
-                    <input type="text" class="form-control form-control-solid"
+                <div class="col-lg-4 col-md-8"><label class="form-label fw-bold">Búsqueda Rápida:</label><input
+                        type="text" class="form-control form-control-solid"
                         placeholder="Buscar por alumno, DNI, ticket..." [(ngModel)]="filtros.busqueda"
-                        (input)="filtrarPagos()" />
-                </div>
+                        (input)="filtrarPagos()" /></div>
             </div>
             <div class="row g-3 mt-2">
-                <div class="col-12 text-end">
-                    <button type="button" class="btn btn-light-primary me-3 btn-sm"
-                        (click)="limpiarFiltros()">Limpiar</button>
-                </div>
+                <div class="col-12 text-end"><button type="button" class="btn btn-light-primary btn-sm"
+                        (click)="limpiarFiltros()">Limpiar Filtros</button></div>
             </div>
         </div>
         <!--end::Filtros-->
@@ -79,55 +70,87 @@
                     </tr>
                 </thead>
                 <tbody class="text-gray-600 fw-semibold">
-                    <ng-container *ngIf="pagosFiltrados.length > 0; else noResults">
-                        <tr *ngFor="let pago of pagedPagos">
-                            <td>{{ pago.numeroTicket }}</td>
+                    <ng-container *ngIf="pagedPagos && pagedPagos.content.length > 0; else noResults">
+                        <tr *ngFor="let pago of pagedPagos.content">
+                            <td>{{ pago.numeroTicket || 'N/A' }}</td>
                             <td>{{ pago.fechaPago | date:'dd/MM/yyyy h:mm a' }}</td>
-                            <td>{{ pago.estudiante }}</td>
+                            <td>{{ pago.nombreEstudiante }}</td>
                             <td class="text-end">{{ pago.montoTotalPagado | currency:'S/ ' }}</td>
                             <td>{{ pago.canalPago }}</td>
-                            <td>{{ pago.registradoPor }}</td>
+                            <td>{{ pago.nombreUsuario }}</td>
                             <td class="text-center">
                                 <span class="badge"
-                                    [ngClass]="{'badge-light-success': pago.estado, 'badge-light-danger': pago.estado}">
+                                    [ngClass]="{'badge-light-success': pago.estado === EstadoPagoReference.CONFIRMADO, 'badge-light-danger': pago.estado === EstadoPagoReference.ANULADO}">
                                     {{ pago.estado }}
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-light-primary me-2" (click)="abrirDetallePago(pago)">Ver
-                                    Detalle</button>
-                                <button *ngIf="pago.estado" class="btn btn-sm btn-light-danger">Anular</button>
+                                <div class="d-none d-md-flex justify-content-end">
+                                    <button type="button" class="btn btn-light-info btn-sm"
+                                        [class.me-2]="pago.estado !== EstadoPagoReference.ANULADO"
+                                        (click)="abrirDetallePago(pago)">
+                                        <app-keenicon name="eye" class="fs-5 me-2"></app-keenicon>
+                                        Detalle
+                                    </button>
+
+                                    <ng-container *ngIf="pago.estado === EstadoPagoReference.CONFIRMADO">
+                                        <button *ngIf="pago.estado === EstadoPagoReference.CONFIRMADO"
+                                            class="btn btn-sm btn-light-danger" (click)="confirmarAnulacionPago(pago)">
+                                            <app-keenicon name="trash" class="fs-5 me-1"></app-keenicon>
+                                            Anular
+                                        </button>
+                                    </ng-container>
+                                </div>
+
+                                <div class="d-md-none text-end" ngbDropdown>
+                                    <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
+                                        ngbDropdownToggle>
+                                        <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                                    </button>
+                                    <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                                        <button class="dropdown-item text-info" (click)="abrirDetallePago(pago)">
+                                            <app-keenicon name="eye" class="fs-5 me-2"></app-keenicon>
+                                            Detalle
+                                        </button>
+
+                                        <button *ngIf="pago.estado === EstadoPagoReference.CONFIRMADO"
+                                            class="dropdown-item text-danger" (click)="confirmarAnulacionPago(pago)">
+                                            <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                                            Anular
+                                        </button>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     </ng-container>
                     <ng-template #noResults>
                         <tr>
                             <td colspan="8" class="text-center text-muted py-10">
-                                No se encontraron transacciones con los filtros aplicados.
+                                No se encontraron transacciones.
                             </td>
                         </tr>
                     </ng-template>
                 </tbody>
             </table>
         </div>
+        <!--end::Table-->
+
         <!--begin::Pagination-->
-        <div class="d-flex flex-stack flex-wrap pt-10">
+        <div class="d-flex flex-stack flex-wrap pt-10" *ngIf="pagedPagos && pagedPagos.totalElements > 0">
             <div class="fs-6 fw-semibold text-gray-700">
-                Mostrando
-                <span class="fw-bold">{{ pagosFiltrados.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}</span>
-                a
-                <span class="fw-bold">{{ (currentPage - 1) * itemsPerPage + pagedPagos.length }}</span>
-                de <span class="fw-bold">{{ pagosFiltrados.length }}</span> registros
+                Mostrando <span class="fw-bold">{{ pagedPagos.number * pagedPagos.size + 1 }}</span>
+                a <span class="fw-bold">{{ pagedPagos.number * pagedPagos.size + pagedPagos.content.length }}</span>
+                de <span class="fw-bold">{{ pagedPagos.totalElements }}</span> registros
             </div>
-            <ul class="pagination" *ngIf="getTotalPages() > 1">
-                <li class="page-item previous" [class.disabled]="currentPage === 1">
+            <ul class="pagination">
+                <li class="page-item previous" [class.disabled]="pagedPagos.first">
                     <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
                             class="previous"></i></a>
                 </li>
-                <li *ngFor="let page of pagesArray" class="page-item" [class.active]="page === currentPage">
+                <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
                     <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
                 </li>
-                <li class="page-item next" [class.disabled]="currentPage === getTotalPages()">
+                <li class="page-item next" [class.disabled]="pagedPagos.last">
                     <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i
                             class="next"></i></a>
                 </li>
@@ -136,34 +159,41 @@
         <!--end::Pagination-->
     </div>
 </div>
-<!--end::Table-->
+<!--end::Card-->
+
 
 <!-- =================================================== -->
-<!--   MODAL PARA REGISTRAR NUEVO PAGO   -->
+<!--  MODAL PARA REGISTRAR NUEVO PAGO  -->
 <!-- =================================================== -->
 <div class="modal fade" [class.show]="showRegistrarPagoModal"
     [style.display]="showRegistrarPagoModal ? 'block' : 'none'" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-xl" (click)="$event.stopPropagation()">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Registrar Nuevo Pago</h2>
                 <button type="button" class="btn-close" (click)="cerrarRegistrarPagoModal()"></button>
             </div>
             <div class="modal-body">
-
-                <!-- PASO 1: BÚSQUEDA DEL ESTUDIANTE -->
-                <div [hidden]="procesoPagoPaso !== 'busqueda'">
+                <div [hidden]="procesoPagoPaso === 'seleccion'">
                     <label class="form-label fw-bold">Paso 1: Identificar al Estudiante</label>
-                    <div class="input-group">
+                    <div class="position-relative">
                         <input type="text" class="form-control form-control-solid"
                             placeholder="Buscar estudiante por Nombre o DNI..." [(ngModel)]="busquedaEstudiante"
-                            (keyup.enter)="buscarEstudiante()">
-                        <button class="btn btn-primary" (click)="buscarEstudiante()">Buscar</button>
+                            (keyup)="buscarEstudiante()">
+                        <div *ngIf="estudiantesEncontrados.length > 0" class="card shadow-sm position-absolute w-100"
+                            style="z-index: 10;">
+                            <div class="list-group list-group-flush">
+                                <a *ngFor="let est of estudiantesEncontrados" (mousedown)="seleccionarEstudiante(est)"
+                                    class="list-group-item list-group-item-action cursor-pointer">
+                                    {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI:
+                                    {{est.dni}})
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- PASO 2 y 3: SELECCIÓN Y DETALLES (se muestran después de la búsqueda) -->
-                <div *ngIf="procesoPagoPaso === 'seleccion' && estudianteEncontrado">
+                <div *ngIf="procesoPagoPaso === 'seleccion' && estudianteSeleccionado">
                     <button (click)="resetearProcesoPago()" class="btn btn-sm btn-light-primary mb-6">
                         <app-keenicon name="arrow-left" class="fs-4 me-1"></app-keenicon>
                         Buscar otro estudiante
@@ -171,8 +201,9 @@
                     <div>
                         <h3 class="fs-4 fw-bold">Paso 2: Seleccionar Deudas a Pagar</h3>
                         <p class="text-muted">Deudas pendientes de: <span class="fw-bolder text-dark">{{
-                                estudianteEncontrado.nombre }}</span></p>
-                        <div class="table-responsive mt-4 border rounded-lg">
+                                estudianteSeleccionado.nombre }}</span></p>
+                        <div class="table-responsive mt-4 border rounded-lg"
+                            style="max-height: 250px; overflow-y: auto;">
                             <table class="table align-middle">
                                 <thead class="bg-light-secondary">
                                     <tr class="fw-bold text-muted">
@@ -183,7 +214,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let deuda of estudianteEncontrado.deudas">
+                                    <tr *ngFor="let deuda of estudianteSeleccionado.deudas">
                                         <td class="ps-4">
                                             <div class="form-check form-check-sm form-check-custom form-check-solid">
                                                 <input class="form-check-input" type="checkbox"
@@ -191,10 +222,16 @@
                                             </div>
                                         </td>
                                         <td>{{ deuda.descripcion }}</td>
-                                        <td>{{ deuda.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-                                        <td class="text-end pe-4 fw-bolder"
-                                            [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">{{ deuda.montoAPagar |
-                                            currency:'S/ ' }}</td>
+                                        <td>{{ deuda.fechaVencimiento | date:'dd/MM/yyyy' : 'UTC' }}</td>
+                                        <td class="text-end pe-4"
+                                            [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">
+                                            <div class="d-flex justify-content-end align-items-center">
+                                                <span *ngIf="deuda.mora && deuda.mora > 0" class="fs-7 me-2">
+                                                    (+ S/ {{ deuda.mora | number:'1.2-2' }} de mora)
+                                                </span>
+                                                <span class="fw-bolder">{{ deuda.montoAPagar | currency:'S/ ' }}</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -212,23 +249,26 @@
                                 <div class="row g-5">
                                     <div class="col-12">
                                         <label class="form-label required">Canal de Pago</label>
-                                        <select class="form-select form-select-solid" [(ngModel)]="nuevoPago.canal">
-                                            <option value="CAJA">Caja</option>
-                                            <option value="BANCO">Banco</option>
+                                        <select class="form-select form-select-solid" [(ngModel)]="nuevoPago.canal"
+                                            (ngModelChange)="onCanalPagoChange()">
+                                            <option [ngValue]="CanalReference.CAJA">Caja</option>
+                                            <option [ngValue]="CanalReference.BANCO">Banco</option>
                                         </select>
                                     </div>
-                                    <div class="col-12" *ngIf="nuevoPago.canal === 'BANCO'">
+                                    <div class="col-12" *ngIf="nuevoPago.canal === CanalReference.BANCO">
                                         <label class="form-label required">Banco</label>
                                         <select class="form-select form-select-solid" [(ngModel)]="nuevoPago.bancoId">
                                             <option value="" disabled>Seleccione un banco</option>
-                                            <option *ngFor="let banco of bancos" [value]="banco.id">{{ banco.nombre }}
-                                            </option>
+                                            <option *ngFor="let banco of bancos" [value]="banco.identifier">{{
+                                                banco.descripcion }}</option>
                                         </select>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label">Nº Recibo / Operación</label>
                                         <input type="text" class="form-control form-control-solid"
-                                            [(ngModel)]="nuevoPago.numeroOperacion">
+                                            [(ngModel)]="nuevoPago.numeroOperacion"
+                                            [readOnly]="nuevoPago.canal === CanalReference.CAJA"
+                                            [class.form-control-readonly]="nuevoPago.canal === CanalReference.CAJA">
                                     </div>
                                 </div>
                             </div>
@@ -248,11 +288,11 @@
 </div>
 
 <!-- =================================================== -->
-<!--   MODAL PARA VER DETALLE DE PAGO   -->
+<!--  MODAL PARA VER DETALLE DE PAGO  -->
 <!-- =================================================== -->
 <div class="modal fade" [class.show]="showDetallePagoModal" [style.display]="showDetallePagoModal ? 'block' : 'none'"
     tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" *ngIf="pagoSeleccionado">
             <div class="modal-header">
                 <div>
@@ -263,19 +303,19 @@
                 <button type="button" class="btn-close" (click)="cerrarDetallePago()"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-5 mb-8 bg-light-secondary p-6 rounded-lg">
-                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Monto Total Pagado</label>
-                        <div class="fs-3 fw-bolder text-primary">{{ pagoSeleccionado.montoTotalPagado | currency:'S/ '
+                <div class="row mb-8 bg-light-secondary p-6 rounded-lg">
+                    <div class="col-6 mb-4"><label class="fs-7 text-muted fw-semibold">Monto Total Pagado</label>
+                        <div class="fs-3 fw-bolder">{{ pagoSeleccionado.montoTotalPagado | currency:'S/ '
                             }}</div>
                     </div>
-                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Fecha de Pago</label>
+                    <div class="col-6 mb-4"><label class="fs-7 text-muted fw-semibold">Fecha de Pago</label>
                         <div class="fs-6 fw-bolder">{{ pagoSeleccionado.fechaPago | date:'fullDate' }} a las {{
                             pagoSeleccionado.fechaPago | date:'shortTime' }}</div>
                     </div>
-                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Estudiante</label>
-                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.estudiante }}</div>
+                    <div class="col-6 mb-4"><label class="fs-7 text-muted fw-semibold">Estudiante</label>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.nombreEstudiante }}</div>
                     </div>
-                    <div class="col-6"><label class="fs-7 text-muted fw-semibold">Canal de Pago</label>
+                    <div class="col-6 mb-4"><label class="fs-7 text-muted fw-semibold">Canal de Pago</label>
                         <div class="fs-6 fw-bolder">{{ pagoSeleccionado.canalPago }}</div>
                     </div>
                     <div class="col-6" *ngIf="pagoSeleccionado.banco"><label
@@ -283,7 +323,7 @@
                         <div class="fs-6 fw-bolder">{{ getNombreBanco(pagoSeleccionado.banco) }}</div>
                     </div>
                     <div class="col-6"><label class="fs-7 text-muted fw-semibold">Registrado por</label>
-                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.registradoPor }}</div>
+                        <div class="fs-6 fw-bolder">{{ pagoSeleccionado.nombreUsuario }}</div>
                     </div>
                 </div>
                 <div>
@@ -298,7 +338,7 @@
                             </thead>
                             <tbody>
                                 <tr *ngFor="let detalle of pagoSeleccionado.detalles">
-                                    <td class="ps-4">Pensión/Matrícula (Ejemplo)</td>
+                                    <td class="ps-4">{{ detalle.descripcionCronograma }}</td>
                                     <td class="text-end pe-4 fw-semibold">{{ detalle.montoAplicado | currency:'S/ ' }}
                                     </td>
                                 </tr>
@@ -308,7 +348,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-primary">Imprimir</button>
+                <button type="button" class="btn btn-light-info">Imprimir</button>
                 <button type="button" class="btn btn-light" (click)="cerrarDetallePago()">Cerrar</button>
             </div>
         </div>

@@ -17,6 +17,7 @@ export class RolService implements OnDestroy {
         private rolDomainService: RolDomainService,
     ) { }
 
+    // MODIFICADO: Ahora el método getList puede recibir y usar los filtros de descripción y estado.
     getList(page: number = 0, size: number = 10, descripcion?: string, estado?: string): Observable<PageResponse<RolDto> | undefined> {
         this.isLoadingSubject.next(true);
         return this.rolDomainService.getList(page, size, descripcion, estado).pipe(

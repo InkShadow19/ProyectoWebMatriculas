@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, TemplateRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
 import { UsuarioDto } from 'src/app/models/usuario.model';
 import { GeneroReference } from 'src/app/models/enums/genero-reference.enum';
@@ -14,6 +14,26 @@ import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
 
+export function fechaNacimientoValidator(control: AbstractControl): ValidationErrors | null {
+  const fechaSeleccionada = new Date(control.value);
+  const fechaActual = new Date();
+
+  // 1. Validar que no sea una fecha futura
+  if (fechaSeleccionada > fechaActual) {
+    return { fechaFutura: true };
+  }
+
+  // 2. Validar que sea mayor de 18 años
+  const fechaMayorDeEdad = new Date();
+  fechaMayorDeEdad.setFullYear(fechaMayorDeEdad.getFullYear() - 18);
+
+  if (fechaSeleccionada > fechaMayorDeEdad) {
+    return { menorDeEdad: true };
+  }
+
+  return null; // Si pasa ambas validaciones, es válido
+}
+
 @Component({
   selector: 'app-user',
   standalone: true,
@@ -21,14 +41,18 @@ import { AuthService } from 'src/app/modules/auth';
     CommonModule,
     SharedModule,
     FormsModule,
+    ReactiveFormsModule,
     NgbDropdownModule
   ],
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss'],
 })
 export class UserComponent implements OnInit {
-  @ViewChild('addUserModal') addUserModal: TemplateRef<any>;
-  @ViewChild('editUserModal') editUserModal: TemplateRef<any>;
+  @ViewChild('userModal') userModal: TemplateRef<any>;
+
+  // MODIFICADO: Se unifican los modales y se añade la propiedad del formulario
+  isEditing = false;
+  usuarioForm: FormGroup;
 
   EstadoReference = EstadoReference;
   GeneroReference = GeneroReference;
@@ -36,20 +60,16 @@ export class UserComponent implements OnInit {
   estadoKeys: string[];
   rolesDisponibles: RolDto[] = [];
 
-  newUsuario: Partial<UsuarioDto> = {};
-  confirmPassword = '';
-  editingUser: UsuarioDto | null = null;
-  
   pagedUsuarios: PageResponse<UsuarioDto> | undefined;
   filtroBusqueda: string = '';
   filtroEstado: string = '';
   currentPage = 1;
   itemsPerPage = 5;
 
-  // Propiedades para el reset de contraseña
+  // Propiedades para la contraseña
+  password = '';
+  confirmPassword = '';
   showResetPasswordFields = false;
-  newPassword = '';
-  confirmNewPassword = '';
 
   constructor(
     private modalService: NgbModal,
@@ -57,22 +77,38 @@ export class UserComponent implements OnInit {
     private usuarioService: UsuarioService,
     private rolService: RolService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private fb: FormBuilder // MODIFICADO: Inyectar FormBuilder
   ) {
     this.generoKeys = Object.values(GeneroReference);
     this.estadoKeys = Object.values(EstadoReference);
+    this.buildForm(); // Se llama al método que construye el formulario
   }
 
   ngOnInit(): void {
-    this.loadRoles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
       return;
     }
+    this.loadRoles();
+  }
+
+  private buildForm(): void {
+    this.usuarioForm = this.fb.group({
+      identifier: [null],
+      usuario: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(20), Validators.pattern('^[a-zA-Z0-9-]+$')]],
+      nombres: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+      apellidos: ['', [Validators.required, Validators.pattern('^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$')]],
+      dni: ['', [Validators.required, Validators.pattern('\\d{8}')]],
+      fechaNacimiento: ['', [Validators.required, fechaNacimientoValidator]],
+      genero: [GeneroReference.MASCULINO, [Validators.required]],
+      rol: ['', [Validators.required]],
+      estado: [EstadoReference.ACTIVO, [Validators.required]],
+    });
   }
 
   loadRoles(): void {
-    this.rolService.getList(0, 100).subscribe(response => {
+    this.rolService.getList(0, 100, undefined, EstadoReference.ACTIVO).subscribe(response => {
       this.rolesDisponibles = response?.content || [];
       this.loadUsuarios();
     });
@@ -111,51 +147,80 @@ export class UserComponent implements OnInit {
 
   getRolDescripcion(rolIdentifier: string): string {
     const rol = this.rolesDisponibles.find(r => r.identifier === rolIdentifier);
-    return rol ? rol.descripcion : 'N/A';
+    return rol ? rol.descripcion : 'Inactivo';
   }
 
   // --- Métodos CRUD ---
   openAddUserModal(): void {
-    this.newUsuario = {
+    this.isEditing = false;
+    this.usuarioForm.reset({
       genero: GeneroReference.MASCULINO,
-      rol: this.rolesDisponibles.length > 0 ? this.rolesDisponibles[0].identifier : '',
-      estado: EstadoReference.ACTIVO,
-    };
-    this.confirmPassword = ''; // Limpiar campo al abrir
-    this.modalService.open(this.addUserModal, { centered: true, size: 'lg' });
+      rol: '',
+      estado: EstadoReference.ACTIVO
+    });
+    this.password = '';
+    this.confirmPassword = '';
+    this.modalService.open(this.userModal, { centered: true, size: 'lg' });
   }
 
   saveUser(): void {
-    if (!this.newUsuario.usuario || !this.newUsuario.nombres || !this.newUsuario.apellidos ||
-      !this.newUsuario.dni || !this.newUsuario.fechaNacimiento ||
-      !this.newUsuario.rol || !this.newUsuario.contrasena) {
-      Swal.fire('Error', 'Todos los campos obligatorios, incluyendo la contraseña, deben ser completados.', 'error');
-      return;
-    }
-    if (this.newUsuario.contrasena !== this.confirmPassword) {
-      Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
+    if (this.usuarioForm.invalid) {
+      this.usuarioForm.markAllAsTouched();
       return;
     }
 
-    this.usuarioService.add(this.newUsuario).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Éxito!', 'Usuario añadido correctamente.', 'success');
-        this.loadUsuarios();
-        this.dismiss();
-      } else {
-        Swal.fire('Error', 'No se pudo agregar el usuario.', 'error');
+    const usuarioData = this.usuarioForm.getRawValue();
+
+    if (this.isEditing) {
+      this.usuarioService.update(usuarioData.identifier, usuarioData).subscribe({
+        next: () => {
+          Swal.fire('¡Éxito!', 'Usuario actualizado correctamente.', 'success');
+          this.loadUsuarios();
+          this.dismiss();
+        },
+        error: (err) => {
+          Swal.fire('Error', err.error.error || 'No se pudo actualizar el usuario.', 'error');
+        }
+      });
+    } else {
+      if (this.password !== this.confirmPassword || !this.password) {
+        Swal.fire('Error', 'Las contraseñas no coinciden o están vacías.', 'error');
+        return;
       }
-    });
+      usuarioData.contrasena = this.password;
+
+      this.usuarioService.add(usuarioData).subscribe({
+        next: () => {
+          Swal.fire('¡Éxito!', 'Usuario añadido correctamente.', 'success');
+          this.loadUsuarios();
+          this.dismiss();
+        },
+        error: (err) => {
+          Swal.fire('Error', err.error.error || 'No se pudo agregar el usuario.', 'error');
+        }
+      });
+    }
   }
 
   openEditUserModal(usuario: UsuarioDto): void {
-    this.editingUser = { ...usuario };
-    this.showResetPasswordFields = false;
-    this.newPassword = '';
-    this.confirmNewPassword = '';
-    this.modalService.open(this.editUserModal, { centered: true, size: 'lg' });
+    this.isEditing = true;
+    this.showResetPasswordFields = false; // Ocultar campos de contraseña al abrir
+    this.password = '';
+    this.confirmPassword = '';
+
+    const fechaFormateada = usuario.fechaNacimiento 
+      ? new Date(usuario.fechaNacimiento).toISOString().split('T')[0] 
+      : null;
+
+    this.usuarioForm.patchValue({
+        ...usuario,
+        fechaNacimiento: fechaFormateada // Se usa la fecha formateada y segura
+    });
+
+    this.modalService.open(this.userModal, { centered: true, size: 'lg' });
   }
 
+  /*
   updateUser(): void {
     if (!this.editingUser || !this.editingUser.identifier) return;
 
@@ -164,7 +229,7 @@ export class UserComponent implements OnInit {
       Swal.fire('Error', 'Todos los campos obligatorios deben ser completados.', 'error');
       return;
     }
-    
+
     this.usuarioService.update(this.editingUser.identifier, this.editingUser).subscribe(success => {
       if (success) {
         Swal.fire('¡Éxito!', 'Usuario actualizado correctamente.', 'success');
@@ -174,7 +239,7 @@ export class UserComponent implements OnInit {
         Swal.fire('Error', 'Usuario no encontrado para actualizar.', 'error');
       }
     });
-  }
+  }*/
 
   confirmDeleteUser(usuario: UsuarioDto): void {
     Swal.fire({
@@ -194,16 +259,14 @@ export class UserComponent implements OnInit {
   }
 
   private deleteUser(identifier: string): void {
-    this.usuarioService.delete(identifier).subscribe(success => {
-      if (success) {
-        Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
-        if (this.pagedUsuarios?.content.length === 1 && this.currentPage > 1) {
-          this.currentPage--;
-        }
-        this.loadUsuarios();
-      } else {
-        Swal.fire('Error', 'No se pudo encontrar el usuario para eliminar.', 'error');
+    this.usuarioService.delete(identifier).subscribe(() => {
+      Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
+      if (this.pagedUsuarios?.content.length === 1 && this.currentPage > 1) {
+        this.currentPage--;
       }
+      this.loadUsuarios();
+    }, () => {
+      Swal.fire('Error', 'No se pudo encontrar el usuario para eliminar.', 'error');
     });
   }
 
@@ -212,28 +275,26 @@ export class UserComponent implements OnInit {
   }
 
   submitNewPassword(): void {
-    if (!this.editingUser || !this.editingUser.identifier) return;
+    const identifier = this.usuarioForm.get('identifier')?.value;
+    if (!identifier) return;
 
-    if (!this.newPassword || this.newPassword.trim() === '') {
-        Swal.fire('Error', 'La nueva contraseña no puede estar vacía.', 'error');
-        return;
+    if (!this.password || this.password.trim() === '') {
+      Swal.fire('Error', 'La nueva contraseña no puede estar vacía.', 'error');
+      return;
     }
-    if (this.newPassword !== this.confirmNewPassword) {
+    if (this.password !== this.confirmPassword) {
       Swal.fire('Error', 'Las contraseñas no coinciden.', 'error');
       return;
     }
 
-    this.usuarioService.resetPassword(this.editingUser.identifier, this.newPassword)
-      .subscribe(success => {
-        if (success) {
-          Swal.fire('¡Éxito!', 'La contraseña ha sido restablecida correctamente.', 'success');
-          this.showResetPasswordFields = false;
-          this.newPassword = '';
-          this.confirmNewPassword = '';
-        } else {
-          Swal.fire('Error', 'No se pudo restablecer la contraseña.', 'error');
-        }
-      });
+    this.usuarioService.resetPassword(identifier, this.password).subscribe(() => {
+      Swal.fire('¡Éxito!', 'La contraseña ha sido restablecida correctamente.', 'success');
+      this.showResetPasswordFields = false;
+      this.password = '';
+      this.confirmPassword = '';
+    }, () => {
+      Swal.fire('Error', 'No se pudo restablecer la contraseña.', 'error');
+    });
   }
 
   dismiss(): void {

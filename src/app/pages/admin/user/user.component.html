@@ -43,6 +43,7 @@
             <th>Usuario</th>
             <th>Nombre Completo</th>
             <th>DNI</th>
+            <th>Género</th>
             <th>Fecha de Nacimiento</th>
             <th>Rol</th>
             <th class="text-center">Estado</th>
@@ -54,18 +55,19 @@
             <td>{{ usuario.usuario }}</td>
             <td>{{ usuario.nombres }} {{ usuario.apellidos }}</td>
             <td>{{ usuario.dni }}</td>
+            <td>{{ usuario.genero }}</td>
             <td>{{ usuario.fechaNacimiento | date:'dd/MM/yyyy':'UTC' }}</td>
             <td>{{ getRolDescripcion(usuario.rol) }}</td>
             <td class="text-center">
               <div class="badge" [ngClass]="{
-                  'badge-light-success': usuario.estado === EstadoReference.ACTIVO,
-                  'badge-light-danger': usuario.estado === EstadoReference.INACTIVO
-                }">
+                    'badge-light-success': usuario.estado === EstadoReference.ACTIVO,
+                    'badge-light-danger': usuario.estado === EstadoReference.INACTIVO
+                  }">
                 {{ usuario.estado.replace('_', ' ') }}
               </div>
             </td>
             <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
+              <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditUserModal(usuario)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                   Editar
@@ -75,26 +77,10 @@
                   Eliminar
                 </button>
               </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditUserModal(usuario)">
-                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                    Editar
-                  </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteUser(usuario)">
-                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                    Eliminar
-                  </button>
-                </div>
-              </div>
             </td>
           </tr>
           <tr *ngIf="!pagedUsuarios || pagedUsuarios.content.length === 0">
-            <td colspan="7" class="text-center text-muted py-5">
+            <td colspan="8" class="text-center text-muted py-5">
               No se encontraron registros.
             </td>
           </tr>
@@ -107,11 +93,9 @@
         Mostrando
         <span class="fw-bold">{{ pagedUsuarios.number * pagedUsuarios.size + 1 }}</span>
         a
-        <span class="fw-bold">{{ pagedUsuarios.number * pagedUsuarios.size + pagedUsuarios.content.length
-          }}</span>
+        <span class="fw-bold">{{ pagedUsuarios.number * pagedUsuarios.size + pagedUsuarios.content.length }}</span>
         de <span class="fw-bold">{{ pagedUsuarios.totalElements }}</span> registros
       </div>
-
       <ul class="pagination">
         <li class="page-item previous" [class.disabled]="pagedUsuarios.first">
           <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
@@ -128,155 +112,149 @@
   </div>
 </div>
 
-<ng-template #addUserModal>
+<ng-template #userModal>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Añadir Nuevo Usuario</h2>
+      <h2>{{ isEditing ? 'Editar' : 'Añadir Nuevo' }} Usuario</h2>
       <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
         <app-keenicon name="cross" class="fs-1"></app-keenicon>
       </div>
     </div>
     <div class="modal-body">
-      <form>
+      <form [formGroup]="usuarioForm">
         <div class="row g-5">
           <div class="col-md-6">
             <div class="mb-5">
               <label class="form-label required">Usuario:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="newUsuario.usuario"
-                name="newUsuarioUserName" />
+              <input type="text" class="form-control" formControlName="usuario"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['usuario'].invalid && usuarioForm.controls['usuario'].touched }" />
+              <div *ngIf="usuarioForm.controls['usuario'].invalid && usuarioForm.controls['usuario'].touched"
+                class="invalid-feedback">
+                <div *ngIf="usuarioForm.controls['usuario'].errors?.['required']">El usuario es requerido.</div>
+                <div *ngIf="usuarioForm.controls['usuario'].errors?.['minlength']">Mínimo 4 caracteres.</div>
+                <div *ngIf="usuarioForm.controls['usuario'].errors?.['maxlength']">Máximo 20 caracteres.</div>
+                <div *ngIf="usuarioForm.controls['usuario'].errors?.['pattern']">Solo letras, números y guiones.</div>
+              </div>
             </div>
             <div class="mb-5">
               <label class="form-label required">Nombres:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="newUsuario.nombres"
-                name="newUsuarioNombres" />
+              <input type="text" class="form-control" formControlName="nombres"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['nombres'].invalid && usuarioForm.controls['nombres'].touched }" />
+              <div *ngIf="usuarioForm.controls['nombres'].invalid && usuarioForm.controls['nombres'].touched"
+                class="invalid-feedback">
+                <div *ngIf="usuarioForm.controls['nombres'].errors?.['required']">Los nombres son requeridos.</div>
+                <div *ngIf="usuarioForm.controls['nombres'].errors?.['pattern']">Solo puede contener letras y espacios.
+                </div>
+              </div>
             </div>
             <div class="mb-5">
               <label class="form-label required">Apellidos:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="newUsuario.apellidos"
-                name="newUsuarioApellidos" />
+              <input type="text" class="form-control" formControlName="apellidos"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['apellidos'].invalid && usuarioForm.controls['apellidos'].touched }" />
+              <div *ngIf="usuarioForm.controls['apellidos'].invalid && usuarioForm.controls['apellidos'].touched"
+                class="invalid-feedback">
+                <div *ngIf="usuarioForm.controls['apellidos'].errors?.['required']">Los apellidos son requeridos.</div>
+                <div *ngIf="usuarioForm.controls['apellidos'].errors?.['pattern']">Solo puede contener letras y
+                  espacios.</div>
+              </div>
             </div>
             <div class="mb-5">
               <label class="form-label required">DNI:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="newUsuario.dni"
-                name="newUsuarioDNI" maxlength="8" />
-            </div>
-            <div class="mb-5">
-              <label class="form-label required">Fecha de Nacimiento:</label>
-              <input type="date" class="form-control form-control-solid" [(ngModel)]="newUsuario.fechaNacimiento"
-                name="newUsuarioFechaNacimiento" />
+              <input type="text" class="form-control" formControlName="dni" maxlength="8"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['dni'].invalid && usuarioForm.controls['dni'].touched }" />
+              <div *ngIf="usuarioForm.controls['dni'].invalid && usuarioForm.controls['dni'].touched"
+                class="invalid-feedback">
+                <div *ngIf="usuarioForm.controls['dni'].errors?.['required']">El DNI es requerido.</div>
+                <div *ngIf="usuarioForm.controls['dni'].errors?.['pattern']">Debe contener 8 dígitos numéricos.</div>
+              </div>
             </div>
           </div>
 
           <div class="col-md-6">
             <div class="mb-5">
-              <label class="form-label required">Contraseña:</label>
-              <input type="password" class="form-control form-control-solid" [(ngModel)]="newUsuario.contrasena"
-                name="newUsuarioPassword" />
+              <label class="form-label required">Fecha de Nacimiento:</label>
+              <input type="date" class="form-control" formControlName="fechaNacimiento"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['fechaNacimiento'].invalid && usuarioForm.controls['fechaNacimiento'].touched }" />
+              <div
+                *ngIf="usuarioForm.controls['fechaNacimiento'].invalid && usuarioForm.controls['fechaNacimiento'].touched"
+                class="invalid-feedback">
+                <div *ngIf="usuarioForm.controls['fechaNacimiento'].errors?.['required']">La fecha es requerida.</div>
+                <div *ngIf="usuarioForm.controls['fechaNacimiento'].errors?.['fechaFutura']">La fecha no puede ser
+                  futura.</div>
+                <div *ngIf="usuarioForm.controls['fechaNacimiento'].errors?.['menorDeEdad']">El usuario debe ser mayor
+                  de edad (18 años).</div>
+              </div>
             </div>
             <div class="mb-5">
-              <label class="form-label required">Confirmar Contraseña:</label>
-              <input type="password" class="form-control form-control-solid" [(ngModel)]="confirmPassword"
-                name="newUsuarioConfirmPassword" />
+              <label class="form-label required">Género:</label>
+              <select class="form-select" formControlName="genero"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['genero'].invalid && usuarioForm.controls['genero'].touched }">
+                <option *ngFor="let genero of generoKeys" [value]="genero">{{ genero.replace('_', ' ') }}</option>
+              </select>
+              <div *ngIf="usuarioForm.controls['genero'].invalid && usuarioForm.controls['genero'].touched"
+                class="invalid-feedback">
+                El género es requerido.
+              </div>
             </div>
             <div class="mb-5">
               <label class="form-label required">Rol:</label>
-              <select class="form-select form-select-solid" [(ngModel)]="newUsuario.rol" name="newUsuarioRol">
+              <select class="form-select" formControlName="rol"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['rol'].invalid && usuarioForm.controls['rol'].touched }">
                 <option value="" disabled>Seleccione un rol</option>
                 <option *ngFor="let rol of rolesDisponibles" [value]="rol.identifier">{{ rol.descripcion }}</option>
               </select>
+              <div *ngIf="usuarioForm.controls['rol'].invalid && usuarioForm.controls['rol'].touched"
+                class="invalid-feedback">
+                Debe seleccionar un rol.
+              </div>
             </div>
             <div class="mb-5">
               <label class="form-label required">Estado:</label>
-              <select class="form-select form-select-solid" [(ngModel)]="newUsuario.estado" name="newUsuarioEstado">
+              <select class="form-select" formControlName="estado"
+                [ngClass]="{ 'is-invalid': usuarioForm.controls['estado'].invalid && usuarioForm.controls['estado'].touched }">
                 <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
               </select>
             </div>
           </div>
         </div>
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cancelar</button>
-      <button type="button" class="btn btn-primary" (click)="saveUser()">Guardar</button>
-    </div>
-  </div>
-</ng-template>
 
-<ng-template #editUserModal>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Editar Usuario</h2>
-      <div class="btn btn-sm btn-icon btn-active-color-primary" (click)="dismiss()">
-        <app-keenicon name="cross" class="fs-1"></app-keenicon>
-      </div>
-    </div>
-    <div class="modal-body">
-      <form *ngIf="editingUser">
-        <div class="row g-5">
-          <div class="col-md-6">
-            <div class="mb-5">
-              <label for="editUsuario" class="form-label required">Usuario:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="editingUser.usuario"
-                name="editUsuarioUserName" />
-            </div>
-            <div class="mb-5">
-              <label for="editNombres" class="form-label required">Nombres:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="editingUser.nombres"
-                name="editUsuarioNombres" />
-            </div>
-            <div class="mb-5">
-              <label for="editApellidos" class="form-label required">Apellidos:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="editingUser.apellidos"
-                name="editUsuarioApellidos" />
-            </div>
-            <div class="mb-5">
-              <label for="editDNI" class="form-label required">DNI:</label>
-              <input type="text" class="form-control form-control-solid" [(ngModel)]="editingUser.dni"
-                name="editUsuarioDNI" maxlength="8" />
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-5">
-              <label for="editFechaNacimiento" class="form-label required">Fecha de Nacimiento:</label>
-              <input type="date" class="form-control form-control-solid"
-                [ngModel]="editingUser.fechaNacimiento | date:'yyyy-MM-dd':'UTC'"
-                (ngModelChange)="editingUser.fechaNacimiento = $event" name="editUsuarioFechaNacimiento" />
-            </div>
-            <div class="mb-5">
-              <label for="editRol" class="form-label required">Rol:</label>
-              <select class="form-select form-select-solid" [(ngModel)]="editingUser.rol" name="editUsuarioRol">
-                <option *ngFor="let rol of rolesDisponibles" [value]="rol.identifier">{{ rol.descripcion }}</option>
-              </select>
-            </div>
-            <div class="mb-5">
-              <label for="editEstado" class="form-label required">Estado:</label>
-              <select class="form-select form-select-solid" [(ngModel)]="editingUser.estado" name="editUsuarioEstado">
-                <option *ngFor="let estado of estadoKeys" [value]="estado">{{ estado.replace('_', ' ') }}</option>
-              </select>
-            </div>
-          </div>
-
+        <div *ngIf="!isEditing">
           <div class="separator separator-dashed my-4"></div>
+          <h5 class="mb-5">Asignar Contraseña</h5>
+          <div class="row">
+            <div class="col-md-6 mb-5">
+              <label class="form-label required">Contraseña:</label>
+              <input type="password" class="form-control" [(ngModel)]="password"
+                [ngModelOptions]="{standalone: true}" />
+            </div>
+            <div class="col-md-6 mb-5">
+              <label class="form-label required">Confirmar Contraseña:</label>
+              <input type="password" class="form-control" [(ngModel)]="confirmPassword"
+                [ngModelOptions]="{standalone: true}" />
+            </div>
+          </div>
+        </div>
 
+        <div *ngIf="isEditing">
+          <div class="separator separator-dashed my-4"></div>
           <div class="d-flex justify-content-start" *ngIf="!showResetPasswordFields">
             <button type="button" class="btn btn-light-info btn-sm" (click)="toggleResetPasswordFields()">
               <app-keenicon name="key" class="fs-5 me-2"></app-keenicon>
               Restablecer Contraseña
             </button>
           </div>
-
           <div *ngIf="showResetPasswordFields">
             <h5 class="mb-5">Asignar Nueva Contraseña</h5>
             <div class="row">
               <div class="col-md-6 mb-5">
                 <label class="form-label required">Nueva Contraseña:</label>
-                <input type="password" class="form-control form-control-solid" [(ngModel)]="newPassword"
-                  name="newPassword" />
+                <input type="password" class="form-control" [(ngModel)]="password"
+                  [ngModelOptions]="{standalone: true}" />
               </div>
               <div class="col-md-6 mb-5">
                 <label class="form-label required">Confirmar Nueva Contraseña:</label>
-                <input type="password" class="form-control form-control-solid" [(ngModel)]="confirmNewPassword"
-                  name="confirmNewPassword" />
+                <input type="password" class="form-control" [(ngModel)]="confirmPassword"
+                  [ngModelOptions]="{standalone: true}" />
               </div>
             </div>
             <div class="d-flex justify-content-end">
@@ -293,8 +271,10 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="dismiss()">Cerrar</button>
-      <button type="button" class="btn btn-primary" (click)="updateUser()" [disabled]="showResetPasswordFields">Guardar
-        Cambios</button>
+      <button type="button" class="btn btn-primary" (click)="saveUser()"
+        [disabled]="usuarioForm.invalid || showResetPasswordFields">
+        Guardar
+      </button>
     </div>
   </div>
 </ng-template>

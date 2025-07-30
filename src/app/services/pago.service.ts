@@ -6,6 +6,7 @@ import { PagoDto } from '../models/pago.model';
 import { PageResponse } from '../models/page-response.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CronogramaPagoDto } from '../models/cronograma-pago.model';
+import Swal from 'sweetalert2';
 
 @Injectable({
     providedIn: 'root',
@@ -62,6 +63,20 @@ export class PagoService {
             catchError((error: HttpErrorResponse) => {
                 const errorMessage = error.error?.error || 'No se pudo anular el pago.';
                 return throwError(() => new Error(errorMessage));
+            }),
+            finalize(() => this.isLoadingSubject.next(false))
+        );
+    }
+
+    // --- NUEVO MÉTODO AÑADIDO ---
+    imprimirBoleta(identifier: string): Observable<Blob | undefined> {
+        this.isLoadingSubject.next(true);
+        return this.domainService.imprimirBoleta(identifier).pipe(
+            catchError((error: HttpErrorResponse) => {
+                // Manejo de error por si el PDF no se puede generar
+                console.error('Error al generar el PDF:', error);
+                Swal.fire('Error', 'No se pudo generar la boleta en PDF.', 'error');
+                return of(undefined);
             }),
             finalize(() => this.isLoadingSubject.next(false))
         );

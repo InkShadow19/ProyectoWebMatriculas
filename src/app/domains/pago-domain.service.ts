@@ -70,4 +70,12 @@ export class PagoDomainService {
     anular(identifier: string): Observable<void> {
         return this.http.patch<void>(`${this.endpoint}/${identifier}/anular`, null, { headers: buildHeader() });
     }
+
+    // --- NUEVO MÉTODO PARA SOLICITAR EL PDF ---
+    imprimirBoleta(identifier: string): Observable<Blob> {
+        return this.http.get(`${this.endpoint}/${identifier}/imprimir`, {
+            headers: buildHeader(),
+            responseType: 'blob' // ¡Muy importante! Le decimos que esperamos un archivo (Blob)
+        });
+    }
 }

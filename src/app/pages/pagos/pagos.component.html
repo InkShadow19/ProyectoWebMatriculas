@@ -223,8 +223,7 @@
                                         </td>
                                         <td>{{ deuda.descripcion }}</td>
                                         <td>{{ deuda.fechaVencimiento | date:'dd/MM/yyyy' : 'UTC' }}</td>
-                                        <td class="text-end pe-4"
-                                            [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">
+                                        <td class="text-end pe-4" [class.text-danger]="deuda.estadoDeuda === 'VENCIDO'">
                                             <div class="d-flex justify-content-end align-items-center">
                                                 <span *ngIf="deuda.mora && deuda.mora > 0" class="fs-7 me-2">
                                                     (+ S/ {{ deuda.mora | number:'1.2-2' }} de mora)
@@ -348,8 +347,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light-info">Imprimir</button>
-                <button type="button" class="btn btn-light" (click)="cerrarDetallePago()">Cerrar</button>
+                <button type="button" class="btn btn-light" (click)="imprimirPago(pagoSeleccionado!)">Imprimir</button>
+                <button type="button" class="btn btn-primary" (click)="cerrarDetallePago()">Cerrar</button>
             </div>
         </div>
     </div>

@@ -152,10 +152,10 @@ export class PagosComponent implements OnInit {
       const deudasPendientes = deudas?.filter(d => d.estadoDeuda === EstadoDeudaReference.PENDIENTE || d.estadoDeuda === EstadoDeudaReference.VENCIDO) || [];
       if (deudasPendientes.length === 0) {
         Swal.fire(
-            'No hay cuotas para pagar', 
-            `El estudiante no tiene un cronograma de pagos activo o ya ha cancelado todas sus deudas pendientes.`, 
-            'info'
-          );
+          'No hay cuotas para pagar',
+          `El estudiante no tiene un cronograma de pagos activo o ya ha cancelado todas sus deudas pendientes.`,
+          'info'
+        );
         this.resetearProcesoPago();
         return;
       }
@@ -174,7 +174,7 @@ export class PagosComponent implements OnInit {
         // la "Matrícula" siempre va primero.
         if (a.descripcion?.includes('Matrícula')) return -1;
         if (b.descripcion?.includes('Matrícula')) return 1;
-        
+
         return 0;
       });
 
@@ -289,6 +289,18 @@ export class PagosComponent implements OnInit {
             Swal.fire('Error', err.message, 'error');
           }
         });
+      }
+    });
+  }
+
+  // --- NUEVO MÉTODO PARA MANEJAR LA DESCARGA ---
+  imprimirPago(pago: PagoDto): void {
+    this.pagoService.imprimirBoleta(pago.identifier).subscribe(blob => {
+      if (blob) {
+        // Se crea una URL temporal para el archivo PDF en el navegador
+        const fileURL = URL.createObjectURL(blob);
+        // Se abre la URL en una nueva pestaña para previsualizar o imprimir
+        window.open(fileURL, '_blank');
       }
     });
   }

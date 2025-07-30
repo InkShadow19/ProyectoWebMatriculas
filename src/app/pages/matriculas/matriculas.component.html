@@ -15,15 +15,19 @@
         <!-- Panel de Filtros -->
         <div class="mb-10">
             <h4 class="text-muted fw-bold mb-8">Filtros</h4>
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label fw-bold">Año:</label>
-                    <select class="form-select form-select-solid" [(ngModel)]="filtroAnio" (ngModelChange)="buscar()">
-                        <option [ngValue]="''">Todos</option>
-                        <option *ngFor="let anio of anios" [value]="anio.identifier">{{ anio.anio }}</option>
-                    </select>
+            <div class="row g-3 d-flex align-items-end">
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label fw-bold">Desde:</label>
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtroFechaDesde"
+                        (change)="buscar()" />
                 </div>
-                <div class="col-md-2">
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label fw-bold">Hasta:</label>
+                    <input type="date" class="form-control form-control-solid" [(ngModel)]="filtroFechaHasta"
+                        (change)="buscar()" />
+                </div>
+
+                <div class="col-lg-4-3 col-md-4">
                     <label class="form-label fw-bold">Nivel:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroNivel"
                         (change)="onNivelChange('filtro')">
@@ -32,7 +36,7 @@
                         </option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-lg-4-3 col-md-4">
                     <label class="form-label fw-bold">Grado:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroGrado" (ngModelChange)="buscar()"
                         [disabled]="!filtroNivel">
@@ -41,16 +45,17 @@
                             }}</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+
+                <div class="col-lg-4-3 col-md-4">
                     <label class="form-label fw-bold">Estado:</label>
                     <select class="form-select form-select-solid" [(ngModel)]="filtroEstado" (ngModelChange)="buscar()">
-                        <option [ngValue]="''">Todos</option>
+                        <option value="">Todos</option>
                         <option [ngValue]="EstadoMatriculaReference.VIGENTE">Vigente</option>
                         <option [ngValue]="EstadoMatriculaReference.ANULADA">Anulada</option>
                         <option [ngValue]="EstadoMatriculaReference.COMPLETADA">Completada</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-4 col-md-8">
                     <label class="form-label fw-bold">Búsqueda Rápida:</label>
                     <input type="text" class="form-control form-control-solid"
                         placeholder="Buscar por estudiante, DNI o cód..." [(ngModel)]="filtroBusqueda"
@@ -58,10 +63,8 @@
                 </div>
             </div>
             <div class="row g-3 mt-2">
-                <div class="col-md-12 text-end">
-                    <button type="button" class="btn btn-light-primary btn-sm" (click)="limpiarFiltros()">Limpiar
-                        Filtros</button>
-                </div>
+                <div class="col-12 text-end"><button type="button" class="btn btn-light-primary btn-sm"
+                        (click)="limpiarFiltros()">Limpiar Filtros</button></div>
             </div>
         </div>
 
@@ -93,7 +96,7 @@
                                 'badge-light-warning': matricula.situacion === SituacionReference.REPITENTE
                             }">{{ matricula.situacion }}</span>
                         </td>
-                        <td>{{ matricula.fechaMatricula | date:'dd/MM/yyyy':'UTC' }}</td>
+                        <td>{{ matricula.fechaMatricula | date:'dd/MM/yyyy h:mm a' }}</td>
                         <td class="text-center">
                             <span class="badge" [ngClass]="{
                                 'badge-light-success': matricula.estado === EstadoMatriculaReference.VIGENTE,
@@ -103,23 +106,26 @@
                         </td>
                         <td class="text-end">
                             <div class="d-none d-md-flex justify-content-end">
-                                <button type="button" class="btn btn-light-info btn-sm me-3"
+                                <button type="button" class="btn btn-light-info btn-sm"
                                     (click)="abrirDetalleModal(matricula)">
                                     <app-keenicon name="eye" class="fs-5 me-2"></app-keenicon>
                                     Detalle
                                 </button>
-                                <button type="button" class="btn btn-light-primary btn-sm me-3"
-                                    (click)="abrirEditarModal(matricula)">
-                                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                                    Editar
-                                </button>
-                                <button type="button" class="btn btn-light-danger btn-sm"
-                                    (click)="confirmarAnulacion(matricula)">
-                                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                                    Anular
-                                </button>
-                            </div>
 
+                                <ng-container
+                                    *ngIf="matricula.estado !== EstadoMatriculaReference.ANULADA && matricula.estado !== EstadoMatriculaReference.COMPLETADA">
+                                    <button type="button" class="btn btn-light-primary btn-sm ms-3"
+                                        (click)="abrirEditarModal(matricula)">
+                                        <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                                        Editar
+                                    </button>
+                                    <button type="button" class="btn btn-light-danger btn-sm ms-3"
+                                        (click)="confirmarAnulacion(matricula)">
+                                        <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                                        Anular
+                                    </button>
+                                </ng-container>
+                            </div>
                             <div class="d-md-none text-end" ngbDropdown>
                                 <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm"
                                     ngbDropdownToggle>
@@ -130,14 +136,20 @@
                                         <app-keenicon name="eye" class="fs-5 me-2"></app-keenicon>
                                         Detalle
                                     </button>
-                                    <button class="dropdown-item text-primary" (click)="abrirEditarModal(matricula)">
-                                        <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                                        Editar
-                                    </button>
-                                    <button class="dropdown-item text-danger" (click)="confirmarAnulacion(matricula)">
-                                        <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                                        Anular
-                                    </button>
+
+                                    <ng-container
+                                        *ngIf="matricula.estado !== EstadoMatriculaReference.ANULADA && matricula.estado !== EstadoMatriculaReference.COMPLETADA">
+                                        <button class="dropdown-item text-primary"
+                                            (click)="abrirEditarModal(matricula)">
+                                            <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                                            Editar
+                                        </button>
+                                        <button class="dropdown-item text-danger"
+                                            (click)="confirmarAnulacion(matricula)">
+                                            <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                                            Anular
+                                        </button>
+                                    </ng-container>
                                 </div>
                             </div>
                         </td>
@@ -203,7 +215,7 @@
                         <div *ngIf="estudiantesEncontrados.length > 0" class="card shadow-sm position-absolute w-100"
                             style="z-index: 10;">
                             <div class="list-group list-group-flush">
-                                <a *ngFor="let est of estudiantesEncontrados" (click)="seleccionarEstudiante(est)"
+                                <a *ngFor="let est of estudiantesEncontrados" (mousedown)="seleccionarEstudiante(est)"
                                     class="list-group-item list-group-item-action cursor-pointer">
                                     {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI: {{
                                     est.dni }})
@@ -225,7 +237,7 @@
                             <div *ngIf="apoderadosEncontrados.length > 0" class="card shadow-sm position-absolute w-100"
                                 style="z-index: 10;">
                                 <div class="list-group list-group-flush">
-                                    <a *ngFor="let apo of apoderadosEncontrados" (click)="seleccionarApoderado(apo)"
+                                    <a *ngFor="let apo of apoderadosEncontrados" (mousedown)="seleccionarApoderado(apo)"
                                         class="list-group-item list-group-item-action cursor-pointer">
                                         {{ apo.nombre }} {{ apo.apellidoPaterno }} {{ apo.apellidoMaterno }} (DNI: {{
                                         apo.dni }})
@@ -237,13 +249,13 @@
 
                     <!-- PASO 3: DETALLES ACADÉMICOS -->
                     <div class="mb-8">
-                        <h3 class="fs-lg fw-bolder text-dark mb-4">Paso 3: Detalles Académicos</h3>
+                        <h3 class="fs-lg fw-bolder mb-4">Paso 3: Detalles Académicos</h3>
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="form-label">Nivel</label>
                                 <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.nivel"
-                                    (change)="onNivelChange('modal')">
-                                    <option [ngValue]="undefined" disabled>Seleccione...</option>
+                                    (change)="onNivelChange('modal')" name="nivelModal">
+                                    <option [ngValue]="''" disabled>Seleccione...</option>
                                     <option *ngFor="let n of niveles" [value]="n.identifier">{{ n.descripcion }}
                                     </option>
                                 </select>
@@ -251,15 +263,16 @@
                             <div class="col-md-4">
                                 <label class="form-label">Grado</label>
                                 <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.grado"
-                                    [disabled]="!nuevaMatricula.nivel">
-                                    <option [ngValue]="undefined" disabled>Seleccione...</option>
+                                    [disabled]="!nuevaMatricula.nivel" name="gradoModal">
+                                    <option [ngValue]="''" disabled>Seleccione...</option>
                                     <option *ngFor="let g of gradosDelNivelSeleccionado" [value]="g.identifier">{{
                                         g.descripcion }}</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Situación</label>
-                                <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.situacion">
+                                <select class="form-select form-select-solid" [(ngModel)]="nuevaMatricula.situacion"
+                                    name="situacionModal">
                                     <option *ngFor="let s of situaciones" [value]="s">{{ s }}</option>
                                 </select>
                             </div>
@@ -274,7 +287,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <h3 class="fs-lg fw-bolder text-dark">Paso 4: Descuentos y Pagos (Opcional)</h3>
+                        <h3 class="fs-lg fw-bolder">Paso 4: Descuentos y Pagos (Opcional)</h3>
                         <div class="table-responsive">
                             <table class="table table-row-bordered gy-5">
                                 <thead>
@@ -287,7 +300,7 @@
                                 <tbody class="text-gray-600">
                                     <tr>
                                         <td class="fw-bold align-middle">Matrícula</td>
-                                        <td class="text-end align-middle">S/ 280.00</td>
+                                        <td class="text-end align-middle">{{ montoBaseMatricula | currency:'S/ ' }}</td>
                                         <td>
                                             <input type="number"
                                                 class="form-control form-control-solid form-control-sm text-end"
@@ -297,7 +310,7 @@
                                     </tr>
                                     <tr>
                                         <td class="fw-bold align-middle">Pensión Mensual</td>
-                                        <td class="text-end align-middle">S/ 300.00</td>
+                                        <td class="text-end align-middle">{{ montoBasePension | currency:'S/ ' }}</td>
                                         <td>
                                             <input type="number"
                                                 class="form-control form-control-solid form-control-sm text-end"
@@ -334,74 +347,72 @@
                 <button type="button" class="btn-close" (click)="cerrarDetalleModal()"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-5 g-xl-10 mb-5">
-                    <div class="col-xl-4">
+                <div class="row g-5 mb-5">
+                    <div class="col-xl-5">
                         <div class="card card-flush h-md-100">
                             <div class="card-header">
                                 <h3 class="card-title">Estudiante</h3>
                             </div>
-                            <div class="card-body pt-1">
-                                <div class="d-flex flex-center flex-column pb-5">
-                                    <div class="symbol symbol-75px symbol-circle mb-7">
+                            <div class="card-body pt-2">
+                                <div class="d-flex flex-center flex-column pb-2">
+                                    <div class="symbol symbol-100px symbol-circle mb-6">
                                         <img [src]="matriculaSeleccionada.avatarUrl" alt="Avatar" />
                                     </div>
-                                    <a class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{
-                                        getEstudianteNombre(matriculaSeleccionada.estudiante) }}</a>
+                                    <p class="fs-3 text-gray-600 fw-bold">{{
+                                        getEstudianteNombre(matriculaSeleccionada.estudiante) }}</p>
                                 </div>
-                                <div class="d-flex flex-stack fs-4 py-3">
+                                <div class="d-flex flex-stack fs-5 py-3">
                                     <div class="fw-bold">DNI:</div>
                                     <div class="text-gray-600">{{ getEstudianteDNI(matriculaSeleccionada.estudiante) }}
                                     </div>
                                 </div>
-                                <div class="d-flex flex-stack fs-4 py-3">
+                                <div class="d-flex flex-stack fs-5 py-3">
                                     <div class="fw-bold">Situación:</div>
                                     <div class="text-gray-600">
                                         <span class="badge" [ngClass]="{
-                                            'badge-light-info': matriculaSeleccionada.situacion === SituacionReference.PROMOVIDO,
-                                            'badge-light-primary': matriculaSeleccionada.situacion === SituacionReference.INGRESANTE,
-                                            'badge-light-warning': matriculaSeleccionada.situacion === SituacionReference.REPITENTE
-                                        }">{{ matriculaSeleccionada.situacion }}</span>
+                                'badge-light-info': matriculaSeleccionada.situacion === SituacionReference.PROMOVIDO,
+                                'badge-light-primary': matriculaSeleccionada.situacion === SituacionReference.INGRESANTE,
+                                'badge-light-warning': matriculaSeleccionada.situacion === SituacionReference.REPITENTE
+                            }">{{ matriculaSeleccionada.situacion }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-8">
+                    <div class="col-xl-7">
                         <div class="card card-flush h-md-100">
                             <div class="card-header">
                                 <h3 class="card-title">Datos de la Matrícula</h3>
                             </div>
                             <div class="card-body pt-1">
                                 <div class="row">
-                                    <div class="col-6">
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                    <div class="col-12">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Año Académico:</div>
                                             <div class="text-gray-600">{{
                                                 getAnioAcademicoValor(matriculaSeleccionada.anioAcademico) }}</div>
                                         </div>
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Nivel:</div>
                                             <div class="text-gray-600">{{ getNivelNombre(matriculaSeleccionada.nivel) }}
                                             </div>
                                         </div>
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Grado:</div>
                                             <div class="text-gray-600">{{ getGradoNombre(matriculaSeleccionada.grado) }}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Fecha Matrícula:</div>
                                             <div class="text-gray-600">{{ matriculaSeleccionada.fechaMatricula |
-                                                date:'dd/MM/yyyy' }}</div>
+                                                date:'dd/MM/yyyy h:mm a' }}</div>
                                         </div>
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Apoderado:</div>
                                             <div class="text-gray-600">{{
                                                 getApoderadoNombre(matriculaSeleccionada.apoderado) }}</div>
                                         </div>
-                                        <div class="d-flex flex-stack fs-4 py-3">
+                                        <div class="d-flex flex-stack fs-5 py-3">
                                             <div class="fw-bold">Estado:</div>
                                             <div class="text-gray-600">
                                                 <span class="badge" [ngClass]="{
@@ -422,7 +433,7 @@
                         <h3 class="card-title">Cronograma de Pagos / Estado de Cuenta</h3>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive" style="max-height: 175px; overflow-y: auto;">
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                             <table class="table table-row-bordered gy-5">
                                 <thead>
                                     <tr class="fw-semibold fs-6 text-muted">
@@ -434,11 +445,17 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let cuota of matriculaSeleccionada.cronogramas; let i = index">
+                                    <tr *ngFor="let cuota of matriculaSeleccionada.cronogramas; let i = index"
+                                        class="align-middle">
                                         <td>{{ i + 1 }}</td>
                                         <td>{{ cuota.descripcion }}</td>
                                         <td>{{ cuota.fechaVencimiento | date:'dd/MM/yyyy':'UTC' }}</td>
-                                        <td>{{ cuota.montoAPagar | currency:'S/ ' }}</td>
+                                        <td>
+                                            <span>{{ cuota.montoAPagar | currency:'S/ ' }}</span>
+                                            <div *ngIf="cuota.mora && cuota.mora > 0" class="fs-7 text-danger">
+                                                (+ S/ {{ cuota.mora | number:'1.2-2' }} de mora)
+                                            </div>
+                                        </td>
                                         <td class="text-center">
                                             <span class="badge" [ngClass]="{
                                                 'badge-light-success': cuota.estadoDeuda === EstadoDeudaReference.PAGADO,
@@ -461,6 +478,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" (click)="cerrarDetalleModal()">Cerrar</button>
+
+                <button type="button" class="btn btn-light-info" *ngIf="mostrarBotonCompletar(matriculaSeleccionada!)"
+                    (click)="confirmarCompletar(matriculaSeleccionada!)">
+                    Completar Matrícula
+                </button>
             </div>
         </div>
     </div>
@@ -478,54 +500,90 @@
                 <button type="button" class="btn-close" (click)="cerrarEditarModal()"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning" *ngIf="tienePagosRegistrados">
+                <div class="alert alert-warning d-flex align-items-center" *ngIf="tienePagosRegistrados">
                     <app-keenicon name="information-5" class="fs-2 me-2"></app-keenicon>
                     Algunos campos están bloqueados porque esta matrícula ya tiene pagos registrados.
                 </div>
 
-                <!-- Formulario de Edición -->
-                <div class="py-2">
-                    <!-- Estudiante y Apoderado (Bloqueados si hay pagos) -->
+                <div>
                     <div class="mb-6">
-                        <h3 class="fs-lg fw-semibold text-dark mb-2">Estudiante</h3>
-                        <div class="bg-light p-4 rounded border d-flex align-items-center justify-content-between">
-                            <span>{{ matriculaParaEditar.nombreEstudiante }} (DNI: {{
+                        <label class="form-label fw-bolder">Estudiante</label>
+                        <div *ngIf="!matriculaParaEditar.editandoEstudiante"
+                            class="bg-light p-4 rounded border d-flex align-items-center justify-content-between"
+                            [class.form-control-readonly]="tienePagosRegistrados">
+                            <span class="fs-6 fw-normal">{{ matriculaParaEditar.nombreEstudiante }} (DNI: {{
                                 getEstudianteDNI(matriculaParaEditar.estudiante) }})</span>
-                            <button class="btn btn-sm btn-light-primary"
-                                [disabled]="tienePagosRegistrados">Cambiar</button>
+                            <button class="btn py-1 px-2 fs-sm btn-light-primary" [disabled]="tienePagosRegistrados"
+                                (click)="cambiarEstudianteEnEdicion()">Cambiar</button>
+                        </div>
+                        <div *ngIf="matriculaParaEditar.editandoEstudiante" class="position-relative">
+                            <input type="text" class="form-control form-control-solid"
+                                placeholder="Buscar nuevo estudiante..."
+                                [(ngModel)]="matriculaParaEditar.estudianteBusqueda" (keyup)="buscarEstudiantes()">
+
+                            <div *ngIf="estudiantesEncontrados.length > 0"
+                                class="card shadow-sm position-absolute w-100" style="z-index: 10;">
+                                <div class="list-group list-group-flush">
+                                    <a *ngFor="let est of estudiantesEncontrados"
+                                        (mousedown)="seleccionarNuevoEstudiante(est)"
+                                        class="list-group-item list-group-item-action cursor-pointer">
+                                        {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI: {{ est.dni }})
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="mb-6">
-                        <label class="form-label fw-bold">Apoderado Responsable</label>
-                        <div class="bg-light p-4 rounded border d-flex align-items-center justify-content-between">
-                            <span>{{ matriculaParaEditar.nombreApoderado }}</span>
-                            <button class="btn btn-sm btn-light-primary"
-                                [disabled]="tienePagosRegistrados">Cambiar</button>
+                        <label class="form-label fw-bolder">Apoderado Responsable</label>
+                        <div *ngIf="!matriculaParaEditar.editandoApoderado"
+                            class="bg-light p-4 rounded border d-flex align-items-center justify-content-between"
+                            [class.form-control-readonly]="tienePagosRegistrados">
+                            <span class="fs-6 fw-normal">{{ matriculaParaEditar.nombreApoderado }} (DNI: {{
+                                getApoderadoDNI(matriculaParaEditar.apoderado) }})</span>
+                            <button class="btn py-1 px-2 fs-sm btn-light-primary" [disabled]="tienePagosRegistrados"
+                                (click)="cambiarApoderadoEnEdicion()">Cambiar</button>
+                        </div>
+                        <div *ngIf="matriculaParaEditar.editandoApoderado" class="position-relative">
+                            <input type="text" class="form-control form-control-solid"
+                                placeholder="Buscar nuevo apoderado..."
+                                [(ngModel)]="matriculaParaEditar.apoderadoBusqueda" (keyup)="buscarApoderados()">
+
+                            <div *ngIf="apoderadosEncontrados.length > 0" class="card shadow-sm position-absolute w-100"
+                                style="z-index: 10;">
+                                <div class="list-group list-group-flush">
+                                    <a *ngFor="let apo of apoderadosEncontrados"
+                                        (mousedown)="seleccionarNuevoApoderado(apo)"
+                                        class="list-group-item list-group-item-action cursor-pointer">
+                                        {{ apo.nombre }} {{ apo.apellidoPaterno }} {{ apo.apellidoMaterno }} (DNI: {{ apo.dni }})
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Detalles Académicos -->
-                    <div>
-                        <h3 class="fs-lg fw-semibold text-dark mb-4">Detalles Académicos</h3>
+                    <div class="py-2">
+                        <h3 class="fs-lg fw-bolder mb-5">Detalles Académicos</h3>
                         <div class="row g-4">
                             <div class="col-md-4">
                                 <label class="form-label">Nivel</label>
                                 <select class="form-select form-select-solid" [(ngModel)]="matriculaParaEditar.nivel"
-                                    [disabled]="tienePagosRegistrados">
+                                    [disabled]="tienePagosRegistrados"
+                                    [class.form-control-readonly]="tienePagosRegistrados"
+                                    (change)="onNivelChangeEnEditar()">
+                                    <option [ngValue]="''" disabled>Seleccione...</option>
                                     <option *ngFor="let n of niveles" [value]="n.identifier">{{ n.descripcion }}
                                     </option>
                                 </select>
-                                <div *ngIf="tienePagosRegistrados" class="form-text text-danger mt-1">Bloqueado por
-                                    pagos existentes.</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Grado</label>
                                 <select class="form-select form-select-solid" [(ngModel)]="matriculaParaEditar.grado"
-                                    [disabled]="tienePagosRegistrados">
-                                    <option *ngFor="let g of grados" [value]="g.identifier">{{ g.descripcion }}</option>
+                                    [disabled]="tienePagosRegistrados"
+                                    [class.form-control-readonly]="tienePagosRegistrados">
+                                    <option [ngValue]="''" disabled>Seleccione...</option>
+                                    <option *ngFor="let g of gradosParaEditar" [value]="g.identifier">{{ g.descripcion
+                                        }}</option>
                                 </select>
-                                <div *ngIf="tienePagosRegistrados" class="form-text text-danger mt-1">Bloqueado por
-                                    pagos existentes.</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Situación</label>
@@ -534,6 +592,56 @@
                                     <option *ngFor="let s of situaciones" [value]="s">{{ s }}</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div class="row g-4 mt-1"
+                            *ngIf="matriculaParaEditar.situacion === SituacionReference.INGRESANTE">
+                            <div class="col-md-12">
+                                <label class="form-label">Institución de Procedencia</label>
+                                <input type="text" class="form-control form-control-solid"
+                                    placeholder="Ej: Colegio San Agustín" [(ngModel)]="matriculaParaEditar.procedencia">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="fs-lg fw-bolder">Descuentos Aplicados</h3>
+                        <div class="table-responsive">
+                            <table class="table table-row-bordered gy-5">
+                                <thead>
+                                    <tr class="fw-semibold fs-6 text-muted">
+                                        <th>Concepto</th>
+                                        <th class="text-end">Monto Base</th>
+                                        <th class="text-end" style="width: 150px;">Descuento (S/)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-600">
+                                    <tr>
+                                        <td class="fw-bold align-middle">Matrícula</td>
+                                        <td class="text-end align-middle">{{ montoBaseMatricula | currency:'S/ ' }}</td>
+                                        <td>
+                                            <input type="number"
+                                                class="form-control form-control-solid form-control-sm text-end"
+                                                [(ngModel)]="matriculaParaEditar.descuentoMatricula"
+                                                name="descuentoMatriculaEdit" placeholder="0.00"
+                                                [disabled]="tienePagosRegistrados"
+                                                [class.form-control-readonly]="tienePagosRegistrados">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold align-middle">Pensión Mensual</td>
+                                        <td class="text-end align-middle">{{ montoBasePension | currency:'S/ ' }}</td>
+                                        <td>
+                                            <input type="number"
+                                                class="form-control form-control-solid form-control-sm text-end"
+                                                [(ngModel)]="matriculaParaEditar.descuentoPension"
+                                                name="descuentoPensionEdit" placeholder="0.00"
+                                                [disabled]="tienePagosRegistrados"
+                                                [class.form-control-readonly]="tienePagosRegistrados">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef, LOCALE_ID } from '@angular/core';
+import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from 'src/app/_metronic/shared/shared.module';
@@ -21,6 +21,9 @@ import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-
 import { EstadoDeudaReference } from 'src/app/models/enums/estado-deuda-reference.enum';
 import { forkJoin } from 'rxjs';
 import Swal from 'sweetalert2';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
+import localeEs from '@angular/common/locales/es-PE';
 
 // Interfaz para el formulario de nueva matricula
 interface NuevaMatriculaForm {
@@ -42,14 +45,21 @@ interface EditarMatriculaForm extends Partial<MatriculaDto> {
   nombreEstudiante?: string;
   nombreApoderado?: string;
   avatarUrl?: string;
+  editandoEstudiante?: boolean;
+  estudianteBusqueda?: string;
+  editandoApoderado?: boolean;
+  apoderadoBusqueda?: string;
 }
+
+registerLocaleData(localeEs, 'es-PE');
 
 @Component({
   selector: 'app-matriculas',
   standalone: true,
-  imports: [CommonModule, SharedModule, FormsModule, RouterModule],
+  imports: [CommonModule, SharedModule, FormsModule, RouterModule, NgbDropdownModule],
   templateUrl: './matriculas.component.html',
-  styleUrls: ['./matriculas.component.scss']
+  styleUrls: ['./matriculas.component.scss'],
+  providers: [{ provide: LOCALE_ID, useValue: 'es-PE' }]
 })
 export class MatriculasComponent implements OnInit {
   pagedMatriculas: PageResponse<MatriculaDto> | undefined;
@@ -60,19 +70,28 @@ export class MatriculasComponent implements OnInit {
   grados: GradoDto[] = [];
   estudiantes: EstudianteDto[] = [];
   apoderados: ApoderadoDto[] = [];
+  // --- NUEVAS PROPIEDADES PARA MONTOS BASE ---
+  montoBaseMatricula: number = 0;
+  montoBasePension: number = 0;
+
+  // --- PROPIEDAD PARA GUARDAR EL AÑO ACTIVO ---
+  anioActivoId: string = '';
 
   // Modelos de los filtros
-  filtroAnio: string = '';
   filtroNivel: string = '';
   filtroGrado: string = '';
-  filtroEstado: string = '';
+  filtroEstado: string = EstadoMatriculaReference.VIGENTE;
   filtroBusqueda: string = '';
+
+  // --- NUEVAS PROPIEDADES ---
+  filtroFechaDesde: string = '';
+  filtroFechaHasta: string = '';
 
   gradosParaFiltro: GradoDto[] = []; // Lista de grados para el dropdown del filtro
 
   // Paginación
   currentPage: number = 1;
-  itemsPerPage: number = 10;
+  itemsPerPage: number = 5;
 
   // Enums
   SituacionReference = SituacionReference;
@@ -80,12 +99,13 @@ export class MatriculasComponent implements OnInit {
   EstadoDeudaReference = EstadoDeudaReference; // Añadido para el modal de detalle
   situaciones: string[] = Object.values(SituacionReference);
 
-  // --- LÓGICA PARA EL MODAL DE NUEVA MATRÍCULA ---
+  // --- LÓGICA PARA EL MODAL DE NUEVA Y EDICIÓN DE MATRÍCULA ---
   showNuevaMatriculaModal = false;
   nuevaMatricula: Partial<NuevaMatriculaForm> = {};
   estudiantesEncontrados: EstudianteDto[] = [];
   apoderadosEncontrados: ApoderadoDto[] = [];
   gradosDelNivelSeleccionado: GradoDto[] = [];
+  gradosParaEditar: GradoDto[] = [];
 
   // --- PROPIEDADES PARA LOS NUEVOS MODALES ---
   showDetalleModal = false;
@@ -103,7 +123,8 @@ export class MatriculasComponent implements OnInit {
     private nivelService: NivelService,
     private gradoService: GradoService,
     private estudianteService: EstudianteService,
-    private apoderadoService: ApoderadoService
+    private apoderadoService: ApoderadoService,
+    private conceptoPagoService: ConceptoPagoService
   ) { }
 
   ngOnInit(): void {
@@ -116,47 +137,51 @@ export class MatriculasComponent implements OnInit {
       niveles: this.nivelService.getList(0, 100),
       grados: this.gradoService.getList(0, 1000), // Cargar todos los grados de una vez
       estudiantes: this.estudianteService.getList(0, 1000),
-      apoderados: this.apoderadoService.getList(0, 1000)
-    }).subscribe(({ anios, niveles, grados, estudiantes, apoderados }) => {
+      apoderados: this.apoderadoService.getList(0, 1000),
+      conceptos: this.conceptoPagoService.getList(0, 100) // Añadir esta llamada
+    }).subscribe(({ anios, niveles, grados, estudiantes, apoderados, conceptos }) => {
       this.anios = anios?.content || [];
       this.niveles = niveles?.content || [];
       this.grados = grados?.content || []; // Guardar todos los grados
       this.estudiantes = estudiantes?.content || [];
       this.apoderados = apoderados?.content || [];
 
+      // --- LÓGICA ACTUALIZADA PARA CARGA INICIAL ---
       const anioActivo = this.anios.find(a => a.estadoAcademico === 'ACTIVO');
       if (anioActivo && anioActivo.identifier) {
-        this.filtroAnio = anioActivo.identifier;
+        this.anioActivoId = anioActivo.identifier;
       }
+
+      // --- LÓGICA PARA EXTRAER MONTOS BASE ---
+      const conceptoMatricula = conceptos?.content.find(c => c.codigo === 'MATR');
+      const conceptoPension = conceptos?.content.find(c => c.codigo === 'PENS');
+      this.montoBaseMatricula = conceptoMatricula?.montoSugerido || 280; // Valor por defecto si no se encuentra
+      this.montoBasePension = conceptoPension?.montoSugerido || 300; // Valor por defecto si no se encuentra
 
       this.loadMatriculas();
     });
   }
 
-  /*loadMatriculas(): void {
-    const page = this.currentPage - 1;
-    this.matriculaService.getList(page, this.itemsPerPage, this.filtroBusqueda, undefined, this.filtroEstado)
-      .subscribe(response => {
-        this.pagedMatriculas = response;
-        this.cdr.detectChanges();
-      });
-  }*/
-
   // --- MÉTODO CORREGIDO ---
   loadMatriculas(): void {
     const page = this.currentPage - 1;
-    
+
+    // Si no hay fechas seleccionadas, usamos el año activo por defecto.
+    const anioParaFiltrar = (this.filtroFechaDesde || this.filtroFechaHasta) ? '' : this.anioActivoId;
+
     this.matriculaService.getList(
-        page, 
-        this.itemsPerPage, 
-        this.filtroBusqueda, 
-        this.filtroEstado,
-        this.filtroAnio,
-        this.filtroNivel,
-        this.filtroGrado
+      page,
+      this.itemsPerPage,
+      this.filtroBusqueda,
+      this.filtroEstado,
+      anioParaFiltrar,
+      this.filtroNivel,
+      this.filtroGrado,
+      this.filtroFechaDesde,
+      this.filtroFechaHasta
     ).subscribe(response => {
-        this.pagedMatriculas = response;
-        this.cdr.detectChanges();
+      this.pagedMatriculas = response;
+      this.cdr.detectChanges();
     });
   }
 
@@ -168,14 +193,13 @@ export class MatriculasComponent implements OnInit {
       this.filtroGrado = ''; // Resetea el grado seleccionado
       // Filtramos la lista maestra de grados que ya cargamos al inicio
       this.gradosParaFiltro = nivelId ? this.grados.filter(g => g.nivel === nivelId) : [];
+      this.buscar();
     }
     // Lógica para el modal de nueva matrícula
     else {
       this.nuevaMatricula.grado = '';
       this.gradosDelNivelSeleccionado = nivelId ? this.grados.filter(g => g.nivel === nivelId) : [];
     }
-
-    if (source === 'filtro') this.buscar();
   }
 
   buscar(): void {
@@ -185,11 +209,12 @@ export class MatriculasComponent implements OnInit {
 
   limpiarFiltros(): void {
     const anioActivo = this.anios.find(a => a.estadoAcademico === 'ACTIVO');
-    this.filtroAnio = anioActivo?.identifier || '';
     this.filtroNivel = '';
     this.filtroGrado = '';
-    this.filtroEstado = '';
+    this.filtroEstado = EstadoMatriculaReference.VIGENTE;
     this.filtroBusqueda = '';
+    this.filtroFechaDesde = '';
+    this.filtroFechaHasta = '';
     this.gradosParaFiltro = [];
     this.buscar();
   }
@@ -226,6 +251,12 @@ export class MatriculasComponent implements OnInit {
     return apo ? `${apo.nombre} ${apo.apellidoPaterno} ${apo.apellidoMaterno}` : '...';
   }
 
+  getApoderadoDNI(id: string | undefined): string {
+    if (!id) return '...';
+    const apo = this.apoderados.find(a => a.identifier === id);
+    return apo ? apo.dni : '...';
+  }
+
   generarAvatarUrl(nombre: string): string {
     const iniciales = nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     return `https://placehold.co/64x64/E2E8F0/4A5568?text=${iniciales}`;
@@ -233,21 +264,30 @@ export class MatriculasComponent implements OnInit {
 
   // --- Métodos para el Modal de Nueva Matrícula ---
   abrirNuevaMatriculaModal(): void {
+    // 1. Primero, busca un año académico activo.
+    const anioActivo = this.anios.find(a => a.estadoAcademico === 'ACTIVO');
+
+    // 2. SI NO LO ENCUENTRA, detiene todo y le avisa al usuario.
+    if (!anioActivo) {
+        Swal.fire('Error de Configuración', 'No se encontró un año académico activo. Por favor, configure uno en el módulo de Años Académicos.', 'error');
+        return; // No abre el modal.
+    }
+
+    // 3. Si lo encuentra, procede a crear el formulario con el año ya asignado.
     this.nuevaMatricula = {
       estudianteBusqueda: '',
       estudianteSeleccionado: null,
       apoderadoBusqueda: '',
       apoderadoSeleccionado: null,
+      anioAcademico: anioActivo.identifier, // Se asigna aquí
+      nivel: '',
+      grado: '',
       situacion: SituacionReference.PROMOVIDO,
       procedencia: '',
       descuentoMatricula: 0,
       descuentoPension: 0
-      
     };
-    const anioActivo = this.anios.find(a => a.estadoAcademico === 'ACTIVO');
-    if (anioActivo) {
-      this.nuevaMatricula.anioAcademico = anioActivo.identifier;
-    }
+    
     this.estudiantesEncontrados = [];
     this.apoderadosEncontrados = [];
     this.gradosDelNivelSeleccionado = [];
@@ -259,7 +299,11 @@ export class MatriculasComponent implements OnInit {
   }
 
   buscarEstudiantes(): void {
-    const busqueda = this.nuevaMatricula.estudianteBusqueda?.toLowerCase().trim();
+    // Determinamos si estamos en el modal de creación o de edición
+    const busqueda = this.showNuevaMatriculaModal
+      ? this.nuevaMatricula.estudianteBusqueda?.toLowerCase().trim()
+      : this.matriculaParaEditar.estudianteBusqueda?.toLowerCase().trim();
+
     if (busqueda && busqueda.length > 2) {
       this.estudianteService.getList(0, 10, busqueda).subscribe(res => {
         this.estudiantesEncontrados = res?.content || [];
@@ -276,7 +320,10 @@ export class MatriculasComponent implements OnInit {
   }
 
   buscarApoderados(): void {
-    const busqueda = this.nuevaMatricula.apoderadoBusqueda?.toLowerCase().trim();
+    const busqueda = this.showNuevaMatriculaModal
+      ? this.nuevaMatricula.apoderadoBusqueda?.toLowerCase().trim()
+      : this.matriculaParaEditar.apoderadoBusqueda?.toLowerCase().trim();
+
     if (busqueda && busqueda.length > 2) {
       this.apoderadoService.getList(0, 10, busqueda).subscribe(res => {
         this.apoderadosEncontrados = res?.content || [];
@@ -293,12 +340,33 @@ export class MatriculasComponent implements OnInit {
   }
 
   registrarMatricula(): void {
+
+    const descMatricula = this.nuevaMatricula.descuentoMatricula || 0;
+    const descPension = this.nuevaMatricula.descuentoPension || 0;
+
+    // --- VALIDACIÓN DE DESCUENTOS ---
+    if (descMatricula < 0 || descPension < 0) {
+      Swal.fire('Monto Inválido', 'El descuento no puede ser un número negativo.', 'warning');
+      return;
+    }
+    if (descMatricula > this.montoBaseMatricula) {
+      Swal.fire('Monto Inválido', 'El descuento de la matrícula no puede exceder el monto base.', 'warning');
+      return;
+    }
+    if (descPension > this.montoBasePension) {
+      Swal.fire('Monto Inválido', 'El descuento de la pensión no puede exceder el monto base.', 'warning');
+      return;
+    }
+
+    console.log("Datos del formulario ANTES de validar:", this.nuevaMatricula);
+
     if (!this.nuevaMatricula.estudianteSeleccionado || !this.nuevaMatricula.apoderadoSeleccionado ||
       !this.nuevaMatricula.anioAcademico || !this.nuevaMatricula.nivel || !this.nuevaMatricula.grado) {
       Swal.fire('Campos Incompletos', 'Por favor, complete todos los pasos requeridos.', 'warning');
       return;
     }
 
+    // Ahora incluimos los descuentos en el objeto que se envía al backend.
     const nuevaMatriculaDto: Partial<MatriculaDto> = {
       estudiante: this.nuevaMatricula.estudianteSeleccionado.identifier,
       apoderado: this.nuevaMatricula.apoderadoSeleccionado.identifier,
@@ -306,28 +374,49 @@ export class MatriculasComponent implements OnInit {
       nivel: this.nuevaMatricula.nivel,
       grado: this.nuevaMatricula.grado,
       situacion: this.nuevaMatricula.situacion,
-      procedencia: this.nuevaMatricula.situacion === SituacionReference.INGRESANTE ? this.nuevaMatricula.procedencia : ''
-      // Aquí, en el futuro, podrías pasar los descuentos al DTO si el backend los necesita
+      procedencia: this.nuevaMatricula.situacion === SituacionReference.INGRESANTE ? this.nuevaMatricula.procedencia : '',
+      // --- LÍNEAS AÑADIDAS ---
+      descuentoMatricula: this.nuevaMatricula.descuentoMatricula,
+      descuentoPension: this.nuevaMatricula.descuentoPension
     };
 
     console.log('Datos de Matrícula a Registrar:', this.nuevaMatricula); // <-- Para ver los descuentos en consola
 
     // CORREGIDO: Se añade el tipo explícito 'MatriculaDto | undefined'
-    this.matriculaService.add(nuevaMatriculaDto).subscribe((matriculaCreada: MatriculaDto | undefined) => {
-      if (matriculaCreada) {
-        Swal.fire('¡Éxito!', `Matrícula ${matriculaCreada.codigo} registrada correctamente.`, 'success');
-        this.loadMatriculas();
-        this.cerrarNuevaMatriculaModal();
-      } else {
-        Swal.fire('Error', 'No se pudo registrar la matrícula.', 'error');
+    this.matriculaService.add(nuevaMatriculaDto).subscribe({
+      next: (matriculaCreada) => {
+        if (matriculaCreada) {
+          Swal.fire('¡Éxito!', `Matrícula ${matriculaCreada.codigo} registrada correctamente.`, 'success');
+          this.loadMatriculas();
+          this.cerrarNuevaMatriculaModal();
+        }
+      },
+      error: (err) => {
+        // --- CAMBIO AQUÍ: Se muestra el error específico del backend ---
+        Swal.fire('¡Cuidado!', err.message, 'warning');
       }
     });
   }
 
   // --- MÉTODOS PARA EL MODAL DE DETALLE ---
   abrirDetalleModal(matricula: MatriculaDto): void {
-    // Ordenamos el cronograma por fecha de vencimiento
-    matricula.cronogramas.sort((a, b) => new Date(a.fechaVencimiento).getTime() - new Date(b.fechaVencimiento).getTime());
+    // --- LÓGICA DE ORDENAMIENTO MEJORADA CON DESEMPATE ---
+    matricula.cronogramas.sort((a, b) => {
+      const fechaA = new Date(a.fechaVencimiento).getTime();
+      const fechaB = new Date(b.fechaVencimiento).getTime();
+
+      // 1. Criterio principal: ordenar por fecha
+      if (fechaA !== fechaB) {
+        return fechaA - fechaB;
+      }
+
+      // 2. Criterio de desempate: si las fechas son iguales,
+      // la "Matrícula" siempre va primero que la "Pensión".
+      if (a.descripcion?.includes('Matrícula')) return -1;
+      if (b.descripcion?.includes('Matrícula')) return 1;
+      
+      return 0; // Si no es ninguno de los casos, mantener el orden
+    });
 
     this.matriculaSeleccionada = {
       ...matricula,
@@ -343,18 +432,58 @@ export class MatriculasComponent implements OnInit {
 
   // --- MÉTODOS PARA MODAL DE EDICIÓN ---
   abrirEditarModal(matricula: MatriculaDto): void {
+    const cuotaMatricula = matricula.cronogramas.find(c => c.descripcion?.toLowerCase().includes('matrícula'));
+    const cuotaPension = matricula.cronogramas.find(c => c.descripcion?.toLowerCase().includes('pensión'));
+
     this.matriculaParaEditar = {
       ...matricula,
       nombreEstudiante: this.getEstudianteNombre(matricula.estudiante),
       nombreApoderado: this.getApoderadoNombre(matricula.apoderado),
-      avatarUrl: this.generarAvatarUrl(this.getEstudianteNombre(matricula.estudiante))
+      avatarUrl: this.generarAvatarUrl(this.getEstudianteNombre(matricula.estudiante)),
+      descuentoMatricula: cuotaMatricula?.descuento || 0,
+      descuentoPension: cuotaPension?.descuento || 0,
+      editandoEstudiante: false,
+      editandoApoderado: false
     };
 
-    this.tienePagosRegistrados = matricula.cronogramas.some(
-      c => c.estadoDeuda === EstadoDeudaReference.PAGADO
-    );
-
+    this.tienePagosRegistrados = matricula.cronogramas.some(c => c.estadoDeuda === EstadoDeudaReference.PAGADO);
+    this.onNivelChangeEnEditar();
     this.showEditarModal = true;
+  }
+
+  // --- NUEVA FUNCIÓN PARA FILTRAR GRADOS EN EDICIÓN ---
+  onNivelChangeEnEditar(): void {
+    const nivelId = this.matriculaParaEditar.nivel;
+    this.gradosParaEditar = nivelId ? this.grados.filter(g => g.nivel === nivelId) : [];
+    // Si el grado actual no pertenece al nuevo nivel, se resetea
+    if (!this.gradosParaEditar.some(g => g.identifier === this.matriculaParaEditar.grado)) {
+      this.matriculaParaEditar.grado = '';
+    }
+  }
+
+  // --- NUEVAS FUNCIONES PARA BOTONES "CAMBIAR" ---
+  cambiarEstudianteEnEdicion(): void {
+    this.matriculaParaEditar.editandoEstudiante = true;
+    this.matriculaParaEditar.estudianteBusqueda = '';
+    this.estudiantesEncontrados = [];
+  }
+
+  seleccionarNuevoEstudiante(estudiante: EstudianteDto): void {
+    this.matriculaParaEditar.estudiante = estudiante.identifier;
+    this.matriculaParaEditar.nombreEstudiante = `${estudiante.nombre} ${estudiante.apellidoPaterno}`;
+    this.matriculaParaEditar.editandoEstudiante = false;
+  }
+
+  cambiarApoderadoEnEdicion(): void {
+    this.matriculaParaEditar.editandoApoderado = true;
+    this.matriculaParaEditar.apoderadoBusqueda = '';
+    this.apoderadosEncontrados = [];
+  }
+
+  seleccionarNuevoApoderado(apoderado: ApoderadoDto): void {
+    this.matriculaParaEditar.apoderado = apoderado.identifier;
+    this.matriculaParaEditar.nombreApoderado = `${apoderado.nombre} ${apoderado.apellidoPaterno}`;
+    this.matriculaParaEditar.editandoApoderado = false;
   }
 
   cerrarEditarModal(): void {
@@ -364,48 +493,57 @@ export class MatriculasComponent implements OnInit {
   guardarCambiosMatricula(): void {
     if (!this.matriculaParaEditar || !this.matriculaParaEditar.identifier) return;
 
-    // Creamos un DTO limpio con solo los campos que el backend espera
-    const matriculaActualizada: Partial<MatriculaDto> = {
-      situacion: this.matriculaParaEditar.situacion,
-      procedencia: this.matriculaParaEditar.procedencia,
-      // Si no hay pagos, también podríamos actualizar otros campos
-      // nivel: this.tienePagosRegistrados ? undefined : this.matriculaParaEditar.nivel,
-    };
+    const descMatricula = this.matriculaParaEditar.descuentoMatricula || 0;
+    const descPension = this.matriculaParaEditar.descuentoPension || 0;
 
-    // Si no hay pagos, también se pueden actualizar otros campos (esta lógica es manejada en el backend)
-    if (!this.tienePagosRegistrados) {
-      matriculaActualizada.nivel = this.matriculaParaEditar.nivel;
-      matriculaActualizada.grado = this.matriculaParaEditar.grado;
+    // --- VALIDACIÓN DE DESCUENTOS ---
+    if (descMatricula < 0 || descPension < 0) {
+      Swal.fire('Monto Inválido', 'El descuento no puede ser un número negativo.', 'warning');
+      return;
+    }
+    if (descMatricula > this.montoBaseMatricula) {
+      Swal.fire('Monto Inválido', 'El descuento de la matrícula no puede exceder el monto base.', 'warning');
+      return;
+    }
+    if (descPension > this.montoBasePension) {
+      Swal.fire('Monto Inválido', 'El descuento de la pensión no puede exceder el monto base.', 'warning');
+      return;
     }
 
-    this.matriculaService.update(this.matriculaParaEditar.identifier, matriculaActualizada)
-      .subscribe(matriculaActualizada => {
-        if (matriculaActualizada) {
-          Swal.fire('¡Éxito!', `Matrícula ${matriculaActualizada.codigo} actualizada.`, 'success');
-          this.loadMatriculas(); // Recargar la tabla
-          this.cerrarEditarModal();
-        } else {
-          Swal.fire('Error', 'No se pudo actualizar la matrícula.', 'error');
-        }
-      }
-      );
+    // Creamos el DTO con todos los campos necesarios para la actualización
+    const matriculaActualizada: Partial<MatriculaDto> = {
+      // Campos siempre editables
+      situacion: this.matriculaParaEditar.situacion,
+      procedencia: this.matriculaParaEditar.procedencia,
 
-    /*this.matriculaService.update(this.matriculaParaEditar.identifier, matriculaActualizada)
-      .subscribe(res => {
-        if (res) {
-          Swal.fire('¡Éxito!', `Matrícula ${res.codigo} actualizada.`, 'success');
-          this.loadMatriculas();
-          this.cerrarEditarModal();
-        } else {
-          Swal.fire('Error', 'No se pudo actualizar la matrícula.', 'error');
+      // Campos editables solo si no hay pagos
+      estudiante: this.matriculaParaEditar.estudiante,
+      apoderado: this.matriculaParaEditar.apoderado,
+      nivel: this.matriculaParaEditar.nivel,
+      grado: this.matriculaParaEditar.grado,
+      anioAcademico: this.matriculaParaEditar.anioAcademico, // Es importante enviarlo
+      descuentoMatricula: this.matriculaParaEditar.descuentoMatricula,
+      descuentoPension: this.matriculaParaEditar.descuentoPension
+    };
+
+    this.matriculaService.update(this.matriculaParaEditar.identifier, matriculaActualizada)
+      .subscribe({
+        next: (res) => {
+          if (res) {
+            Swal.fire('¡Éxito!', `Matrícula ${res.codigo} actualizada.`, 'success');
+            this.loadMatriculas();
+            this.cerrarEditarModal();
+          }
+        },
+        error: (err) => {
+          // --- CAMBIO AQUÍ: Se muestra el error específico del backend ---
+          Swal.fire('¡Cuidado!', err.message, 'warning');
         }
-      }
-    );*/
+      });
   }
 
   // --- MÉTODO PARA ANULAR MATRÍCULA (LÓGICA INICIAL) ---
   confirmarAnulacion(matricula: MatriculaDto): void {
-    // Primero, verificamos si se puede anular
     const tienePagos = matricula.cronogramas.some(c => c.estadoDeuda === EstadoDeudaReference.PAGADO);
     if (tienePagos) {
       Swal.fire('Acción no permitida', 'No se puede anular una matrícula que ya tiene pagos registrados.', 'warning');
@@ -421,14 +559,87 @@ export class MatriculasComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        // Llamamos al servicio para actualizar el estado
-        const matriculaAnulada: Partial<MatriculaDto> = { estado: EstadoMatriculaReference.ANULADA };
-        this.matriculaService.update(matricula.identifier, matriculaAnulada).subscribe(success => {
-          if (success) {
-            Swal.fire('Anulada', 'La matrícula ha sido anulada correctamente.', 'success');
-            this.loadMatriculas();
-          } else {
-            Swal.fire('Error', 'No se pudo anular la matrícula.', 'error');
+        // --- CAMBIO CLAVE AQUÍ ---
+        // Llamamos al servicio de anulación en lugar del de actualización.
+        this.matriculaService.anular(matricula.identifier).subscribe({
+          next: (success) => {
+            if (success) {
+              Swal.fire('Anulada', 'La matrícula ha sido anulada correctamente.', 'success');
+              this.loadMatriculas();
+            } else {
+              Swal.fire('Error', 'No se pudo anular la matrícula.', 'error');
+            }
+          },
+          error: (err) => {
+            // Esto mostrará cualquier error específico que el backend pueda devolver
+            Swal.fire('Error', err.message, 'error');
+          }
+        });
+      }
+    });
+  }
+
+  // --- NUEVO MÉTODO: Lógica para mostrar/ocultar el botón 'Completar' ---
+  mostrarBotonCompletar(matricula: MatriculaDto): boolean {
+    // No mostrar si ya está completada o anulada
+    if (matricula.estado === EstadoMatriculaReference.COMPLETADA || matricula.estado === EstadoMatriculaReference.ANULADA) {
+      return false;
+    }
+
+    const deudasPendientes = matricula.cronogramas.filter(c => c.estadoDeuda === EstadoDeudaReference.PENDIENTE).length;
+    const deudasPagadas = matricula.cronogramas.filter(c => c.estadoDeuda === EstadoDeudaReference.PAGADO).length;
+
+    // Caso 1: Todas las deudas están pagadas
+    if (deudasPagadas === matricula.cronogramas.length) {
+      return true;
+    }
+
+    // Caso 2: Hay algunas pagadas y otras pendientes (retiro)
+    if (deudasPagadas > 0 && deudasPendientes > 0) {
+      return true;
+    }
+
+    // No mostrar en ningún otro caso (ej. todas pendientes)
+    return false;
+  }
+
+  // --- NUEVO MÉTODO: Acción al hacer clic en 'Completar' ---
+  confirmarCompletar(matricula: MatriculaDto): void {
+    // 1. Verificamos si aún quedan deudas pendientes
+    const hayDeudasPendientes = matricula.cronogramas.some(
+      c => c.estadoDeuda === EstadoDeudaReference.PENDIENTE || c.estadoDeuda === EstadoDeudaReference.VENCIDO
+    );
+
+    // 2. Definimos el mensaje dinámicamente
+    let confirmationText = '';
+    if (hayDeudasPendientes) {
+      // Mensaje para el caso de retiro (quedan deudas por anular)
+      confirmationText = `Se cambiará el estado a COMPLETADA y las deudas pendientes se anularán. Esta acción no se puede revertir.`;
+    } else {
+      // Mensaje para el caso de finalización (todas las deudas están pagadas)
+      confirmationText = `Todas las deudas han sido pagadas. Se marcará la matrícula ${matricula.codigo} como COMPLETADA para finalizar el proceso académico del año.`;
+    }
+
+    // 3. Mostramos la alerta con el mensaje correcto
+    Swal.fire({
+      title: '¿Completar Matrícula?',
+      text: confirmationText, // Usamos el texto dinámico
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, completar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.matriculaService.completar(matricula.identifier).subscribe({
+          next: (success) => {
+            if (success) {
+              Swal.fire('¡Éxito!', 'La matrícula ha sido marcada como completada.', 'success');
+              this.loadMatriculas();
+              this.cerrarDetalleModal();
+            }
+          },
+          error: (err) => {
+            Swal.fire('Error', err.message, 'error');
           }
         });
       }

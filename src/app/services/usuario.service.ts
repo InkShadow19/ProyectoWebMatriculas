@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription, throwError } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { UsuarioDomainService } from '../domains/usuario-domain.service';
 import { UsuarioDto } from '../models/usuario.model';
@@ -33,13 +33,16 @@ export class UsuarioService implements OnDestroy {
         );
     }
 
-    update(identifier: string, body: Partial<UsuarioDto>): Observable<UsuarioDto | undefined> {
-        this.isLoadingSubject.next(true);
-        return this.usuarioDomainService.update(identifier, body).pipe(
-            catchError(() => of(undefined)),
-            finalize(() => this.isLoadingSubject.next(false))
-        );
-    }
+    update(identifier: string, body: Partial<UsuarioDto>): Observable<UsuarioDto> {
+    this.isLoadingSubject.next(true);
+    // Asumiendo que tienes un 'usuarioDomainService' como en tu RolService
+    return this.usuarioDomainService.update(identifier, body).pipe(
+        // ESTA LÍNEA ES LA CLAVE:
+        // Captura el error del backend y lo relanza para que el componente lo reciba.
+        catchError(err => throwError(() => err)),
+        finalize(() => this.isLoadingSubject.next(false))
+    );
+}
 
     resetPassword(identifier: string, newPassword: string): Observable<boolean> {
         this.isLoadingSubject.next(true);

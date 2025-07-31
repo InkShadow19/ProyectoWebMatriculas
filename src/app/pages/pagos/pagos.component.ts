@@ -297,10 +297,28 @@ export class PagosComponent implements OnInit {
   imprimirPago(pago: PagoDto): void {
     this.pagoService.imprimirBoleta(pago.identifier).subscribe(blob => {
       if (blob) {
-        // Se crea una URL temporal para el archivo PDF en el navegador
-        const fileURL = URL.createObjectURL(blob);
-        // Se abre la URL en una nueva pestaña para previsualizar o imprimir
-        window.open(fileURL, '_blank');
+        const objectUrl = URL.createObjectURL(blob);
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = objectUrl;
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+          const iframeWindow = iframe.contentWindow;
+          if (iframeWindow) {
+            // --- LÓGICA CORREGIDA ---
+            // 1. Escuchamos el evento 'afterprint' que se dispara
+            //    cuando el diálogo de impresión se cierra.
+            iframeWindow.onafterprint = () => {
+              // 2. Solo entonces, limpiamos y eliminamos el iframe.
+              document.body.removeChild(iframe);
+              URL.revokeObjectURL(objectUrl);
+            };
+
+            // 3. Damos la orden de imprimir.
+            iframeWindow.print();
+          }
+        };
       }
     });
   }

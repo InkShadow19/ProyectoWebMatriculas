@@ -207,7 +207,7 @@
               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
               [ngClass]="{ 'is-invalid': f['telefono'].touched && f['telefono'].errors }" />
             <div *ngIf="f['telefono'].touched && f['telefono'].errors" class="invalid-feedback">
-              <div *ngIf="f['telefono'].errors?.['pattern']">Debe tener 9 dígitos.</div>
+              <div *ngIf="f['telefono'].errors?.['pattern']">El teléfono debe tener 9 dígitos y comenzar con 9.</div>
             </div>
           </div>
           <div class="mb-5 col-md-6">

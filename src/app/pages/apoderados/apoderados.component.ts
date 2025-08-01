@@ -67,14 +67,14 @@ export class ApoderadosComponent implements OnInit {
       fechaNacimiento: ['', [Validators.required, pastDateValidator]],
       genero: [GeneroReference.MASCULINO, Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      telefono: ['', [Validators.pattern(/^\d{9}$/)]],
+      telefono: ['', [Validators.pattern(/^9\d{8}$/)]],
       direccion: [''],
       estado: [EstadoReference.ACTIVO, Validators.required],
     });
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: [EstadoReference.ACTIVO]
+      filtroEstado: ['']
     });
   }
 
@@ -100,7 +100,7 @@ export class ApoderadosComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filterForm.reset({
-      filtroBusqueda: '', filtroEstado: EstadoReference.ACTIVO
+      filtroBusqueda: '', filtroEstado: ''
     });
   }
 

@@ -67,7 +67,7 @@
               </div>
             </td>
             <td class="text-end">
-              <div class="d-flex justify-content-end">
+              <div class="d-none d-md-flex justify-content-end">
                 <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditUserModal(usuario)">
                   <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                   Editar
@@ -76,6 +76,22 @@
                   <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                   Eliminar
                 </button>
+              </div>
+
+              <div class="d-md-none text-end" ngbDropdown>
+                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                </button>
+                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                  <button class="dropdown-item text-info" (click)="openEditUserModal(usuario)">
+                    <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                    Editar
+                  </button>
+                  <button class="dropdown-item text-danger" (click)="confirmDeleteUser(usuario)">
+                    <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </td>
           </tr>

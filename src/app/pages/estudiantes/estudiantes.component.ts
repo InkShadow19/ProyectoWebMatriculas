@@ -15,7 +15,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 // Validador personalizado para la fecha de nacimiento
 export function ageRangeValidator(control: AbstractControl): { [key: string]: boolean } | null {
   if (!control.value) {
-    return null; // Si no hay fecha, no validar
+    return null; 
   }
 
   const birthDate = new Date(control.value);
@@ -29,8 +29,8 @@ export function ageRangeValidator(control: AbstractControl): { [key: string]: bo
     age--;
   }
 
-  // Comprobar si la edad está fuera del rango de 3 a 18 años
-  if (age < 3 || age > 20) { // Cambiar 18 por 20
+  // Comprobar si la edad está fuera del rango de 3 a 20 años
+  if (age < 3 || age > 20) { 
     return { 'ageRange': true };
   }
 
@@ -84,14 +84,14 @@ export class EstudiantesComponent implements OnInit {
       fechaNacimiento: ['', [Validators.required, ageRangeValidator]],
       genero: [GeneroReference.MASCULINO, Validators.required],
       direccion: [''],
-      telefono: ['', [Validators.pattern(/^\d{9}$/)]],
+      telefono: ['', [Validators.pattern(/^9\d{8}$/)]],
       email: ['', [Validators.required, Validators.email]],
       estadoAcademico: [EstadoAcademicoReference.ACTIVO, Validators.required],
     });
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: [EstadoAcademicoReference.ACTIVO]
+      filtroEstado: ['']
     });
   }
 
@@ -119,7 +119,7 @@ export class EstudiantesComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filterForm.reset({
-      filtroBusqueda: '', filtroEstado: EstadoAcademicoReference.ACTIVO
+      filtroBusqueda: '', filtroEstado: ''
     });
   }
 

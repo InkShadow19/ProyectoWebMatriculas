@@ -1,0 +1,7 @@
+// Estilo personalizado para campos de solo lectura
+.form-control-readonly {
+  background-color: #f5f8fa !important; // Un gris un poco más notorio
+  border-color: #e4e6ef !important;     // Un borde más claro
+  color: #7e8299;                       // Texto ligeramente atenuado
+  cursor: not-allowed;                  // Muestra el cursor de "no permitido" al pasar el mouse
+}

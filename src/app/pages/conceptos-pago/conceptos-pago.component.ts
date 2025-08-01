@@ -165,7 +165,7 @@ export class ConceptosPagoComponent implements OnInit {
         }
         this.loadConceptos();
       } else {
-        Swal.fire('Error', 'No se pudo eliminar el concepto de pago.', 'error');
+        Swal.fire('Error', 'No se puede eliminar este concepto porque está siendo utilizado en cronogramas de pago existentes.', 'error');
       }
     });
   }

@@ -91,7 +91,7 @@ export class EstudiantesComponent implements OnInit {
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: ['']
+      filtroEstado: [EstadoAcademicoReference.ACTIVO]
     });
   }
 
@@ -118,13 +118,13 @@ export class EstudiantesComponent implements OnInit {
   }
 
   limpiarFiltros(): void {
-    this.filterForm.reset({ filtroBusqueda: '', filtroEstado: '' });
+    this.filterForm.reset({
+      filtroBusqueda: '', filtroEstado: EstadoAcademicoReference.ACTIVO
+    });
   }
 
   setPage(page: number): void {
-    if (page < 1 || (this.pagedEstudiantes && page > this.pagedEstudiantes.totalPages)) {
-      return;
-    }
+    if (page < 1 || (this.pagedEstudiantes && page > this.pagedEstudiantes.totalPages)) { return; }
     this.currentPage = page;
     this.loadEstudiantes();
   }
@@ -225,7 +225,7 @@ export class EstudiantesComponent implements OnInit {
         this.loadEstudiantes();
       },
       error: (err) => {
-        const errorMessage = err.error?.error || 'No se pudo eliminar el estudiante.';
+        const errorMessage = err.error?.error || 'No se puede eliminar un alumno con matrículas asociadas.';
         Swal.fire('Error', errorMessage, 'error');
       }
     });

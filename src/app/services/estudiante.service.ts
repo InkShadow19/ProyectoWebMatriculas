@@ -41,7 +41,7 @@ export class EstudianteService implements OnDestroy {
         return this.estudianteDomainService.add(body).pipe(
             catchError((error: HttpErrorResponse) => {
                 // Dejamos que el error fluya hacia el componente
-                return throwError(() => error); 
+                return throwError(() => error);
             }),
             finalize(() => this.isLoadingSubject.next(false))
         );
@@ -63,7 +63,20 @@ export class EstudianteService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.estudianteDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
+            catchError((error: HttpErrorResponse) => {
+                // 1. Extrae el mensaje de error específico del backend.
+                const errorMessage = error.error?.error || 'No se pudo eliminar el alumno.';
+                // 2. Lanza un nuevo error con ese mensaje para que el componente lo reciba.
+                return throwError(() => new Error(errorMessage));
+            }),
+            finalize(() => this.isLoadingSubject.next(false))
+        );
+    }
+    
+    getSearchActivos(page: number, size: number, descripcion?: string): Observable<PageResponse<EstudianteDto> | undefined> {
+        this.isLoadingSubject.next(true);
+        return this.estudianteDomainService.searchActivos(page, size, descripcion).pipe(
+            catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }

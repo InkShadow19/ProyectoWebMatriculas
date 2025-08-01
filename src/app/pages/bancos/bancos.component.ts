@@ -162,7 +162,7 @@ export class BancosComponent implements OnInit {
         }
         this.loadBancos();
       } else {
-        Swal.fire('Error', 'No se pudo encontrar el banco para eliminar.', 'error');
+        Swal.fire('Error', 'No se puede eliminar este banco porque ya tiene pagos registrados.', 'error');
       }
     });
   }

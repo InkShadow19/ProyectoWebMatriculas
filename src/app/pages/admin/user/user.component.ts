@@ -266,7 +266,7 @@ export class UserComponent implements OnInit {
       }
       this.loadUsuarios();
     }, () => {
-      Swal.fire('Error', 'No se pudo encontrar el usuario para eliminar.', 'error');
+      Swal.fire('Error', 'No se puede eliminar este usuario porque tiene pagos registrados a su nombre.', 'error');
     });
   }
 

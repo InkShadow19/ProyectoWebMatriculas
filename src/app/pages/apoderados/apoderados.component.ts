@@ -74,7 +74,7 @@ export class ApoderadosComponent implements OnInit {
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: ['']
+      filtroEstado: [EstadoReference.ACTIVO]
     });
   }
 
@@ -99,7 +99,9 @@ export class ApoderadosComponent implements OnInit {
   }
 
   limpiarFiltros(): void {
-    this.filterForm.reset({ filtroBusqueda: '', filtroEstado: '' });
+    this.filterForm.reset({
+      filtroBusqueda: '', filtroEstado: EstadoReference.ACTIVO
+    });
   }
 
   setPage(page: number): void {
@@ -190,7 +192,7 @@ export class ApoderadosComponent implements OnInit {
         }
         this.loadApoderados();
       },
-      error: (err) => Swal.fire('Error', err.error?.error || 'No se pudo eliminar.', 'error')
+      error: (err) => Swal.fire('Error', err.error?.error || 'No se puede eliminar un apoderado con matrículas asociadas.', 'error')
     });
   }
 

@@ -1,4 +1,6 @@
 import { CanalReference } from "./enums/canal-reference.enum";
+import { EstadoAcademicoReference } from "./enums/estado-academico-reference.enum";
+import { EstadoMatriculaReference } from "./enums/estado-matricula-reference.enum";
 import { EstadoPagoReference } from "./enums/estado-pago-reference.enum";
 import { PagoDetalleDto } from "./pago-detalle.model";
 
@@ -18,4 +20,8 @@ export interface PagoDto {
   nombreEstudiante?: string;
   nombreUsuario?: string;
 
+  // --- CAMPO AÑADIDO ---
+  estadoMatricula?: EstadoMatriculaReference; 
+
+  estadoAnioAcademico?: EstadoAcademicoReference;
 }

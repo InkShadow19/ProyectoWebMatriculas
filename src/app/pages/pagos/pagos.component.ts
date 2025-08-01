@@ -16,6 +16,8 @@ import Swal from 'sweetalert2';
 import { EstudianteDto } from 'src/app/models/estudiante.model';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import localeEs from '@angular/common/locales/es-PE';
+import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-reference.enum';
+import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
 
 // Interfaces para la vista
 interface DeudaPendiente extends CronogramaPagoDto {
@@ -139,7 +141,8 @@ export class PagosComponent implements OnInit {
       this.estudiantesEncontrados = [];
       return;
     }
-    this.estudianteService.getList(0, 5, this.busquedaEstudiante).subscribe(res => {
+    // Se llama al método getSearchActivos en lugar de getList
+    this.estudianteService.getSearchActivos(0, 5, this.busquedaEstudiante).subscribe(res => {
       this.estudiantesEncontrados = res?.content || [];
     });
   }
@@ -269,27 +272,39 @@ export class PagosComponent implements OnInit {
 
   // --- NUEVO MÉTODO PARA CONFIRMAR LA ANULACIÓN ---
   confirmarAnulacionPago(pago: PagoDto): void {
+    // --- VALIDACIONES PROACTIVAS ---
+    if (pago.estadoMatricula === EstadoMatriculaReference.COMPLETADA) {
+      Swal.fire('Acción no permitida', 'No se puede anular un pago de una matrícula que ya ha sido completada.', 'warning');
+      return;
+    }
+    // --- VALIDACIÓN AÑADIDA ---
+    if (pago.estadoAnioAcademico === EstadoAcademicoReference.CERRADO) {
+        Swal.fire('Acción no permitida', 'No se puede anular un pago perteneciente a un año académico cerrado.', 'warning');
+        return;
+    }
+
+    // El resto del método de confirmación se ejecuta solo si las validaciones pasan
     Swal.fire({
-      title: '¿Estás seguro?',
-      text: `Se anulará el pago con Ticket #${pago.numeroTicket}. Las deudas asociadas volverán a estar pendientes.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, anular pago',
-      cancelButtonText: 'Cancelar'
+        title: '¿Estás seguro?',
+        text: `Se anulará el pago con Ticket #${pago.numeroTicket}. Las deudas asociadas volverán a estar pendientes.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, anular pago',
+        cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.pagoService.anular(pago.identifier).subscribe({
-          next: (success) => {
-            if (success) {
-              Swal.fire('Anulado', 'El pago ha sido anulado correctamente.', 'success');
-              this.loadPagos(); // Recargar la tabla
-            }
-          },
-          error: (err) => {
-            Swal.fire('Error', err.message, 'error');
-          }
-        });
-      }
+        if (result.isConfirmed) {
+            this.pagoService.anular(pago.identifier).subscribe({
+                next: (success) => {
+                    if (success) {
+                        Swal.fire('Anulado', 'El pago ha sido anulado correctamente.', 'success');
+                        this.loadPagos();
+                    }
+                },
+                error: (err) => {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            });
+        }
     });
   }
 

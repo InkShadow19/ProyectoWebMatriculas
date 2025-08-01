@@ -54,11 +54,25 @@ export class ApoderadoService implements OnDestroy {
         );
     }
 
+    // --- MÉTODO DELETE CORREGIDO ---
     delete(identifier: string): Observable<boolean> {
         this.isLoadingSubject.next(true);
         return this.apoderadoDomainService.delete(identifier).pipe(
-            map(() => true),
-            catchError(() => of(false)),
+            map(() => true), // Si tiene éxito, devuelve true
+            catchError((error: HttpErrorResponse) => {
+                // 1. Extrae el mensaje de error específico del backend.
+                const errorMessage = error.error?.error || 'No se pudo eliminar el apoderado.';
+                // 2. Lanza un nuevo error con ese mensaje para que el componente lo reciba.
+                return throwError(() => new Error(errorMessage));
+            }),
+            finalize(() => this.isLoadingSubject.next(false))
+        );
+    }
+
+    getSearchActivos(page: number, size: number, descripcion?: string): Observable<PageResponse<ApoderadoDto> | undefined> {
+        this.isLoadingSubject.next(true);
+        return this.apoderadoDomainService.searchActivos(page, size, descripcion).pipe(
+            catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }

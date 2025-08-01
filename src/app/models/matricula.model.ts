@@ -1,4 +1,5 @@
 import { CronogramaPagoDto } from "./cronograma-pago.model";
+import { EstadoAcademicoReference } from "./enums/estado-academico-reference.enum";
 import { EstadoMatriculaReference } from "./enums/estado-matricula-reference.enum";
 import { SituacionReference } from "./enums/situacion-reference.enum";
 
@@ -20,4 +21,6 @@ export interface MatriculaDto {
     // --- CAMPOS AÑADIDOS ---
   descuentoMatricula?: number;
   descuentoPension?: number;
+
+  estadoAnioAcademico?: EstadoAcademicoReference;
 }

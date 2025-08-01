@@ -63,4 +63,16 @@ export class EstudianteDomainService {
             { headers: buildHeader() }
         );
     }
+    
+    searchActivos(page: number, size: number, descripcion?: string): Observable<PageResponse<EstudianteDto>> {
+        let params = new HttpParams()
+            .set("page", page.toString())
+            .set("size", size.toString());
+        if (descripcion) params = params.set("descripcion", descripcion);
+
+        return this.http.get<PageResponse<EstudianteDto>>(`${this.endpoint}/search/activos`, {
+            headers: buildHeader(),
+            params: params
+        });
+    }
 }

@@ -24,6 +24,7 @@ import Swal from 'sweetalert2';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
 import localeEs from '@angular/common/locales/es-PE';
+import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
 
 // Interfaz para el formulario de nueva matricula
 interface NuevaMatriculaForm {
@@ -305,7 +306,8 @@ export class MatriculasComponent implements OnInit {
       : this.matriculaParaEditar.estudianteBusqueda?.toLowerCase().trim();
 
     if (busqueda && busqueda.length > 2) {
-      this.estudianteService.getList(0, 10, busqueda).subscribe(res => {
+      // --- CAMBIO AQUÍ: Se usa el nuevo método getSearchActivos ---
+      this.estudianteService.getSearchActivos(0, 10, busqueda).subscribe(res => {
         this.estudiantesEncontrados = res?.content || [];
       });
     } else {
@@ -325,7 +327,8 @@ export class MatriculasComponent implements OnInit {
       : this.matriculaParaEditar.apoderadoBusqueda?.toLowerCase().trim();
 
     if (busqueda && busqueda.length > 2) {
-      this.apoderadoService.getList(0, 10, busqueda).subscribe(res => {
+      // --- CAMBIO AQUÍ: Se usa el nuevo método getSearchActivos ---
+      this.apoderadoService.getSearchActivos(0, 10, busqueda).subscribe(res => {
         this.apoderadosEncontrados = res?.content || [];
       });
     } else {
@@ -432,6 +435,12 @@ export class MatriculasComponent implements OnInit {
 
   // --- MÉTODOS PARA MODAL DE EDICIÓN ---
   abrirEditarModal(matricula: MatriculaDto): void {
+    // --- VALIDACIÓN AÑADIDA AL INICIO ---
+    if (matricula.estadoAnioAcademico === EstadoAcademicoReference.CERRADO) {
+      Swal.fire('Acción no permitida', 'No se puede editar una matrícula de un año académico que ya ha sido cerrado.', 'warning');
+      return; // Detiene la ejecución aquí.
+    }
+    
     const cuotaMatricula = matricula.cronogramas.find(c => c.descripcion?.toLowerCase().includes('matrícula'));
     const cuotaPension = matricula.cronogramas.find(c => c.descripcion?.toLowerCase().includes('pensión'));
 

@@ -4,6 +4,7 @@ import { catchError, finalize, map } from 'rxjs/operators';
 import { UsuarioDomainService } from '../domains/usuario-domain.service';
 import { UsuarioDto } from '../models/usuario.model';
 import { PageResponse } from '../models/page-response.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root',
@@ -57,7 +58,14 @@ export class UsuarioService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.usuarioDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(() => of(false)),
+            // --- LÓGICA DE ERROR CORREGIDA ---
+            catchError((error: HttpErrorResponse) => {
+                // 1. Extrae el mensaje de error específico del backend.
+                const errorMessage = error.error?.error || 'No se pudo eliminar el usuario.';
+                
+                // 2. Lanza un nuevo error con ese mensaje para que el componente lo reciba.
+                return throwError(() => new Error(errorMessage));
+            }),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }

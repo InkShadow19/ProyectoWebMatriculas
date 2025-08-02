@@ -48,7 +48,6 @@ export class PagoDomainService {
         });
     }
 
-    // --- NUEVO MÉTODO AÑADIDO ---
     getNextCajaTicket(): Observable<string> {
         return this.http.get(`${this.endpoint}/next-caja-ticket`, { 
             headers: buildHeader(), 
@@ -56,10 +55,11 @@ export class PagoDomainService {
         });
     }
     
-    // Nuevo método para obtener las deudas de un estudiante
-    getDeudasPendientes(estudianteIdentifier: string): Observable<CronogramaPagoDto[]> {
+    getDeudasPendientes(estudianteIdentifier: string, anio: number): Observable<CronogramaPagoDto[]> {
+      const params = new HttpParams().set('anio', anio.toString());
       return this.http.get<CronogramaPagoDto[]>(`${this.reportEndpoint}/estudiante/${estudianteIdentifier}/estado/cuenta`, {
-        headers: buildHeader()
+        headers: buildHeader(),
+        params: params
       });
     }
 

@@ -18,6 +18,8 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import localeEs from '@angular/common/locales/es-PE';
 import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-reference.enum';
 import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
+import { AnioAcademicoService } from 'src/app/services/anio-academico.service';
+import { AnioAcademicoDto } from 'src/app/models/anio-academico.model';
 
 // Interfaces para la vista
 interface DeudaPendiente extends CronogramaPagoDto {
@@ -60,14 +62,29 @@ export class PagosComponent implements OnInit {
   showDetallePagoModal = false;
   pagoSeleccionado: PagoDto | null = null;
 
+  // --- NUEVAS PROPIEDADES ---
+  anios: AnioAcademicoDto[] = [];
+  anioActivo: AnioAcademicoDto | null = null;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private pagoService: PagoService,
     private bancoService: BancoService,
-    private estudianteService: EstudianteService
+    private estudianteService: EstudianteService,
+    private anioAcademicoService: AnioAcademicoService
   ) { }
 
   ngOnInit(): void {
+    this.loadInitialData();
+  }
+
+  loadInitialData(): void {
+    // Obtenemos los años para saber cuál es el activo
+    this.anioAcademicoService.getList(0, 100).subscribe(res => {
+      this.anios = res?.content || [];
+      this.anioActivo = this.anios.find(a => a.estadoAcademico === 'ACTIVO') || null;
+    });
+
     this.loadPagos();
     this.loadBancos();
   }
@@ -148,10 +165,16 @@ export class PagosComponent implements OnInit {
   }
 
   seleccionarEstudiante(estudiante: EstudianteDto): void {
+    if (!this.anioActivo) {
+      Swal.fire('Error de Configuración', 'No se encontró un año académico activo.', 'error');
+      return;
+    }
+
     this.busquedaEstudiante = `${estudiante.nombre} ${estudiante.apellidoPaterno} ${estudiante.apellidoMaterno}`;
     this.estudiantesEncontrados = [];
 
-    this.pagoService.getDeudasPendientes(estudiante.identifier).subscribe(deudas => {
+    // --- LLAMADA CORREGIDA: Se pasa el año activo ---
+    this.pagoService.getDeudasPendientes(estudiante.identifier, this.anioActivo.anio).subscribe(deudas => {
       const deudasPendientes = deudas?.filter(d => d.estadoDeuda === EstadoDeudaReference.PENDIENTE || d.estadoDeuda === EstadoDeudaReference.VENCIDO) || [];
       if (deudasPendientes.length === 0) {
         Swal.fire(
@@ -163,21 +186,15 @@ export class PagosComponent implements OnInit {
         return;
       }
 
-      // --- LÓGICA DE ORDENAMIENTO MEJORADA CON DESEMPATE ---
+      // Tu lógica de ordenamiento con desempate (que es perfecta) se mantiene.
       deudasPendientes.sort((a, b) => {
         const fechaA = new Date(a.fechaVencimiento).getTime();
         const fechaB = new Date(b.fechaVencimiento).getTime();
-
-        // 1. Criterio principal: ordenar por fecha
         if (fechaA !== fechaB) {
           return fechaA - fechaB;
         }
-
-        // 2. Criterio de desempate: si las fechas son iguales,
-        // la "Matrícula" siempre va primero.
         if (a.descripcion?.includes('Matrícula')) return -1;
         if (b.descripcion?.includes('Matrícula')) return 1;
-
         return 0;
       });
 
@@ -279,32 +296,32 @@ export class PagosComponent implements OnInit {
     }
     // --- VALIDACIÓN AÑADIDA ---
     if (pago.estadoAnioAcademico === EstadoAcademicoReference.CERRADO) {
-        Swal.fire('Acción no permitida', 'No se puede anular un pago perteneciente a un año académico cerrado.', 'warning');
-        return;
+      Swal.fire('Acción no permitida', 'No se puede anular un pago perteneciente a un año académico cerrado.', 'warning');
+      return;
     }
 
     // El resto del método de confirmación se ejecuta solo si las validaciones pasan
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: `Se anulará el pago con Ticket #${pago.numeroTicket}. Las deudas asociadas volverán a estar pendientes.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, anular pago',
-        cancelButtonText: 'Cancelar'
+      title: '¿Estás seguro?',
+      text: `Se anulará el pago con Ticket #${pago.numeroTicket}. Las deudas asociadas volverán a estar pendientes.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, anular pago',
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
-        if (result.isConfirmed) {
-            this.pagoService.anular(pago.identifier).subscribe({
-                next: (success) => {
-                    if (success) {
-                        Swal.fire('Anulado', 'El pago ha sido anulado correctamente.', 'success');
-                        this.loadPagos();
-                    }
-                },
-                error: (err) => {
-                    Swal.fire('Error', err.message, 'error');
-                }
-            });
-        }
+      if (result.isConfirmed) {
+        this.pagoService.anular(pago.identifier).subscribe({
+          next: (success) => {
+            if (success) {
+              Swal.fire('Anulado', 'El pago ha sido anulado correctamente.', 'success');
+              this.loadPagos();
+            }
+          },
+          error: (err) => {
+            Swal.fire('Error', err.message, 'error');
+          }
+        });
+      }
     });
   }
 

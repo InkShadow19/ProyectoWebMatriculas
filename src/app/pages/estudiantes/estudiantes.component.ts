@@ -91,7 +91,7 @@ export class EstudiantesComponent implements OnInit {
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: ['']
+      filtroEstado: [EstadoAcademicoReference.ACTIVO]
     });
   }
 
@@ -119,7 +119,7 @@ export class EstudiantesComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filterForm.reset({
-      filtroBusqueda: '', filtroEstado: ''
+      filtroBusqueda: '', filtroEstado: EstadoAcademicoReference.ACTIVO
     });
   }
 

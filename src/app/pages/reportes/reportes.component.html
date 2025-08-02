@@ -1,22 +1,16 @@
 <div class="card shadow-sm">
-    <!-- Se añade padding (p-8) para dar espacio superior al título y a todo el contenido -->
     <div class="card-body p-8">
-        <!-- Título de la Página -->
         <div class="mb-10 pt-1">
             <h3>Gestión de Reportes</h3>
-            <p class="text-muted mt-1">Seleccione un tipo de reporte, aplique los filtros y genere la información que necesita.</p>
+            <p class="text-muted mt-1">Seleccione un tipo de reporte, aplique los filtros y genere la información que
+                necesita.</p>
         </div>
 
-        <!-- Selección del Tipo de Reporte -->
         <div class="mb-10">
             <h4 class="mb-6">Paso 1: Seleccione el Tipo de Reporte</h4>
-            <!-- Se ajustan las clases de columna para mejorar la responsividad -->
             <div class="row g-5 g-xl-8">
-                
-                <!-- Tarjeta Estado de Cuenta -->
                 <div class="col-sm-6 col-xl-3">
                     <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
-                        data-report="estado-cuenta"
                         (click)="seleccionarReporte('estado-cuenta')"
                         [ngClass]="{'selected': reporteSeleccionado === 'estado-cuenta'}">
                         <app-keenicon name="profile-circle" class="fs-2x text-primary mb-4"></app-keenicon>
@@ -25,22 +19,19 @@
                     </div>
                 </div>
 
-                <!-- Tarjeta Morosidad -->
                 <div class="col-sm-6 col-xl-3">
                     <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
-                        data-report="morosidad"
                         (click)="seleccionarReporte('morosidad')"
                         [ngClass]="{'selected': reporteSeleccionado === 'morosidad'}">
                         <app-keenicon name="shield-cross" class="fs-2x text-danger mb-4"></app-keenicon>
                         <h4 class="fw-bold text-center">Reporte de Morosidad</h4>
-                        <p class="text-sm text-muted mt-1 text-center">Alumnos con pagos vencidos.</p>
+                        <p class="text-sm text-muted mt-1 text-center">Alumnos con deudas fuera de plazo.
+                        </p>
                     </div>
                 </div>
 
-                <!-- Tarjeta Pagos por Período -->
                 <div class="col-sm-6 col-xl-3">
                     <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
-                        data-report="pagos-periodo"
                         (click)="seleccionarReporte('pagos-periodo')"
                         [ngClass]="{'selected': reporteSeleccionado === 'pagos-periodo'}">
                         <app-keenicon name="dollar" class="fs-2x text-success mb-4"></app-keenicon>
@@ -49,10 +40,8 @@
                     </div>
                 </div>
 
-                <!-- Tarjeta Alumnos por Grado -->
                 <div class="col-sm-6 col-xl-3">
                     <div class="report-card card card-body border-2 p-6 d-flex flex-column align-items-center"
-                        data-report="alumnos-grado"
                         (click)="seleccionarReporte('alumnos-grado')"
                         [ngClass]="{'selected': reporteSeleccionado === 'alumnos-grado'}">
                         <app-keenicon name="abstract-28" class="fs-2x text-info mb-4"></app-keenicon>
@@ -60,65 +49,91 @@
                         <p class="text-sm text-muted mt-1 text-center">Lista de alumnos por aula.</p>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- Panel de Filtros (Contextual) -->
         <div class="filter-container" [class.visible]="reporteSeleccionado">
             <h4 class="mb-5">Paso 2: Aplique los Filtros</h4>
             <div class="py-3 rounded-lg">
-                <!-- Filtros para Estado de Cuenta -->
-                <div *ngIf="reporteSeleccionado === 'estado-cuenta'" class="filter-section">
-                    <label class="form-label fw-bold">Buscar Estudiante</label>
-                    <input type="text" class="form-control form-control-solid mw-400px" 
-                        placeholder="Ingrese nombre o DNI..." [(ngModel)]="filtros.busquedaEstudiante">
+                <div *ngIf="reporteSeleccionado === 'estado-cuenta'" class="filter-section row g-5 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Año Académico</label>
+                        <select class="form-select form-select-solid" [(ngModel)]="filtros.anioId">
+                            <option *ngFor="let a of anios" [value]="a.identifier">{{a.anio}}</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Buscar Estudiante</label>
+                        <div class="position-relative">
+                            <input type="text" class="form-control form-control-solid"
+                                placeholder="Ingrese nombre o DNI..." [(ngModel)]="filtros.busquedaEstudiante"
+                                (keyup)="buscarEstudianteParaReporte()">
+
+                            <div *ngIf="estudiantesEncontrados.length > 0"
+                                class="card shadow-sm position-absolute w-100" style="z-index: 10;">
+                                <div class="list-group list-group-flush">
+                                    <a *ngFor="let est of estudiantesEncontrados"
+                                        (mousedown)="seleccionarEstudianteParaReporte(est)"
+                                        class="list-group-item list-group-item-action cursor-pointer">
+                                        {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI:
+                                        {{est.dni}})
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Filtros para Morosidad o Alumnos por Grado -->
-                <div *ngIf="reporteSeleccionado === 'morosidad' || reporteSeleccionado === 'alumnos-grado'" class="filter-section row g-5">
+
+                <div *ngIf="reporteSeleccionado === 'morosidad' || reporteSeleccionado === 'alumnos-grado'"
+                    class="filter-section row g-5">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Año Académico</label>
+                        <select class="form-select form-select-solid" [(ngModel)]="filtros.anioId">
+                            <option *ngFor="let a of anios" [value]="a.identifier">{{a.anio}}</option>
+                        </select>
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Nivel</label>
-                        <select class="form-select form-select-solid" [(ngModel)]="filtros.nivel">
+                        <select class="form-select form-select-solid" [(ngModel)]="filtros.nivelId"
+                            (change)="onNivelChange()">
                             <option value="">Todos</option>
-                            <option *ngFor="let n of niveles" [value]="n">{{n}}</option>
+                            <option *ngFor="let n of niveles" [value]="n.identifier">{{n.descripcion}}</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Grado</label>
-                         <select class="form-select form-select-solid" [(ngModel)]="filtros.grado">
-                             <option value="">Todos</option>
-                            <option *ngFor="let g of grados" [value]="g">{{g}}</option>
+                        <select class="form-select form-select-solid" [(ngModel)]="filtros.gradoId"
+                            [disabled]="!filtros.nivelId">
+                            <option value="">Todos</option>
+                            <option *ngFor="let g of gradosFiltrados" [value]="g.identifier">{{g.descripcion}}</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Filtros para Pagos por Período -->
                 <div *ngIf="reporteSeleccionado === 'pagos-periodo'" class="filter-section row g-5">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Fecha de Inicio</label>
                         <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaInicio">
                     </div>
-                     <div class="col-md-4">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">Fecha de Fin</label>
                         <input type="date" class="form-control form-control-solid" [(ngModel)]="filtros.fechaFin">
                     </div>
                 </div>
             </div>
-             <!-- Botón para generar el reporte -->
             <div class="d-flex justify-content-end mt-6">
-                <button (click)="generarReporte()" class="btn btn-success">
+                <button (click)="generarReporte()" class="btn btn-sm btn-success">
                     <app-keenicon name="search-list" class="fs-3 me-2"></app-keenicon>
                     Generar Reporte
                 </button>
             </div>
         </div>
 
-        <!-- Área de Resultados -->
         <div *ngIf="mostrarResultados" class="mt-10 result-section">
             <div class="separator separator-dashed mb-8"></div>
             <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
-                <h2 class="fs-2 fw-bold text-dark mb-0">{{ tituloReporteGenerado }}</h2>
+                <h2 class="fs-2 fw-bold mb-0">{{ tituloReporteGenerado }}</h2>
                 <div>
                     <button class="btn btn-sm btn-light-danger me-3">Exportar a PDF</button>
                     <button class="btn btn-sm btn-light-success">Exportar a Excel</button>
@@ -128,26 +143,80 @@
                 <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
                     <thead>
                         <tr class="fw-bold text-muted">
-                            <th class="min-w-200px">Alumno</th>
-                            <th class="min-w-150px">Apoderado</th>
-                            <th class="min-w-150px">Concepto Adeudado</th>
-                            <th class="min-w-125px text-end">Monto Pendiente</th>
+                            <th *ngFor="let col of columnas"
+                                [class.text-end]="col.includes('Monto') || col.includes('Descuento') || col.includes('Mora')"
+                                [class.text-center]="col.includes('Estado') || col.includes('Situación')">{{ col }}</th>
                         </tr>
                     </thead>
                     <tbody>
-                         <tr>
-                            <td><a href="#" class="text-dark fw-bold text-hover-primary fs-6">Campos Díaz, Lucas</a></td>
-                            <td><span class="text-muted fw-semibold d-block fs-7">Carlos Campos Luna</span></td>
-                            <td><span class="text-muted fw-semibold d-block fs-7">Pensión Marzo 2025</span></td>
-                            <td class="text-end"><span class="text-danger fw-bold fs-6">S/ 300.00</span></td>
-                        </tr>
-                         <tr>
-                            <td><a href="#" class="text-dark fw-bold text-hover-primary fs-6">Torres Rojas, Sofía</a></td>
-                            <td><span class="text-muted fw-semibold d-block fs-7">Juan Torres Vega</span></td>
-                            <td><span class="text-muted fw-semibold d-block fs-7">Pensión Abril 2025</span></td>
-                            <td class="text-end"><span class="text-danger fw-bold fs-6">S/ 310.00</span></td>
+                        <ng-container *ngIf="reporteSeleccionado === 'alumnos-grado'">
+                            <tr *ngFor="let item of resultadosAlumnosPorGrado">
+                                <td>{{ item.dniEstudiante }}</td>
+                                <td><span class="fw-bold fs-6">{{ item.nombreEstudiante }}</span></td>
+                                <td>{{ item.nombreApoderado }}</td>
+                                <td>{{ item.telefonoApoderado }}</td>
+                                <td>{{ item.fechaMatricula | date:'dd/MM/yyyy' : 'UTC' }}</td>
+                                <td class="text-center">
+                                    <span class="badge" [ngClass]="{
+                                        'badge-light-info': item.situacionAlumno === 'PROMOVIDO',
+                                        'badge-light-primary': item.situacionAlumno === 'INGRESANTE',
+                                        'badge-light-warning': item.situacionAlumno === 'REPITENTE'
+                                    }">{{ item.situacionAlumno }}</span>
+                                </td>
+                            </tr>
+                        </ng-container>
+                        <ng-container *ngIf="reporteSeleccionado === 'morosidad'">
+                            <tr *ngFor="let item of resultadosMorosidad">
+                                <td><span class="fw-bold fs-6">{{ item.nombreEstudiante }}</span></td>
+                                <td>{{ item.nombreApoderado }}</td>
+                                <td>{{ item.telefonoApoderado }}</td>
+                                <td class="text-center">{{ item.cuotasVencidas }}</td>
+                                <td class="text-end fw-bold text-danger">{{ item.montoTotalAdeudado | currency:'S/ ' }}
+                                </td>
+                            </tr>
+                        </ng-container>
+                        <ng-container *ngIf="reporteSeleccionado === 'pagos-periodo'">
+                            <tr *ngFor="let item of resultadosPagosPorPeriodo">
+                                <td>{{ item.numeroTicket || 'N/A' }}</td>
+                                <td>{{ item.fechaPago | date:'dd/MM/yyyy h:mm a' }}</td>
+                                <td>{{ item.nombreEstudiante }}</td>
+                                <td>{{ item.nombreUsuario }}</td>
+                                <td>{{ item.canalYBanco }}</td>
+                                <td class="text-end">{{ item.montoPagado | currency:'S/ ' }}</td>
+                            </tr>
+                        </ng-container>
+                        <ng-container *ngIf="reporteSeleccionado === 'estado-cuenta'">
+                            <tr *ngFor="let item of resultadosEstadoCuenta" class="align-middle">
+                                <td>{{ item.descripcion }}</td>
+                                <td>{{ item.fechaVencimiento | date:'dd/MM/yyyy' : 'UTC' }}</td>
+                                <td class="text-end">{{ item.montoOriginal | currency:'S/ ' }}</td>
+                                <td class="text-end">{{ item.descuento | currency:'S/ ' }}</td>
+                                <td class="text-end">{{ item.mora ?? 0 | currency:'S/ ' }}</td>
+                                <td class="text-end fw-bold" [class.text-danger]="item.estadoDeuda === 'VENCIDO'">
+                                    {{ item.montoAPagar | currency:'S/ ' }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge" [ngClass]="{
+                                        'badge-light-success': item.estadoDeuda === 'PAGADO',
+                                        'badge-light-danger': item.estadoDeuda === 'VENCIDO',
+                                        'badge-light-warning': item.estadoDeuda === 'PENDIENTE',
+                                        'badge-secondary': item.estadoDeuda === 'ANULADO'
+                                    }">{{ item.estadoDeuda }}</span>
+                                </td>
+                            </tr>
+                        </ng-container>
+                        <tr *ngIf="!hayResultados()">
+                            <td [attr.colspan]="columnas.length" class="text-center text-muted py-5">
+                                No se encontraron resultados para los filtros aplicados.
+                            </td>
                         </tr>
                     </tbody>
+                    <tfoot *ngIf="reporteSeleccionado === 'pagos-periodo' && hayResultados()">
+                        <tr class="fw-bold fs-6">
+                            <td [attr.colspan]="columnas.length - 1" class="text-end">Total de Ingresos:</td>
+                            <td class="text-end">{{ totalIngresosReporte | currency:'S/ ' }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

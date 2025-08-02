@@ -23,11 +23,20 @@ const Routing: Routes = [
     path: 'builder',
     loadChildren: () => import('./builder/builder.module').then((m) => m.BuilderModule),
   },
+  /*
   {
     path: 'crafted/pages/profile',
     loadChildren: () => import('../modules/profile/profile.module').then((m) => m.ProfileModule),
     // data: { layout: 'light-sidebar' },
   },
+  */
+
+  {
+    path: 'perfil', // Esta es la nueva URL: /perfil
+    loadComponent: () =>
+      import('./admin/user/info/user-info.component').then(m => m.UserInfoComponent),
+  },
+
   {
     path: 'crafted/account',
     loadChildren: () => import('../modules/account/account.module').then((m) => m.AccountModule),

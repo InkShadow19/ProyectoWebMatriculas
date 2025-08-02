@@ -74,7 +74,7 @@ export class ApoderadosComponent implements OnInit {
 
     this.filterForm = this.fb.group({
       filtroBusqueda: [''],
-      filtroEstado: ['']
+      filtroEstado: [EstadoReference.ACTIVO]
     });
   }
 
@@ -100,7 +100,7 @@ export class ApoderadosComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filterForm.reset({
-      filtroBusqueda: '', filtroEstado: ''
+      filtroBusqueda: '', filtroEstado: EstadoReference.ACTIVO
     });
   }
 

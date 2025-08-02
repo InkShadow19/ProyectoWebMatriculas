@@ -28,9 +28,9 @@ export class PagoService {
         );
     }
 
-    getDeudasPendientes(estudianteIdentifier: string): Observable<CronogramaPagoDto[] | undefined> {
+    getDeudasPendientes(estudianteIdentifier: string, anio: number): Observable<CronogramaPagoDto[] | undefined> {
         this.isLoadingSubject.next(true);
-        return this.domainService.getDeudasPendientes(estudianteIdentifier).pipe(
+        return this.domainService.getDeudasPendientes(estudianteIdentifier, anio).pipe(
             catchError(() => of(undefined)),
             finalize(() => this.isLoadingSubject.next(false))
         );

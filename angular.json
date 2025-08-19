@@ -27,7 +27,13 @@
               "clipboard.js",
               "prismjs",
               "sweetalert2",
-              "moment"
+              "moment",
+              "core-js",
+              "raf",
+              "rgbcolor",
+              "canvg",
+              "jspdf",
+              "html2canvas"
             ],
             "index": "src/index.html",
             "main": "src/main.ts",

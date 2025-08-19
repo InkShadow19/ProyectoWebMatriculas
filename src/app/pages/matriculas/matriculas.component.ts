@@ -551,14 +551,26 @@ export class MatriculasComponent implements OnInit {
       });
   }
 
-  // --- MÉTODO PARA ANULAR MATRÍCULA (LÓGICA INICIAL) ---
+  // --- MÉTODO PARA ANULAR MATRÍCULA CON VALIDACIÓN COMPLETA ---
   confirmarAnulacion(matricula: MatriculaDto): void {
+    // Validación 1: No anular si ya tiene pagos registrados (existente).
     const tienePagos = matricula.cronogramas.some(c => c.estadoDeuda === EstadoDeudaReference.PAGADO);
     if (tienePagos) {
       Swal.fire('Acción no permitida', 'No se puede anular una matrícula que ya tiene pagos registrados.', 'warning');
       return;
     }
+    
+    // 2. No anular si tiene deudas pendientes que ya están vencidas.
+    const tieneDeudasVencidas = matricula.cronogramas.some(
+        c => c.estadoDeuda === EstadoDeudaReference.VENCIDO
+    );
 
+    if (tieneDeudasVencidas) {
+        Swal.fire('Acción no permitida', 'No se puede anular. La matrícula tiene deudas vencidas que deben ser canceladas.', 'warning');
+        return;
+    }
+    
+    // Si pasa ambas validaciones, se procede con la confirmación.
     Swal.fire({
       title: '¿Estás seguro?',
       text: `Se anulará la matrícula ${matricula.codigo}. Esta acción no se puede revertir.`,
@@ -568,8 +580,6 @@ export class MatriculasComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        // --- CAMBIO CLAVE AQUÍ ---
-        // Llamamos al servicio de anulación en lugar del de actualización.
         this.matriculaService.anular(matricula.identifier).subscribe({
           next: (success) => {
             if (success) {
@@ -580,7 +590,6 @@ export class MatriculasComponent implements OnInit {
             }
           },
           error: (err) => {
-            // Esto mostrará cualquier error específico que el backend pueda devolver
             Swal.fire('Error', err.message, 'error');
           }
         });

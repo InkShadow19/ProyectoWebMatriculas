@@ -1,88 +1,172 @@
-<div class="d-flex flex-wrap flex-stack pb-5">
+<div class="d-flex flex-wrap pb-5">
   <h2 class="fw-bold fs-3">Dashboard</h2>
 </div>
 
-<!--begin::Row-->
-<div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-  <!--begin::Col-->
-  <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-3 mb-md-5 mb-xl-10">
-    <app-cards-widget20 cssClass="h-md-50 mb-5 mb-xl-10" description="Active Projects" color="#F1416C"
-      img="./assets/media/patterns/vector-1.png"></app-cards-widget20>
+<div class="row g-5 g-xl-8">
+  <div class="col-xl-3">
+    <div class="card bg-primary hoverable h-100">
+      <div class="card-body">
+        <app-keenicon name="user" class="fs-2x text-white ms-n1"></app-keenicon>
+        <div class="text-white fw-bold fs-2 mb-2 mt-5" *ngIf="kpiFijos; else loading">
+          {{ kpiFijos.totalAlumnosMatriculadosAnioActivo }}
+        </div>
+        <div class="fw-semibold fs-6 text-white">Alumnos Matriculados (Año Activo)</div>
+      </div>
+    </div>
+  </div>
 
-    <app-cards-widget7 cssClass="h-md-50 mb-5 mb-xl-10" [icon]="false" [stats]="357" description="Professionals"
-      labelColor="dark" textColor="gray-300"></app-cards-widget7>
+  <div class="col-xl-3">
+    <div class="card bg-success hoverable h-100">
+      <div class="card-body">
+        <app-keenicon name="cheque" class="fs-2x text-white ms-n1"></app-keenicon>
+        <div class="text-white fw-bold fs-2 mb-2 mt-5" *ngIf="kpiFijos; else loading">
+          {{ kpiFijos.ingresosDelMesActual | currency:'S/ ' }}
+        </div>
+        <div class="fw-semibold fs-6 text-white">Ingresos (Mes Actual)</div>
+      </div>
+    </div>
   </div>
-  <!--end::Col-->
 
-  <!--begin::Col-->
-  <div class="col-md-6 col-lg-6 col-xl-6 col-xxl-3 mb-md-5 mb-xl-10">
-    <app-cards-widget17 cssClass="h-md-50 mb-5 mb-xl-10"></app-cards-widget17>
-    <app-lists-widget26 class="h-lg-50"></app-lists-widget26>
+  <div class="col-xl-3">
+    <div class="card bg-danger hoverable h-100">
+      <div class="card-body">
+        <app-keenicon name="bill" class="fs-2x text-white ms-n1"></app-keenicon>
+        <div class="text-white fw-bold fs-2 mb-2 mt-5" *ngIf="kpiFijos; else loading">
+          {{ kpiFijos.totalDeudaPendienteGlobal | currency:'S/ ' }}
+        </div>
+        <div class="fw-semibold fs-6 text-white">Deuda Pendiente (Global)</div>
+      </div>
+    </div>
   </div>
-  <!--end::Col-->
 
-
-  <!--begin::Col-->
-  <app-engage-widget10 class="col-xxl-6" cssClass="h-md-100"></app-engage-widget10>
-  <!--end::Col-->
-</div>
-<!--end::Row-->
-
-<!--begin::Row-->
-<div class="row gx-5 gx-xl-10">
-  <!--begin::Col-->
-  <div class="col-xxl-6 mb-5 mb-xl-10">
-    <app-new-charts-widget8 cssClass="h-xl-100" chartHeight="275px" [chartHeightNumber]="275"></app-new-charts-widget8>
-  </div>
-  <!--end::Col-->
-
-  <!--begin::Col-->
-  <div class="col-xxl-6 mb-5 mb-xl-10">
-    <app-cards-widget18 cssClass="h-xl-100" image="./assets/media/stock/600x600/img-65.jpg"></app-cards-widget18>
-  </div>
-  <!--end::Col-->
-</div>
-<!--end::Row-->
-
-<!-- begin::Row -->
-<div class="row gy-5 gx-xl-8">
-  <div class="col-xxl-4">
-    <app-lists-widget3 class="card card-xxl-stretch mb-xl-3"></app-lists-widget3>
-  </div>
-  <div class="col-xl-8">
-    <app-tables-widget10 class="card card-xxl-stretch mb-5 mb-xl-8"></app-tables-widget10>
-  </div>
-</div>
-<!-- end::Row -->
-
-<!-- begin::Row -->
-<div class="row gy-5 g-xl-8">
-  <div class="col-xl-4">
-    <app-lists-widget2 class="card card-xl-stretch mb-xl-8"></app-lists-widget2>
-  </div>
-  <div class="col-xl-4">
-    <app-lists-widget6 class="card card-xl-stretch mb-xl-8"></app-lists-widget6>
-  </div>
-  <div class="col-xl-4">
-    <app-lists-widget4 class="card card-xl-stretch mb-5 mb-xl-8"></app-lists-widget4>
-  </div>
-</div>
-<!-- end::Row -->
-
-<div class="row g-5 gx-xxl-8">
-  <div class="col-xxl-4">
-    <app-mixed-widget8 class="card card-xxl-stretch mb-xl-3" chartColor="success" chartHeight="150px">
-    </app-mixed-widget8>
-  </div>
-  <div class="col-xxl-8">
-    <app-tables-widget5 class="card card-xxl-stretch mb-5 mb-xxl-8"></app-tables-widget5>
+  <div class="col-xl-3">
+    <div class="card bg-info hoverable h-100">
+      <div class="card-body">
+        <app-keenicon name="shield-cross" class="fs-2x text-white ms-n1"></app-keenicon>
+        <div class="text-white fw-bold fs-2 mb-2 mt-5" *ngIf="kpiFijos; else loading">
+          {{ kpiFijos.totalAlumnosMorososGlobal }}
+        </div>
+        <div class="fw-semibold fs-6 text-white">Alumnos Morosos (Global)</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- begin:: Modal example -->
-<!-- <app-modal #modal [modalConfig]="modalConfig">
-  Modal body html
-</app-modal>
-<button class="btn btn-primary" (click)="openModal()">Open modal</button> -->
-<!-- Note: Don't forget import ModalsModule (from _metronic/partials) into your module -->
-<!-- end:: Modal example -->
+<div class="separator separator-dashed my-8"></div>
+
+<div class="mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <h3>Análisis por Año Académico</h3>
+    <div class="d-flex align-items-center">
+      <label class="form-label fw-bold me-3 mb-0">Año:</label>
+      <select class="form-select form-select-sm w-125px year-filter" [(ngModel)]="anioSeleccionadoId"
+        (ngModelChange)="loadAnalisisAnualData()">
+        <option *ngFor="let anio of anios" [value]="anio.identifier">{{ anio.anio }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row g-5 g-xl-8" *ngIf="analisisAnual">
+    <div class="col-xl-4 d-flex flex-column">
+      <div class="card bg-custom hoverable mb-5">
+        <div class="card-body">
+          <app-keenicon name="wallet" class="fs-2x text-white ms-n1"></app-keenicon>
+          <div class="text-white fw-bold fs-2 mb-2 mt-5"
+            *ngIf="analisisAnual.totalIngresosDelAnio !== undefined; else loadingAnalisis">
+            {{ analisisAnual.totalIngresosDelAnio | currency:'S/ ' }}
+          </div>
+          <div class="fw-semibold fs-6 text-white">Total de Ingresos (del Año)</div>
+        </div>
+      </div>
+      <div class="card flex-grow-1">
+        <div class="card-header">
+          <h3 class="card-title">Distribución por Nivel</h3>
+        </div>
+        <div class="card-body d-flex justify-content-center align-items-center">
+          <apx-chart [series]="distribucionChartOptions.series" [chart]="distribucionChartOptions.chart"
+            [labels]="distribucionChartOptions.labels" [colors]="distribucionChartOptions.colors"
+            [legend]="distribucionChartOptions.legend">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-8">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Tendencia de Matrículas</h3>
+        </div>
+        <div class="card-body">
+          <apx-chart [series]="tendenciaChartOptions.series" [chart]="tendenciaChartOptions.chart"
+            [xaxis]="tendenciaChartOptions.xaxis" [colors]="tendenciaChartOptions.  colors">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-8 mt-5">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">Distribución de Alumnos por Grado</h3>
+          <div class="d-flex align-items-center">
+            <select class="form-select form-select-sm form-select-solid" [(ngModel)]="filtroNivelIdAnalisis"
+              (ngModelChange)="loadAnalisisAnualData()">
+              <option value="">Seleccione un Nivel</option>
+              <option *ngFor="let nivel of niveles" [value]="nivel.identifier">{{ nivel.descripcion }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div *ngIf="!filtroNivelIdAnalisis" class="d-flex flex-column flex-center h-100">
+            <app-keenicon name="graph-up" class="fs-4x text-muted"></app-keenicon>
+            <p class="text-muted mt-5">Por favor, seleccione un nivel para ver la distribución por grado.</p>
+          </div>
+          <apx-chart *ngIf="filtroNivelIdAnalisis && showGradoChart" [series]="distribucionGradoChartOptions.series"
+            [chart]="distribucionGradoChartOptions.chart" [xaxis]="distribucionGradoChartOptions.xaxis"
+            [plotOptions]="distribucionGradoChartOptions.plotOptions" [colors]="distribucionGradoChartOptions.colors">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 mt-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Distribución por Situación del Alumno</h3>
+        </div>
+        <div class="card-body d-flex justify-content-center align-items-center">
+          <apx-chart [series]="distribucionSituacionChartOptions.series"
+            [chart]="distribucionSituacionChartOptions.chart" [labels]="distribucionSituacionChartOptions.labels"
+            [colors]="distribucionSituacionChartOptions.colors" [legend]="distribucionSituacionChartOptions.legend">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-12 mt-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Comparativo Mensual: Ingresos vs. Deuda Vencida</h3>
+        </div>
+        <div class="card-body">
+          <apx-chart [series]="ingresosVsDeudaChartOptions.series" [chart]="ingresosVsDeudaChartOptions.chart"
+            [xaxis]="ingresosVsDeudaChartOptions.xaxis" [dataLabels]="ingresosVsDeudaChartOptions.dataLabels"
+            [stroke]="ingresosVsDeudaChartOptions.stroke" [yaxis]="ingresosVsDeudaChartOptions.yaxis"
+            [fill]="ingresosVsDeudaChartOptions.fill" [tooltip]="ingresosVsDeudaChartOptions.tooltip"
+            [colors]="ingresosVsDeudaChartOptions.colors"></apx-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="spinner-border spinner-border-sm text-white" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+</ng-template>
+
+<ng-template #loadingAnalisis>
+  <div class="spinner-border spinner-border-sm text-white" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+</ng-template>

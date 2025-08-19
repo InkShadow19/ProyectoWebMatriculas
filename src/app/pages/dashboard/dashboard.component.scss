@@ -1,7 +1,11 @@
-:host {
-  width: 100%;
+// Color personalizado para el KPI de Ingresos Anuales
+.bg-custom {
+    background-color: #2ec5b1; // Puedes cambiar este color por el que prefieras
 }
 
-.h-100 {
-  height: 100%;
+// Estilo para dar más contraste y tamaño al filtro de año
+.year-filter {
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem; // Aumentamos ligeramente el tamaño de la fuente
 }

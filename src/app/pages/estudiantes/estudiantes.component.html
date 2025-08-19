@@ -122,14 +122,27 @@
 
       <ul class="pagination">
         <li class="page-item previous" [class.disabled]="pagedEstudiantes.first">
-          <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
-              class="previous"></i></a>
+          <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+            <i class="previous"></i>
+          </a>
         </li>
-        <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-          <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+
+        <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage"
+          [class.disabled]="!isNumber(page)">
+
+          <a *ngIf="isNumber(page)" (click)="setPage(page)" href="javascript:void(0);" class="page-link">
+            {{ page }}
+          </a>
+
+          <span *ngIf="!isNumber(page)" class="page-link">
+            {{ page }}
+          </span>
         </li>
+
         <li class="page-item next" [class.disabled]="pagedEstudiantes.last">
-          <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i class="next"></i></a>
+          <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+            <i class="next"></i>
+          </a>
         </li>
       </ul>
     </div>

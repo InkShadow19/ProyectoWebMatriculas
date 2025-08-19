@@ -15,7 +15,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 // Validador personalizado para la fecha de nacimiento
 export function ageRangeValidator(control: AbstractControl): { [key: string]: boolean } | null {
   if (!control.value) {
-    return null; 
+    return null;
   }
 
   const birthDate = new Date(control.value);
@@ -30,7 +30,7 @@ export function ageRangeValidator(control: AbstractControl): { [key: string]: bo
   }
 
   // Comprobar si la edad está fuera del rango de 3 a 20 años
-  if (age < 3 || age > 20) { 
+  if (age < 3 || age > 20) {
     return { 'ageRange': true };
   }
 
@@ -85,7 +85,15 @@ export class EstudiantesComponent implements OnInit {
       genero: [GeneroReference.MASCULINO, Validators.required],
       direccion: [''],
       telefono: ['', [Validators.pattern(/^9\d{8}$/)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          ),
+        ],
+      ],
       estadoAcademico: [EstadoAcademicoReference.ACTIVO, Validators.required],
     });
 
@@ -129,9 +137,57 @@ export class EstudiantesComponent implements OnInit {
     this.loadEstudiantes();
   }
 
-  getPagesArray(): number[] {
-    if (!this.pagedEstudiantes) return [];
-    return Array(this.pagedEstudiantes.totalPages).fill(0).map((x, i) => i + 1);
+  getPagesArray(): (number | string)[] {
+    if (!this.pagedEstudiantes || this.pagedEstudiantes.totalPages <= 1) {
+      return [];
+    }
+
+    const totalPages = this.pagedEstudiantes.totalPages;
+    const currentPage = this.currentPage;
+    const maxPagesToShow = 5; // Máximo de números de página a mostrar en el centro
+    const pages: (number | string)[] = [];
+
+    // Si no hay muchas páginas, muéstralas todas
+    if (totalPages <= maxPagesToShow + 2) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    // Lógica para mostrar Primera, ..., Rango, ..., Última
+    pages.push(1);
+
+    // CORRECCIÓN AQUÍ: Usar maxPagesToShow en lugar de maxPages
+    if (currentPage > maxPagesToShow - 1) {
+      pages.push('...');
+    }
+
+    let startPage = Math.max(2, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages - 1, currentPage + Math.floor(maxPagesToShow / 2));
+
+    // CORRECCIÓN AQUÍ: Usar maxPagesToShow en lugar de maxPages
+    if (currentPage < maxPagesToShow - 1) {
+      endPage = maxPagesToShow;
+    }
+    // CORRECCIÓN AQUÍ: Usar maxPagesToShow en lugar de maxPages
+    if (currentPage > totalPages - (maxPagesToShow - 1)) {
+      startPage = totalPages - maxPagesToShow + 1;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    // CORRECCIÓN AQUÍ: Usar maxPagesToShow en lugar de maxPages
+    if (currentPage < totalPages - (maxPagesToShow - 2)) {
+      pages.push('...');
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  }
+
+  isNumber(value: any): value is number {
+    return typeof value === 'number';
   }
 
   openEstudianteModal(estudiante?: EstudianteDto): void {

@@ -671,8 +671,51 @@ export class MatriculasComponent implements OnInit {
     this.loadMatriculas();
   }
 
-  getPagesArray(): number[] {
-    if (!this.pagedMatriculas) return [];
-    return Array(this.pagedMatriculas.totalPages).fill(0).map((x, i) => i + 1);
+  getPagesArray(): (number | string)[] {
+    // Usamos 'this.pagedMatriculas' para obtener el total de páginas
+    if (!this.pagedMatriculas || this.pagedMatriculas.totalPages <= 1) {
+      return [];
+    }
+
+    const totalPages = this.pagedMatriculas.totalPages;
+    const currentPage = this.currentPage;
+    const maxPagesToShow = 5;
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= maxPagesToShow + 2) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    pages.push(1);
+
+    if (currentPage > maxPagesToShow - 1) {
+      pages.push('...');
+    }
+
+    let startPage = Math.max(2, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages - 1, currentPage + Math.floor(maxPagesToShow / 2));
+
+    if (currentPage < maxPagesToShow - 1) {
+      endPage = maxPagesToShow;
+    }
+    if (currentPage > totalPages - (maxPagesToShow - 1)) {
+      startPage = totalPages - maxPagesToShow + 1;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - (maxPagesToShow - 2)) {
+      pages.push('...');
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  }
+
+  isNumber(value: any): value is number {
+    return typeof value === 'number';
   }
 }

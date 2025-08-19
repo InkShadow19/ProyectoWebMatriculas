@@ -66,7 +66,15 @@ export class ApoderadosComponent implements OnInit {
       parentesco: ['', [Validators.required]],
       fechaNacimiento: ['', [Validators.required, pastDateValidator]],
       genero: [GeneroReference.MASCULINO, Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          ),
+        ],
+      ],
       telefono: ['', [Validators.pattern(/^9\d{8}$/)]],
       direccion: [''],
       estado: [EstadoReference.ACTIVO, Validators.required],
@@ -110,9 +118,52 @@ export class ApoderadosComponent implements OnInit {
     this.loadApoderados();
   }
 
-  getPagesArray(): number[] {
-    if (!this.pagedApoderados) return [];
-    return Array(this.pagedApoderados.totalPages).fill(0).map((x, i) => i + 1);
+  getPagesArray(): (number | string)[] {
+    // La única diferencia es que usamos 'this.pagedApoderados'
+    if (!this.pagedApoderados || this.pagedApoderados.totalPages <= 1) {
+      return [];
+    }
+
+    const totalPages = this.pagedApoderados.totalPages;
+    const currentPage = this.currentPage;
+    const maxPagesToShow = 5;
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= maxPagesToShow + 2) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    pages.push(1);
+
+    if (currentPage > maxPagesToShow - 1) {
+      pages.push('...');
+    }
+
+    let startPage = Math.max(2, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages - 1, currentPage + Math.floor(maxPagesToShow / 2));
+
+    if (currentPage < maxPagesToShow - 1) {
+      endPage = maxPagesToShow;
+    }
+    if (currentPage > totalPages - (maxPagesToShow - 1)) {
+      startPage = totalPages - maxPagesToShow + 1;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - (maxPagesToShow - 2)) {
+      pages.push('...');
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  }
+
+  isNumber(value: any): value is number {
+    return typeof value === 'number';
   }
 
   openApoderadoModal(apoderado?: ApoderadoDto): void {

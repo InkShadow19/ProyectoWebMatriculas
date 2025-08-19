@@ -175,15 +175,27 @@
             </div>
             <ul class="pagination">
                 <li class="page-item previous" [class.disabled]="pagedMatriculas.first">
-                    <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link"><i
-                            class="previous"></i></a>
+                    <a (click)="setPage(currentPage - 1)" href="javascript:void(0);" class="page-link">
+                        <i class="previous"></i>
+                    </a>
                 </li>
-                <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage">
-                    <a (click)="setPage(page)" href="javascript:void(0);" class="page-link">{{ page }}</a>
+
+                <li *ngFor="let page of getPagesArray()" class="page-item" [class.active]="page === currentPage"
+                    [class.disabled]="!isNumber(page)">
+
+                    <a *ngIf="isNumber(page)" (click)="setPage(page)" href="javascript:void(0);" class="page-link">
+                        {{ page }}
+                    </a>
+
+                    <span *ngIf="!isNumber(page)" class="page-link">
+                        {{ page }}
+                    </span>
                 </li>
+
                 <li class="page-item next" [class.disabled]="pagedMatriculas.last">
-                    <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link"><i
-                            class="next"></i></a>
+                    <a (click)="setPage(currentPage + 1)" href="javascript:void(0);" class="page-link">
+                        <i class="next"></i>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -527,7 +539,8 @@
                                     <a *ngFor="let est of estudiantesEncontrados"
                                         (mousedown)="seleccionarNuevoEstudiante(est)"
                                         class="list-group-item list-group-item-action cursor-pointer">
-                                        {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI: {{ est.dni }})
+                                        {{ est.nombre }} {{ est.apellidoPaterno }} {{ est.apellidoMaterno }} (DNI: {{
+                                        est.dni }})
                                     </a>
                                 </div>
                             </div>
@@ -554,7 +567,8 @@
                                     <a *ngFor="let apo of apoderadosEncontrados"
                                         (mousedown)="seleccionarNuevoApoderado(apo)"
                                         class="list-group-item list-group-item-action cursor-pointer">
-                                        {{ apo.nombre }} {{ apo.apellidoPaterno }} {{ apo.apellidoMaterno }} (DNI: {{ apo.dni }})
+                                        {{ apo.nombre }} {{ apo.apellidoPaterno }} {{ apo.apellidoMaterno }} (DNI: {{
+                                        apo.dni }})
                                     </a>
                                 </div>
                             </div>

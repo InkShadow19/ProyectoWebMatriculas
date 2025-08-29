@@ -19,7 +19,7 @@ import { PageResponse } from 'src/app/models/page-response.model';
 import { SituacionReference } from 'src/app/models/enums/situacion-reference.enum';
 import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-reference.enum';
 import { EstadoDeudaReference } from 'src/app/models/enums/estado-deuda-reference.enum';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import Swal from 'sweetalert2';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
@@ -115,6 +115,7 @@ export class MatriculasComponent implements OnInit {
   matriculaParaEditar: EditarMatriculaForm = {};
   tienePagosRegistrados = false;
 
+  isLoading$: Observable<boolean>;
   // TODO: Propiedades para los modales de Detalle y Edición
 
   constructor(
@@ -126,9 +127,12 @@ export class MatriculasComponent implements OnInit {
     private estudianteService: EstudianteService,
     private apoderadoService: ApoderadoService,
     private conceptoPagoService: ConceptoPagoService
-  ) { }
+  ) { 
+    this.isLoading$ = this.matriculaService.isLoadingSubject.asObservable();
+  }
 
   ngOnInit(): void {
+    this.matriculaService.isLoadingSubject.next(true);
     this.loadInitialData();
   }
 

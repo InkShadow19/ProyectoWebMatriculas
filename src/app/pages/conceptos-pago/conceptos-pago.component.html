@@ -46,51 +46,61 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let concepto of pagedConceptos?.content">
-            <td>{{ concepto.codigo }}</td>
-            <td>{{ concepto.descripcion }}</td>
-            <td class="text-end">{{ concepto.montoSugerido | currency:'S/ ' }}</td>
-            <td class="text-center">
-              <div class="badge" [ngClass]="{
-                'badge-light-success': concepto.estado === EstadoReference.ACTIVO,
-                'badge-light-danger': concepto.estado === EstadoReference.INACTIVO,
-                'badge-secondary': concepto.estado === EstadoReference.UNDEFINED
-              }">
-                {{ concepto.estado.replace('_', ' ') }}
+          <tr *ngIf="isLoading$ | async">
+            <td colspan="5" class="text-center py-10">
+              <div class="d-flex justify-content-center align-items-center">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Cargando conceptos de pago...</span>
               </div>
             </td>
-            <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditConceptoModal(concepto)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteConcepto(concepto)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
+          </tr>
 
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditConceptoModal(concepto)">
+          <ng-container 
+            *ngIf="!(isLoading$ | async) && pagedConceptos && pagedConceptos.content.length > 0">
+            <tr *ngFor="let concepto of pagedConceptos.content">
+              <td>{{ concepto.codigo }}</td>
+              <td>{{ concepto.descripcion }}</td>
+              <td class="text-end">{{ concepto.montoSugerido | currency:'S/ ' }}</td>
+              <td class="text-center">
+                <div class="badge" [ngClass]="{
+                    'badge-light-success': concepto.estado === EstadoReference.ACTIVO,
+                    'badge-light-danger': concepto.estado === EstadoReference.INACTIVO,
+                    'badge-secondary': concepto.estado === EstadoReference.UNDEFINED
+                  }">{{ concepto.estado.replace('_', ' ') }}
+                </div>
+              </td>
+              <td class="text-end">
+                <div class="d-none d-md-flex justify-content-end">
+                  <button type="button" class="btn btn-light-info btn-sm me-3"
+                    (click)="openEditConceptoModal(concepto)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteConcepto(concepto)">
+                  <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteConcepto(concepto)">
                     <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="!pagedConceptos || pagedConceptos.content.length === 0">
-            <td colspan="5" class="text-center text-muted py-5">
+                <div class="d-md-none text-end" ngbDropdown>
+                  <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                    <button class="dropdown-item text-info" (click)="openEditConceptoModal(concepto)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                      Editar
+                    </button>
+                    <button class="dropdown-item text-danger" (click)="confirmDeleteConcepto(concepto)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!(isLoading$ | async) && (!pagedConceptos || pagedConceptos.content.length === 0)">
+            <td colspan="5" class="text-center text-muted py-10">
               No se encontraron registros.
             </td>
           </tr>

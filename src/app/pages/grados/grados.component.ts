@@ -12,6 +12,7 @@ import { NivelDto } from 'src/app/models/nivel.model';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-grados',
@@ -37,6 +38,8 @@ export class GradosComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -48,9 +51,11 @@ export class GradosComponent implements OnInit {
   ) {
     this.estadoKeys = Object.values(EstadoReference).filter(e => e !== EstadoReference.UNDEFINED);
     this.gradoForm = this.initForm();
+    this.isLoading$ = this.gradoService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.gradoService.isLoadingSubject.next(true);
     this.loadNiveles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);

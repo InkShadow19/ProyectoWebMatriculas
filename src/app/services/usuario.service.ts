@@ -11,7 +11,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class UsuarioService implements OnDestroy {
 
-    isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(

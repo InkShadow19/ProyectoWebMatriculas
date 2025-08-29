@@ -20,6 +20,7 @@ import { EstadoMatriculaReference } from 'src/app/models/enums/estado-matricula-
 import { EstadoAcademicoReference } from 'src/app/models/enums/estado-academico-reference.enum';
 import { AnioAcademicoService } from 'src/app/services/anio-academico.service';
 import { AnioAcademicoDto } from 'src/app/models/anio-academico.model';
+import { Observable } from 'rxjs';
 
 // Interfaces para la vista
 interface DeudaPendiente extends CronogramaPagoDto {
@@ -66,15 +67,20 @@ export class PagosComponent implements OnInit {
   anios: AnioAcademicoDto[] = [];
   anioActivo: AnioAcademicoDto | null = null;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private cdr: ChangeDetectorRef,
     private pagoService: PagoService,
     private bancoService: BancoService,
     private estudianteService: EstudianteService,
     private anioAcademicoService: AnioAcademicoService
-  ) { }
+  ) { 
+    this.isLoading$ = this.pagoService.isLoadingSubject.asObservable();
+  }
 
   ngOnInit(): void {
+    this.pagoService.isLoadingSubject.next(true);
     this.loadInitialData();
   }
 
@@ -137,9 +143,52 @@ export class PagosComponent implements OnInit {
     this.loadPagos();
   }
 
-  getPagesArray(): number[] {
-    if (!this.pagedPagos || this.pagedPagos.totalPages === 0) return [];
-    return Array(this.pagedPagos.totalPages).fill(0).map((x, i) => i + 1);
+  getPagesArray(): (number | string)[] {
+    if (!this.pagedPagos || this.pagedPagos.totalPages <= 1) {
+      return [];
+    }
+
+    const totalPages = this.pagedPagos.totalPages;
+    const currentPage = this.currentPage;
+    const maxPagesToShow = 5;
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= maxPagesToShow + 2) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    pages.push(1);
+
+    if (currentPage > maxPagesToShow - 1) {
+      pages.push('...');
+    }
+
+    let startPage = Math.max(2, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages - 1, currentPage + Math.floor(maxPagesToShow / 2));
+
+    if (currentPage < maxPagesToShow - 1) {
+      endPage = maxPagesToShow;
+    }
+
+    if (currentPage > totalPages - (maxPagesToShow - 1)) {
+      startPage = totalPages - maxPagesToShow + 1;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - (maxPagesToShow - 2)) {
+      pages.push('...');
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  }
+
+  isNumber(value: any): value is number {
+    return typeof value === 'number';
   }
 
   // --- Lógica del Modal "Registrar Pago" (Actualizada) ---
@@ -173,39 +222,50 @@ export class PagosComponent implements OnInit {
     this.busquedaEstudiante = `${estudiante.nombre} ${estudiante.apellidoPaterno} ${estudiante.apellidoMaterno}`;
     this.estudiantesEncontrados = [];
 
-    // --- LLAMADA CORREGIDA: Se pasa el año activo ---
-    this.pagoService.getDeudasPendientes(estudiante.identifier, this.anioActivo.anio).subscribe(deudas => {
-      const deudasPendientes = deudas?.filter(d => d.estadoDeuda === EstadoDeudaReference.PENDIENTE || d.estadoDeuda === EstadoDeudaReference.VENCIDO) || [];
-      if (deudasPendientes.length === 0) {
-        Swal.fire(
-          'No hay cuotas para pagar',
-          `El estudiante no tiene un cronograma de pagos activo o ya ha cancelado todas sus deudas pendientes.`,
-          'info'
-        );
-        this.resetearProcesoPago();
-        return;
-      }
+    // --- LLAMADA AL SERVICIO CON MANEJO DE ERRORES AÑADIDO ---
+    this.pagoService.getDeudasPendientes(estudiante.identifier, this.anioActivo.anio).subscribe({
+      // 1. Bloque 'next': Se ejecuta solo si la API responde con éxito (HTTP 200)
+      next: (deudas) => {
+        const deudasPendientes = deudas?.filter(d => d.estadoDeuda === EstadoDeudaReference.PENDIENTE || d.estadoDeuda === EstadoDeudaReference.VENCIDO) || [];
 
-      // Tu lógica de ordenamiento con desempate (que es perfecta) se mantiene.
-      deudasPendientes.sort((a, b) => {
-        const fechaA = new Date(a.fechaVencimiento).getTime();
-        const fechaB = new Date(b.fechaVencimiento).getTime();
-        if (fechaA !== fechaB) {
-          return fechaA - fechaB;
+        if (deudasPendientes.length === 0) {
+          // Este es el caso de un alumno que realmente no tiene deudas en ningún año.
+          Swal.fire(
+            'No hay cuotas para pagar',
+            'El estudiante no tiene un cronograma de pagos activo o ya ha cancelado todas sus deudas pendientes.',
+            'info'
+          );
+          this.resetearProcesoPago();
+          return;
         }
-        if (a.descripcion?.includes('Matrícula')) return -1;
-        if (b.descripcion?.includes('Matrícula')) return 1;
-        return 0;
-      });
 
-      this.estudianteSeleccionado = {
-        identifier: estudiante.identifier,
-        nombre: this.busquedaEstudiante,
-        deudas: deudasPendientes.map(d => ({ ...d, seleccionado: false }))
-      };
+        // Lógica existente para ordenar y mostrar las deudas (sin cambios)
+        deudasPendientes.sort((a, b) => {
+          const fechaA = new Date(a.fechaVencimiento).getTime();
+          const fechaB = new Date(b.fechaVencimiento).getTime();
+          if (fechaA !== fechaB) {
+            return fechaA - fechaB;
+          }
+          if (a.descripcion?.includes('Matrícula')) return -1;
+          if (b.descripcion?.includes('Matrícula')) return 1;
+          return 0;
+        });
 
-      this.procesoPagoPaso = 'seleccion';
-      this.cdr.detectChanges();
+        this.estudianteSeleccionado = {
+          identifier: estudiante.identifier,
+          nombre: this.busquedaEstudiante,
+          deudas: deudasPendientes.map(d => ({ ...d, seleccionado: false }))
+        };
+
+        this.procesoPagoPaso = 'seleccion';
+        this.cdr.detectChanges();
+      },
+      // 2. Bloque 'error': Se ejecuta si el servicio lanza un error (como nuestro 409)
+      error: (err) => {
+        // ¡Aquí mostramos el mensaje personalizado del backend!
+        Swal.fire('Deudas Anteriores Encontradas', err.message, 'warning');
+        this.resetearProcesoPago(); // Reseteamos la vista
+      }
     });
   }
 

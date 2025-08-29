@@ -10,7 +10,7 @@ import { PageResponse } from '../models/page-response.model';
 })
 export class AnioAcademicoService implements OnDestroy {
 
-    isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(
@@ -28,7 +28,7 @@ export class AnioAcademicoService implements OnDestroy {
     add(body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto> {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.add(body).pipe(
-            catchError(err => throwError(() => err)), // <-- Cambio crucial aquí
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -36,7 +36,7 @@ export class AnioAcademicoService implements OnDestroy {
     update(identifier: string, body: Partial<AnioAcademicoDto>): Observable<AnioAcademicoDto> {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.update(identifier, body).pipe(
-            catchError(err => throwError(() => err)), // <-- Cambio crucial aquí
+            catchError(err => throwError(() => err)),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -45,7 +45,8 @@ export class AnioAcademicoService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.anioAcademicoDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(err => throwError(() => err)) // <-- También es buena práctica aquí
+            catchError(err => throwError(() => err)),
+            finalize(() => this.isLoadingSubject.next(false))
         );
     }
 

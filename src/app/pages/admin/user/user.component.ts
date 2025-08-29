@@ -13,6 +13,7 @@ import { RolService } from 'src/app/services/rol.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 export function fechaNacimientoValidator(control: AbstractControl): ValidationErrors | null {
   const fechaSeleccionada = new Date(control.value);
@@ -71,6 +72,8 @@ export class UserComponent implements OnInit {
   confirmPassword = '';
   showResetPasswordFields = false;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -83,9 +86,11 @@ export class UserComponent implements OnInit {
     this.generoKeys = Object.values(GeneroReference);
     this.estadoKeys = Object.values(EstadoReference);
     this.buildForm(); // Se llama al método que construye el formulario
+    this.isLoading$ = this.usuarioService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.usuarioService.isLoadingSubject.next(true);
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
       return;

@@ -44,50 +44,60 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let banco of pagedBancos?.content">
-            <td>{{ banco.codigo }}</td>
-            <td>{{ banco.descripcion }}</td>
-            <td class="text-center">
-              <div class="badge" [ngClass]="{
-                    'badge-light-success': banco.estado === EstadoReference.ACTIVO,
-                    'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
-                    'badge-secondary': banco.estado === EstadoReference.UNDEFINED
-                  }">
-                {{ banco.estado.replace('_', ' ') }}
+          <tr *ngIf="isLoading$ | async">
+            <td colspan="4" class="text-center py-10">
+              <div class="d-flex justify-content-center align-items-center">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Cargando bancos...</span>
               </div>
             </td>
-            <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditBankModal(banco)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteBank(banco)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
+          </tr>
 
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditBankModal(banco)">
+          <ng-container *ngIf="!(isLoading$ | async) && pagedBancos && pagedBancos.content.length > 0">
+            <tr *ngFor="let banco of pagedBancos.content">
+              <td>{{ banco.codigo }}</td>
+              <td>{{ banco.descripcion }}</td>
+              <td class="text-center">
+                <div class="badge" [ngClass]="{
+                      'badge-light-success': banco.estado === EstadoReference.ACTIVO,
+                      'badge-light-danger': banco.estado === EstadoReference.INACTIVO,
+                      'badge-secondary': banco.estado === EstadoReference.UNDEFINED
+                    }">
+                  {{ banco.estado.replace('_', ' ') }}
+                </div>
+              </td>
+              <td class="text-end">
+                <div class="d-none d-md-flex justify-content-end">
+                  <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditBankModal(banco)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteBank(banco)">
+                  <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteBank(banco)">
                     <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="!pagedBancos || pagedBancos.content.length === 0">
-            <td colspan="4" class="text-center text-muted py-5">
+                <div class="d-md-none text-end" ngbDropdown>
+                  <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                    <button class="dropdown-item text-info" (click)="openEditBankModal(banco)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                      Editar
+                    </button>
+                    <button class="dropdown-item text-danger" (click)="confirmDeleteBank(banco)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!(isLoading$ | async) && (!pagedBancos || pagedBancos.content.length === 0)">
+            <td colspan="4" class="text-center text-muted py-10">
               No se encontraron registros.
             </td>
           </tr>

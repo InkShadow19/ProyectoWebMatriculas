@@ -10,7 +10,7 @@ import { PageResponse } from '../models/page-response.model';
 })
 export class NivelService implements OnDestroy {
 
-    isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(
@@ -45,7 +45,8 @@ export class NivelService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.nivelDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(err => throwError(() => err))
+            catchError(err => throwError(() => err)),
+            finalize(() => this.isLoadingSubject.next(false))
         );
     }
 

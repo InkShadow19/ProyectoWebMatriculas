@@ -50,48 +50,58 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let grado of pagedGrados?.content">
-            <td>{{ grado.descripcion }}</td>
-            <td>{{ getNivelDescripcion(grado.nivel) }}</td>
-            <td class="text-center">
-              <div class="badge" [ngClass]="{
-                    'badge-light-success': grado.estado === EstadoReference.ACTIVO,
-                    'badge-light-danger': grado.estado === EstadoReference.INACTIVO
-                  }">
-                {{ grado.estado.replace('_', ' ') }}
+          <tr *ngIf="isLoading$ | async">
+            <td colspan="4" class="text-center py-10">
+              <div class="d-flex justify-content-center align-items-center">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Cargando grados...</span>
               </div>
             </td>
-            <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditGradoModal(grado)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteGrado(grado)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditGradoModal(grado)">
+          </tr>
+          <ng-container *ngIf="!(isLoading$ | async) && pagedGrados && pagedGrados.content.length > 0">
+            <tr *ngFor="let grado of pagedGrados.content">
+              <td>{{ grado.descripcion }}</td>
+              <td>{{ getNivelDescripcion(grado.nivel) }}</td>
+              <td class="text-center">
+                <div class="badge" [ngClass]="{
+                    'badge-light-success': grado.estado === EstadoReference.ACTIVO,
+                    'badge-light-danger': grado.estado === EstadoReference.INACTIVO
+                  }">{{ grado.estado.replace('_', ' ') }}
+                </div>
+              </td>
+              <td class="text-end">
+                <div class="d-none d-md-flex justify-content-end">
+                  <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditGradoModal(grado)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteGrado(grado)">
+                  <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteGrado(grado)">
                     <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>
-              </div>
+                <div class="d-md-none text-end" ngbDropdown>
+                  <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                    <button class="dropdown-item text-info" (click)="openEditGradoModal(grado)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                      Editar
+                    </button>
+                    <button class="dropdown-item text-danger" (click)="confirmDeleteGrado(grado)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!(isLoading$ | async) && (!pagedGrados || pagedGrados.content.length === 0)">
+            <td colspan="4" class="text-center text-muted py-10">
+              No se encontraron registros.
             </td>
-          </tr>
-          <tr *ngIf="!pagedGrados || pagedGrados.content.length === 0">
-            <td colspan="4" class="text-center text-muted py-5">No se encontraron registros.</td>
           </tr>
         </tbody>
       </table>

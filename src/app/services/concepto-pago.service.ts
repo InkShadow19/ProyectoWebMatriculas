@@ -11,7 +11,7 @@ import { EstadoReference } from '../models/enums/estado-reference.enum';
 })
 export class ConceptoPagoService implements OnDestroy {
 
-    isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(

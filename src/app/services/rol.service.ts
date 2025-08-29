@@ -10,7 +10,7 @@ import { PageResponse } from '../models/page-response.model';
 })
 export class RolService implements OnDestroy {
 
-    isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     private unsubscribe: Subscription[] = [];
 
     constructor(
@@ -46,7 +46,8 @@ export class RolService implements OnDestroy {
         this.isLoadingSubject.next(true);
         return this.rolDomainService.delete(identifier).pipe(
             map(() => true),
-            catchError(err => throwError(() => err))
+            catchError(err => throwError(() => err)),
+            finalize(() => this.isLoadingSubject.next(false))
         );
     }
 

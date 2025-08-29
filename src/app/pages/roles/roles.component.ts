@@ -10,6 +10,7 @@ import { RolService } from 'src/app/services/rol.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-roles',
@@ -35,6 +36,8 @@ export class RolesComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -45,9 +48,11 @@ export class RolesComponent implements OnInit {
   ) {
     this.estadoKeys = Object.values(EstadoReference).filter(e => e !== EstadoReference.UNDEFINED);
     this.rolForm = this.initForm();
+    this.isLoading$ = this.rolService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.rolService.isLoadingSubject.next(true);
     this.loadRoles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);

@@ -142,7 +142,10 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadKpiFijos();
     this.loadAnios();
-    this.nivelService.getList(0, 100).subscribe(res => this.niveles = res?.content || []);
+    this.nivelService.getList(0, 100).subscribe(res => {
+      this.niveles = res?.content || [];
+      this.cdr.detectChanges();
+  });
   }
 
   loadKpiFijos(): void {
@@ -173,9 +176,21 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getAnalisisAnualData(this.anioSeleccionadoId, this.filtroNivelIdAnalisis).subscribe(data => {
       this.analisisAnual = data;
       if (data) {
-        this.tendenciaChartOptions.series = [{ name: 'Nuevas Matrículas', data: data.tendenciaMatriculas.map(d => d.total) }];
-        this.tendenciaChartOptions.xaxis.categories = data.tendenciaMatriculas.map(d => d.mes);
+        const mesesOrdenados = [
+          "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+          "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ];
+        const tendenciaMap = new Map(data.tendenciaMatriculas.map((d: any) => [d.mes, d.total]));
+        const tendenciaCompleta = mesesOrdenados.map(mes => ({
+          mes,
+          total: tendenciaMap.get(mes) || 0
+        }));
 
+        this.tendenciaChartOptions.series = [
+          { name: 'Nuevas Matrículas', data: tendenciaCompleta.map(d => d.total) }
+        ];
+        this.tendenciaChartOptions.xaxis.categories = tendenciaCompleta.map(d => d.mes);
+        
         this.distribucionChartOptions.series = data.distribucionAlumnosPorNivel.map(d => d.total);
         this.distribucionChartOptions.labels = data.distribucionAlumnosPorNivel.map(d => d.nivel);
 

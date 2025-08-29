@@ -10,6 +10,7 @@ import { NivelService } from 'src/app/services/nivel.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-niveles',
@@ -33,6 +34,8 @@ export class NivelesComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -43,9 +46,11 @@ export class NivelesComponent implements OnInit {
   ) {
     this.estadoKeys = Object.values(EstadoReference).filter(e => e !== EstadoReference.UNDEFINED) as string[];
     this.nivelForm = this.initForm();
+    this.isLoading$ = this.nivelService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.nivelService.isLoadingSubject.next(true);
     this.loadNiveles();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);

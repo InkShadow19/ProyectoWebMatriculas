@@ -10,6 +10,7 @@ import { ConceptoPagoService } from 'src/app/services/concepto-pago.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-conceptos-pago',
@@ -39,6 +40,8 @@ export class ConceptosPagoComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -48,9 +51,11 @@ export class ConceptosPagoComponent implements OnInit {
     private router: Router
   ) {
     this.conceptoForm = this.initForm();
+    this.isLoading$ = this.conceptoPagoService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.conceptoPagoService.isLoadingSubject.next(true);
     this.loadConceptos();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);

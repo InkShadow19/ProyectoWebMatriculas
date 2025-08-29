@@ -12,12 +12,12 @@ import Swal from 'sweetalert2';
     providedIn: 'root',
 })
 export class PagoService {
-    isLoadingSubject = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject = new BehaviorSubject<boolean>(false);
 
     constructor(private domainService: PagoDomainService) { }
 
     getList(
-        page: number, size: number, estado?: string, canal?: string, 
+        page: number, size: number, estado?: string, canal?: string,
         descripcion?: string,
         monto?: number, fechaDesde?: string, fechaHasta?: string
     ): Observable<PageResponse<PagoDto> | undefined> {
@@ -31,7 +31,13 @@ export class PagoService {
     getDeudasPendientes(estudianteIdentifier: string, anio: number): Observable<CronogramaPagoDto[] | undefined> {
         this.isLoadingSubject.next(true);
         return this.domainService.getDeudasPendientes(estudianteIdentifier, anio).pipe(
-            catchError(() => of(undefined)),
+            // --- LÓGICA DE ERROR MODIFICADA ---
+            catchError((error: HttpErrorResponse) => {
+                // Extraemos el mensaje de error específico enviado por el backend.
+                const errorMessage = error.error?.error || 'Ocurrió un error inesperado.';
+                // En lugar de devolver 'undefined', lanzamos un nuevo error con el mensaje limpio.
+                return throwError(() => new Error(errorMessage));
+            }),
             finalize(() => this.isLoadingSubject.next(false))
         );
     }
@@ -70,15 +76,12 @@ export class PagoService {
 
     // --- NUEVO MÉTODO AÑADIDO ---
     imprimirBoleta(identifier: string): Observable<Blob | undefined> {
-        this.isLoadingSubject.next(true);
         return this.domainService.imprimirBoleta(identifier).pipe(
             catchError((error: HttpErrorResponse) => {
-                // Manejo de error por si el PDF no se puede generar
                 console.error('Error al generar el PDF:', error);
                 Swal.fire('Error', 'No se pudo generar la boleta en PDF.', 'error');
                 return of(undefined);
-            }),
-            finalize(() => this.isLoadingSubject.next(false))
+            })
         );
     }
 }

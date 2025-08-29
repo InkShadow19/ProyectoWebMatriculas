@@ -42,48 +42,58 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 fw-semibold">
-          <tr *ngFor="let nivel of pagedNiveles?.content">
-            <td>{{ nivel.descripcion }}</td>
-            <td class="text-center">
-              <div class="badge" [ngClass]="{
+          <tr *ngIf="isLoading$ | async">
+            <td colspan="3" class="text-center py-10">
+              <div class="d-flex justify-content-center align-items-center">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Cargando niveles...</span>
+              </div>
+            </td>
+          </tr>
+          <ng-container *ngIf="!(isLoading$ | async) && pagedNiveles && pagedNiveles.content.length > 0">
+            <tr *ngFor="let nivel of pagedNiveles.content">
+              <td>{{ nivel.descripcion }}</td>
+              <td class="text-center">
+                <div class="badge" [ngClass]="{
                     'badge-light-success': nivel.estado === EstadoReference.ACTIVO,
                     'badge-light-danger': nivel.estado === EstadoReference.INACTIVO,
                     'badge-secondary': nivel.estado === EstadoReference.UNDEFINED
-                  }">
-                {{ nivel.estado.replace('_', ' ') }}
-              </div>
-            </td>
-            <td class="text-end">
-              <div class="d-none d-md-flex justify-content-end">
-                <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditNivelModal(nivel)">
-                  <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
-                  Editar
-                </button>
-                <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteNivel(nivel)">
-                  <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
-                  Eliminar
-                </button>
-              </div>
-
-              <div class="d-md-none text-end" ngbDropdown>
-                <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
-                  <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
-                </button>
-                <div ngbDropdownMenu class="dropdown-menu-end mt-2">
-                  <button class="dropdown-item text-info" (click)="openEditNivelModal(nivel)">
+                  }">{{ nivel.estado.replace('_', ' ') }}
+                </div>
+              </td>
+              <td class="text-end">
+                <div class="d-none d-md-flex justify-content-end">
+                  <button type="button" class="btn btn-light-info btn-sm me-3" (click)="openEditNivelModal(nivel)">
                     <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
                     Editar
                   </button>
-                  <button class="dropdown-item text-danger" (click)="confirmDeleteNivel(nivel)">
+                  <button type="button" class="btn btn-light-danger btn-sm" (click)="confirmDeleteNivel(nivel)">
                     <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
                     Eliminar
                   </button>
                 </div>
-              </div>
+                <div class="d-md-none text-end" ngbDropdown>
+                  <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm" ngbDropdownToggle>
+                    <app-keenicon name="dots-vertical" class="fs-3"></app-keenicon>
+                  </button>
+                  <div ngbDropdownMenu class="dropdown-menu-end mt-2">
+                    <button class="dropdown-item text-info" (click)="openEditNivelModal(nivel)">
+                      <app-keenicon name="pencil" class="fs-5 me-2"></app-keenicon>
+                      Editar
+                    </button>
+                    <button class="dropdown-item text-danger" (click)="confirmDeleteNivel(nivel)">
+                      <app-keenicon name="trash" class="fs-5 me-2"></app-keenicon>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!(isLoading$ | async) && (!pagedNiveles || pagedNiveles.content.length === 0)">
+            <td colspan="3" class="text-center text-muted py-10">
+              No se encontraron niveles.
             </td>
-          </tr>
-          <tr *ngIf="!pagedNiveles || pagedNiveles.content.length === 0">
-            <td colspan="3" class="text-center text-muted py-5">No se encontraron registros.</td>
           </tr>
         </tbody>
       </table>

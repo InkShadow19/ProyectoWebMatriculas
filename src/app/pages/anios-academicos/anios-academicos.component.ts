@@ -10,6 +10,7 @@ import { AnioAcademicoService } from 'src/app/services/anio-academico.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 // Validador personalizado para el rango del año
 export function anioRangoValido(control: AbstractControl): ValidationErrors | null {
@@ -45,6 +46,8 @@ export class AniosAcademicosComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -55,9 +58,11 @@ export class AniosAcademicosComponent implements OnInit {
   ) {
     this.estadoAcademicoKeys = Object.values(EstadoAcademicoReference).filter(e => e !== EstadoAcademicoReference.UNDEFINED && e !== EstadoAcademicoReference.EGRESADO && e !== EstadoAcademicoReference.RETIRADO);
     this.anioForm = this.initForm();
+    this.isLoading$ = this.anioAcademicoService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.anioAcademicoService.isLoadingSubject.next(true);
     this.loadAniosAcademicos();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);

@@ -12,7 +12,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     providedIn: 'root',
 })
 export class MatriculaService {
-    isLoadingSubject = new BehaviorSubject<boolean>(false);
+    public isLoadingSubject = new BehaviorSubject<boolean>(false);
 
     constructor(private domainService: MatriculaDomainService) { }
 

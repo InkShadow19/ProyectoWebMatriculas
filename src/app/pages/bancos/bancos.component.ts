@@ -10,6 +10,7 @@ import { BancoService } from 'src/app/services/banco.service';
 import { PageResponse } from 'src/app/models/page-response.model';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/modules/auth';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-bancos',
@@ -39,6 +40,8 @@ export class BancosComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 5;
 
+  isLoading$: Observable<boolean>;
+
   constructor(
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
@@ -49,9 +52,11 @@ export class BancosComponent implements OnInit {
   ) {
     this.estadoKeys = Object.values(EstadoReference);
     this.bancoForm = this.initForm();
+    this.isLoading$ = this.bancoService.isLoadingSubject.asObservable();
   }
 
   ngOnInit(): void {
+    this.bancoService.isLoadingSubject.next(true);
     this.loadBancos();
     if (!this.authService.hasRole('Administrador')) {
       this.router.navigate(['/access-denied']);
@@ -70,7 +75,7 @@ export class BancosComponent implements OnInit {
 
   loadBancos(): void {
     const page = this.currentPage - 1;
-    this.bancoService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroBusqueda, this.filtroEstado)
+    this.bancoService.getList(page, this.itemsPerPage, this.filtroBusqueda, this.filtroEstado)
       .subscribe(response => {
         this.pagedBancos = response;
         this.cdr.detectChanges();

@@ -240,7 +240,7 @@
               [ngClass]="{ 'is-invalid': f['email'].touched && f['email'].errors }" />
             <div *ngIf="f['email'].touched && f['email'].errors" class="invalid-feedback">
               <div *ngIf="f['email'].errors?.['required']">El email es requerido.</div>
-              <div *ngIf="f['email'].errors?.['email']">Formato de email inválido.</div>
+              <div *ngIf="f['email'].errors?.['pattern']">Formato de email inválido.</div>
             </div>
           </div>
 

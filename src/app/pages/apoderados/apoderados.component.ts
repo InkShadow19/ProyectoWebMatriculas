@@ -71,7 +71,8 @@ export class ApoderadosComponent implements OnInit {
         [
           Validators.required,
           Validators.pattern(
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            // ✅ Expresión regular que acepta 'ñ' y valida bien el dominio
+            /^[a-zA-Z0-9._%+-ñÑáéíóúÁÉÍÓÚ]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
           ),
         ],
       ],
